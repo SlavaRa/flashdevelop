@@ -1,0 +1,25 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="PluginCore/ScintillaNet/OSHelper.cs">
+    <Files>
+      <File FileName="PluginCore/PluginCore/Utilities/SingleInstanceApp.cs" Line="1" Column="1" />
+      <File FileName="External/Plugins/ProjectManager/Projects/AS3/FlexProjectReader.cs" Line="1" Column="1" />
+      <File FileName="External/3rdParty/Aga-1.7/Aga.Controls/Tree/NativeMethods.cs" Line="1" Column="1" />
+      <File FileName="PluginCore/DockPanelSuite/Win32/NativeMethods.cs" Line="1" Column="1" />
+      <File FileName="PluginCore/DockPanelSuite/Helpers/Win32Helper.cs" Line="1" Column="1" />
+      <File FileName="PluginCore/DockPanelSuite/Docking/DockPanel.FocusManager.cs" Line="1" Column="1" />
+      <File FileName="PluginCore/PluginCore.csproj" Line="493" Column="15" />
+      <File FileName="PluginCore/DockPanelSuite/Win32/Enums.cs" Line="1" Column="1" />
+      <File FileName="PluginCore/ScintillaNet/ScintillaControl.cs" Line="46" Column="1" />
+      <File FileName="PluginCore/ScintillaNet/OSHelper.cs" Line="1" Column="1" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore>
+      <Breakpoint file="/home/gordev/apps_dev/myown/flashdevelopmono/PluginCore/ScintillaNet/OSHelper.cs" line="13" column="1" />
+      <Breakpoint file="/home/gordev/apps_dev/myown/flashdevelopmono/PluginCore/ScintillaNet/ScintillaControl.cs" line="49" column="1" />
+      <Breakpoint file="/home/gordev/apps_dev/myown/flashdevelopmono/PluginCore/ScintillaNet/ScintillaControl.cs" line="46" column="1" />
+    </BreakpointStore>
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

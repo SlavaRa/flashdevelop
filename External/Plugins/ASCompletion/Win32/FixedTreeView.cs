@@ -6,6 +6,7 @@
  */
 
 using System.Runtime.InteropServices;
+using PluginCore;
 
 namespace System.Windows.Forms
 {
@@ -37,7 +38,7 @@ namespace System.Windows.Forms
             if (clickedNode != null)
             {
                 TreeNode currentNode = clickedNode;
-                int offset = 25 - Win32.Scrolling.GetScrollPos(this.Handle, Win32.Scrolling.SB_HORZ);
+                int offset = 25 - OSHelper.API.GetScrollPos(this.Handle, Win32.Scrolling.SB_HORZ);
                 while (currentNode.Parent != null)
                 {
                     offset += 20;
@@ -77,7 +78,7 @@ namespace System.Windows.Forms
                 string text = currentNode.Text;
                 if ((prev == text) && (px == e.X) && (py == e.Y))
                     return;
-				
+
                 // text dimensions
                 int offset = 25 - Win32.Scrolling.GetScrollPos(this.Handle, Win32.Scrolling.SB_HORZ);
                 while (currentNode.Parent != null)

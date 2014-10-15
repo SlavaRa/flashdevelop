@@ -87,9 +87,9 @@ namespace WeifenLuo.WinFormsUI.Docking
                     if (m_hHook != IntPtr.Zero)
                         Uninstall();
 
-                    int threadId = NativeMethods.GetCurrentThreadId();
+					int threadId = NativeMethods.GetCurrentThreadId();
                     m_hHook = NativeMethods.SetWindowsHookEx(m_hookType, m_filterFunc, IntPtr.Zero, threadId);
-                }
+				}
 
                 // Uninstall the hook
                 public void Uninstall()
@@ -118,16 +118,24 @@ namespace WeifenLuo.WinFormsUI.Docking
                 }
             }
 
-            private LocalWindowsHook m_localWindowsHook;
+			// Use a static instance of the windows hook to prevent stack overflows in the windows kernel.
+			[ThreadStatic]
+			private static LocalWindowsHook sm_localWindowsHook;
             private LocalWindowsHook.HookEventHandler m_hookEventHandler;
 
             public FocusManagerImpl(DockPanel dockPanel)
             {
                 m_dockPanel = dockPanel;
-                m_localWindowsHook = new LocalWindowsHook(Win32.HookType.WH_CALLWNDPROCRET);
+				if (Win32Helper.IsRunningOnMono)
+					return;
                 m_hookEventHandler = new LocalWindowsHook.HookEventHandler(HookEventHandler);
-                m_localWindowsHook.HookInvoked += m_hookEventHandler;
-                m_localWindowsHook.Install();
+				// Ensure the windows hook has been created for this thread
+				if (sm_localWindowsHook == null)
+				{
+					sm_localWindowsHook = new LocalWindowsHook(Win32.HookType.WH_CALLWNDPROCRET);
+					sm_localWindowsHook.Install();
+				}
+				sm_localWindowsHook.HookInvoked += m_hookEventHandler;
             }
 
             private DockPanel m_dockPanel;
@@ -139,16 +147,17 @@ namespace WeifenLuo.WinFormsUI.Docking
             private bool m_disposed = false;
             protected override void Dispose(bool disposing)
             {
-                lock (this)
-                {
-                    if (!m_disposed && disposing)
-                    {
-                        m_localWindowsHook.Dispose();
-                        m_disposed = true;
-                    }
+				if (!m_disposed && disposing)
+				{
+					if (!Win32Helper.IsRunningOnMono)
+					{
+						sm_localWindowsHook.HookInvoked -= m_hookEventHandler;
+					}
 
-                    base.Dispose(disposing);
-                }
+					m_disposed = true;
+				}
+
+				base.Dispose(disposing);
             }
 
             private IDockContent m_contentActivating = null;
@@ -168,7 +177,9 @@ namespace WeifenLuo.WinFormsUI.Docking
                 if (content == null) return;
                 DockContentHandler handler = content.DockHandler;
                 if (handler.Form.IsDisposed) return; // Should not reach here, but better than throwing an exception
-                if (ContentContains(content, handler.ActiveWindowHandle)) NativeMethods.SetFocus(handler.ActiveWindowHandle);
+                if (ContentContains(content, handler.ActiveWindowHandle)) 
+					if (!Win32Helper.IsRunningOnMono)
+						NativeMethods.SetFocus(handler.ActiveWindowHandle);
                 if (!handler.Form.ContainsFocus)
                 {
                     if (!handler.Form.SelectNextControl(handler.Form.ActiveControl, true, true, true, true))
@@ -282,7 +293,8 @@ namespace WeifenLuo.WinFormsUI.Docking
             public void SuspendFocusTracking()
             {
                 m_countSuspendFocusTracking++;
-                m_localWindowsHook.HookInvoked -= m_hookEventHandler;
+				if (!Win32Helper.IsRunningOnMono)
+					sm_localWindowsHook.HookInvoked -= m_hookEventHandler;
             }
 
             public void ResumeFocusTracking()
@@ -297,7 +309,8 @@ namespace WeifenLuo.WinFormsUI.Docking
                         Activate(ContentActivating);
                         ContentActivating = null;
                     }
-                    m_localWindowsHook.HookInvoked += m_hookEventHandler;
+					if (!Win32Helper.IsRunningOnMono)
+						sm_localWindowsHook.HookInvoked += m_hookEventHandler;
                     if (!InRefreshActiveWindow)
                         RefreshActiveWindow();
                 }
@@ -387,7 +400,7 @@ namespace WeifenLuo.WinFormsUI.Docking
 
             private void SetActivePane()
             {
-                DockPane value = GetPaneFromHandle(NativeMethods.GetFocus());
+				DockPane value = Win32Helper.IsRunningOnMono ? null : GetPaneFromHandle(NativeMethods.GetFocus());
                 if (m_activePane == value)
                     return;
 

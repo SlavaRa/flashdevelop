@@ -249,6 +249,9 @@ namespace WeifenLuo.WinFormsUI.Docking
 					Form.FormBorderStyle = FormBorderStyle.None;
 					Form.ShowInTaskbar = false;
                     Form.WindowState = FormWindowState.Normal;
+					if (Win32Helper.IsRunningOnMono) 
+						return;
+
 					NativeMethods.SetWindowPos(Form.Handle, IntPtr.Zero, 0, 0, 0, 0,
 						Win32.FlagsSetWindowPos.SWP_NOACTIVATE |
 						Win32.FlagsSetWindowPos.SWP_NOMOVE |
@@ -520,7 +523,8 @@ namespace WeifenLuo.WinFormsUI.Docking
 
             if (Form.ContainsFocus)
                 if (DockState == DockState.Hidden || DockState == DockState.Unknown)
-                    DockPanel.ContentFocusManager.GiveUpFocus(Content);
+					if (!Win32Helper.IsRunningOnMono)
+                    	DockPanel.ContentFocusManager.GiveUpFocus(Content);
 
             SetPaneAndVisible(Pane);
 
@@ -536,11 +540,16 @@ namespace WeifenLuo.WinFormsUI.Docking
 
             if (oldDockState != DockState)
             {
-                if (DockState == DockState.Hidden || DockState == DockState.Unknown ||
-                    DockHelper.IsDockStateAutoHide(DockState))
-                    DockPanel.ContentFocusManager.RemoveFromList(Content);
-                else
-                    DockPanel.ContentFocusManager.AddToList(Content);
+				if (DockState == DockState.Hidden || DockState == DockState.Unknown ||
+					DockHelper.IsDockStateAutoHide (DockState)) 
+				{
+					if (!Win32Helper.IsRunningOnMono)
+						DockPanel.ContentFocusManager.RemoveFromList (Content);
+				} 
+				else if (!Win32Helper.IsRunningOnMono) 
+				{
+					DockPanel.ContentFocusManager.AddToList (Content);
+				}
 
                 OnDockStateChanged(EventArgs.Empty);
             }
@@ -645,14 +654,20 @@ namespace WeifenLuo.WinFormsUI.Docking
                 else if (DockHelper.IsDockStateAutoHide(DockState))
                     DockPanel.ActiveAutoHideContent = Content;
 
-                if (!Form.ContainsFocus)
-                    DockPanel.ContentFocusManager.Activate(Content);
+				if (Form.ContainsFocus) 
+					return;
+
+				if (Win32Helper.IsRunningOnMono) 
+					return;
+				
+				DockPanel.ContentFocusManager.Activate(Content);
 			}
 		}
 
         public void GiveUpFocus()
         {
-            DockPanel.ContentFocusManager.GiveUpFocus(Content);
+			if (!Win32Helper.IsRunningOnMono)
+            	DockPanel.ContentFocusManager.GiveUpFocus(Content);
         }
 
 		private IntPtr m_activeWindowHandle = IntPtr.Zero;
@@ -725,11 +740,20 @@ namespace WeifenLuo.WinFormsUI.Docking
             // Change the parent of a control with focus may result in the first
             // MDI child form get activated. 
             //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            bool bRestureFocus = false;
+            bool bRestoreFocus = false;
             if (Form.ContainsFocus)
             {
-                DockPanel.SaveFocus();
-                bRestureFocus = true;
+				// Suggested as a fix for a memory leak by bugreports
+				if (value == null && !IsFloat)
+				{
+					if (!Win32Helper.IsRunningOnMono)
+						DockPanel.ContentFocusManager.GiveUpFocus(this.Content);
+				}
+				else
+				{
+					DockPanel.SaveFocus();
+					bRestoreFocus = true;
+				}
             }
             //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -740,7 +764,7 @@ namespace WeifenLuo.WinFormsUI.Docking
             // Change the parent of a control with focus may result in the first
             // MDI child form get activated. 
             //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            if (bRestureFocus)
+            if (bRestoreFocus)
                 Activate();
             //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         }

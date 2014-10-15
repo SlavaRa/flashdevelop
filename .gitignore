@@ -10,6 +10,7 @@ Thumbs.db
 *.fdl
 *.fda
 *.nupkg
+*.resources
 obj/
 FlashDevelop/Properties/AssemblyInfo.cs
 FlashDevelop/Bin/Debug/FlashDevelop.*
@@ -22,3 +23,4 @@ PluginCore/Bin
 /FlashDevelop/Bin/Debug/Settings/FileStates
 /FlashDevelop/Bin/Debug/Settings/Recovery
 /FlashDevelop/Bin/Debug/Exceptions.log
+*.userprefs
