@@ -1578,7 +1578,7 @@ namespace ASCompletion.Completion
         /// <summary>
         /// Locate beginning of function call parameters and return index of current parameter
         /// </summary>
-        private static int FindParameterIndex(ScintillaControl Sci, ref int position)
+        internal static int FindParameterIndex(ScintillaControl Sci, ref int position)
         {
             int parCount = 0;
             int braCount = 0;

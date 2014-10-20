@@ -57,6 +57,13 @@ namespace FlashDevelop.Mock
             FileStateManager.RemoveOldStateFiles();
         }
 
+        /// <summary>
+        /// Stop the currently running process
+        /// </summary>
+        public void KillProcess()
+        {   
+        }
+
         public void RefreshUI()
         {
             throw new NotImplementedException();
@@ -577,5 +584,6 @@ namespace FlashDevelop.Mock
             //ButtonManager.UpdateFlaggedButtons();
             //TabTextManager.UpdateTabTexts();
         }
+
     }
 }

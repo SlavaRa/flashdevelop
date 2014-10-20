@@ -18,6 +18,12 @@ namespace ASCompletion.Test.Context
             pluginMain.Initialize();
         }
 
+        [TestCleanup]
+        public void Cleanup()
+        {
+            SingleInstanceApp.Close();
+        }
+
         [TestMethod]
         public void TestFirstRun()
         {

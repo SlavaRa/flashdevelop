@@ -55,6 +55,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Completion\ASCompletionTest.cs" />
     <Compile Include="Context\ASContextTest.cs" />
     <Compile Include="Model\MemberModelTest.cs" />
     <Compile Include="PathHelper.cs" />
@@ -97,6 +98,7 @@
     <None Include="Resources\as3\AS3ModuleWithPrivateClass.as" />
     <None Include="Resources\as3\AS3TestClassWithCustomNamespaces.as" />
     <None Include="Resources\as3\AS3TestClassWithCustomNamespace.as" />
+    <None Include="Resources\as3\AS3TestFindParameterIndex.as" />
     <None Include="Resources\as3\AS3TestUserObjectClass.as" />
     <None Include="Resources\haxe\HaxeModuleWithPrivateClass.hx" />
     <None Include="Resources\haxe\HaxeTestClass.hx" />
