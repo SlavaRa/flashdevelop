@@ -75,7 +75,7 @@ namespace Aga.Controls
 		private int bgIndex; // background color index
 		private int bgColor; // background color
 		private int lastBgColor; // previous bg color
-		//private int pixelAspect; // pixel aspect ratio
+		private int pixelAspect; // pixel aspect ratio
 
 		private bool lctFlag; // local color table flag
 		private bool interlace; // interlace flag
@@ -806,7 +806,7 @@ namespace Aga.Controls
 			gctSize = 2 << (packed & 7); // 6-8 : gct size
 
 			bgIndex = Read(); // background color index
-			//pixelAspect = Read(); // pixel aspect ratio
+			pixelAspect = Read(); // pixel aspect ratio
 		}
 
 		/**
