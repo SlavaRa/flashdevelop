@@ -16,7 +16,7 @@
     <ApplicationIcon>Resources\FlashDevelopIcon.ico</ApplicationIcon>
     <OldToolsVersion>3.5</OldToolsVersion>
     <ApplicationManifest>Properties\Program.manifest</ApplicationManifest>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <UpgradeBackupLocation>
@@ -77,6 +77,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Aga, Version=1.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Bin\Debug\Aga.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Design" />
@@ -91,9 +95,6 @@
     </Reference>
     <Reference Include="Scripting">
       <HintPath>Bin\Debug\Scripting.dll</HintPath>
-    </Reference>
-    <Reference Include="Aga">
-      <HintPath>Bin\Debug\Aga.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -272,7 +273,8 @@
   <PropertyGroup Condition=" '$(OS)' == 'Unix'">
     <PreBuildEvent>"$(SolutionDir)\SetVersion.sh" "$(SolutionDir)"</PreBuildEvent>
   </PropertyGroup>
+  <ItemGroup />
   <ItemGroup>
-    <Folder Include="Properties\" />
+    <None Include="app.config" />
   </ItemGroup>
 </Project>
