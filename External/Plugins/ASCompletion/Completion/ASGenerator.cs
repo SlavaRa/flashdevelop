@@ -179,7 +179,7 @@ namespace ASCompletion.Completion
                         Match m = Regex.Match(text, String.Format(patternEvent, ""), RegexOptions.IgnoreCase);
                         if (m.Success)
                         {
-                            int regexIndex = m.Index + Sci.PositionFromLine(Sci.LineFromPosition(Sci.CurrentPos));
+                            int regexIndex = m.Index + Sci.PositionFromLine(Sci.CurrentLine);
                             GenerateDefaultHandlerName(Sci, position, regexIndex, m.Groups["event"].Value, true);
                             resolve = ASComplete.GetExpressionType(Sci, Sci.CurrentPos);
                             if (resolve.Member == null || (resolve.Member.Flags & FlagType.AutomaticVar) > 0)
@@ -270,7 +270,7 @@ namespace ASCompletion.Completion
                 }
 
                 // "assign var to statement" suggestion
-                int curLine = Sci.LineFromPosition(Sci.CurrentPos);
+                int curLine = Sci.CurrentLine;
                 string ln = Sci.GetLine(curLine);
                 if (ln.Trim().Length > 0 && ln.TrimEnd().Length <= Sci.CurrentPos - Sci.PositionFromLine(curLine) && ln.IndexOf("=") == -1)
                 {
@@ -306,7 +306,7 @@ namespace ASCompletion.Completion
                 && resolve.Type.QualifiedName == "String"
                 && found.inClass != ClassModel.VoidClass)
             {
-                int lineStartPos = Sci.PositionFromLine(Sci.LineFromPosition(Sci.CurrentPos));
+                int lineStartPos = Sci.PositionFromLine(Sci.CurrentLine);
                 string lineStart = text.Substring(0, Sci.CurrentPos - lineStartPos);
                 Match m = Regex.Match(lineStart, String.Format(@"new\s+(?<event>\w+)\s*\(\s*\w+", lineStart));
                 if (m.Success)
@@ -1266,7 +1266,7 @@ namespace ASCompletion.Completion
 
         private static void AssignStatementToVar(ClassModel inClass, ScintillaNet.ScintillaControl Sci, MemberModel member)
         {
-            int lineNum = Sci.LineFromPosition(Sci.CurrentPos);
+            int lineNum = Sci.CurrentLine;
             string line = Sci.GetLine(lineNum);
             StatementReturnType returnType = GetStatementReturnType(Sci, inClass, line, Sci.PositionFromLine(lineNum));
 
@@ -1656,8 +1656,6 @@ namespace ASCompletion.Completion
         {
             if (!RemoveLocalDeclaration(Sci, contextMember)) return;
 
-            int currLine = Sci.LineFromPosition(Sci.CurrentPos);
-
             int posStart = Sci.PositionFromLine(member.LineFrom);
             int posEnd = Sci.LineEndPosition(member.LineTo);
             Sci.SetSel(posStart, posEnd);
@@ -1682,7 +1680,7 @@ namespace ASCompletion.Completion
             string template = TemplateUtils.ToDeclarationString(memberCopy, TemplateUtils.GetTemplate("MethodDeclaration"));
             InsertCode(start, template);
 
-            int currPos = Sci.LineEndPosition(currLine);
+            int currPos = Sci.LineEndPosition(Sci.CurrentLine);
 
             Sci.SetSel(currPos, currPos);
             Sci.CurrentPos = currPos;
@@ -1953,7 +1951,7 @@ namespace ASCompletion.Completion
             StringBuilder membersString = new StringBuilder();
             StringBuilder oneMembersString;
             int len = 0;
-            int indent = Sci.GetLineIndentation(Sci.LineFromPosition(Sci.CurrentPos));
+            int indent = Sci.GetLineIndentation(Sci.CurrentLine);
             foreach (MemberModel m in members)
             {
                 if (((m.Flags & FlagType.Variable) > 0 || (m.Flags & FlagType.Getter) > 0)
@@ -2013,7 +2011,7 @@ namespace ASCompletion.Completion
             }
 
             ASResult returnType = null;
-            int lineNum = Sci.LineFromPosition(Sci.CurrentPos);
+            int lineNum = Sci.CurrentLine;
             string line = Sci.GetLine(lineNum);
             
             Match m = Regex.Match(line, "\\b" + Regex.Escape(contextToken) + "\\(");
@@ -3529,9 +3527,15 @@ namespace ASCompletion.Completion
             return null;
         }
 
-        static private void GenerateGetter(string name, MemberModel member, int position)
+        private static void GenerateGetter(string name, MemberModel member, int position)
         {
-            string acc = GetPublicAccessor(member);
+            string acc;
+            if (isHaxe)
+            {
+                acc = GetStaticKeyword(member);
+                if (!string.IsNullOrEmpty(acc)) acc += " ";
+            }
+            else acc = GetPublicAccessor(member);
             string template = TemplateUtils.GetTemplate("Getter");
             string decl = NewLine + TemplateUtils.ReplaceTemplateVariable(template, "Modifiers", acc);
             decl = TemplateUtils.ReplaceTemplateVariable(decl, "Name", name);
@@ -3541,9 +3545,14 @@ namespace ASCompletion.Completion
             InsertCode(position, decl);
         }
 
-        static private void GenerateSetter(string name, MemberModel member, int position)
+        private static void GenerateSetter(string name, MemberModel member, int position)
         {
-            string acc = GetPublicAccessor(member);
+            string acc;
+            if (isHaxe)
+            {
+                acc = GetStaticKeyword(member);
+                if (!string.IsNullOrEmpty(acc)) acc += " ";
+            } else acc = GetPublicAccessor(member);
             string template = TemplateUtils.GetTemplate("Setter");
             string decl = NewLine + TemplateUtils.ReplaceTemplateVariable(template, "Modifiers", acc);
             decl = TemplateUtils.ReplaceTemplateVariable(decl, "Name", name);
@@ -3554,7 +3563,7 @@ namespace ASCompletion.Completion
             InsertCode(position, decl);
         }
 
-        static private void GenerateGetterSetter(string name, MemberModel member, int position)
+        private static void GenerateGetterSetter(string name, MemberModel member, int position)
         {
             string template = TemplateUtils.GetTemplate("GetterSetter");
             if (template == "")
@@ -3564,7 +3573,13 @@ namespace ASCompletion.Completion
                 GenerateGetter(name, member, position);
                 return;
             }
-            string acc = GetPublicAccessor(member);
+            string acc;
+            if (isHaxe)
+            {
+                acc = GetStaticKeyword(member);
+                if (!string.IsNullOrEmpty(acc)) acc += " ";
+            }
+            else acc = GetPublicAccessor(member);
             string decl = NewLine + TemplateUtils.ReplaceTemplateVariable(template, "Modifiers", acc);
             decl = TemplateUtils.ReplaceTemplateVariable(decl, "Name", name);
             decl = TemplateUtils.ReplaceTemplateVariable(decl, "Type", FormatType(member.Type));
@@ -3574,27 +3589,30 @@ namespace ASCompletion.Completion
             InsertCode(position, decl);
         }
 
-        static private string GetPrivateAccessor(MemberModel member)
+        private static string GetStaticKeyword(MemberModel member)
         {
-            string acc = GetPrivateKeyword();
-            if ((member.Flags & FlagType.Static) > 0) acc = (ASContext.Context.Features.staticKey ?? "static") + " " + acc;
-            return acc;
+            if ((member.Flags & FlagType.Static) > 0) return ASContext.Context.Features.staticKey ?? "static";
+            return string.Empty;
         }
 
-        static public string GetPrivateKeyword()
+        private static string GetPrivateAccessor(MemberModel member)
         {
-            string acc;
-            if (GetDefaultVisibility() == Visibility.Protected)
-                acc = ASContext.Context.Features.protectedKey ?? "protected";
-            else acc = ASContext.Context.Features.privateKey ?? "private";
-            return acc;
+            string acc = GetStaticKeyword(member);
+            if (!string.IsNullOrEmpty(acc)) acc += " ";
+            return acc + GetPrivateKeyword();
         }
 
-        static private string GetPublicAccessor(MemberModel member)
+        private static string GetPrivateKeyword()
         {
-            string acc = ASContext.Context.Features.publicKey ?? "public";
-            if ((member.Flags & FlagType.Static) > 0) acc = (ASContext.Context.Features.staticKey ?? "static") + " " + acc;
-            return acc;
+            if (GetDefaultVisibility() == Visibility.Protected) return ASContext.Context.Features.protectedKey ?? "protected";
+            return ASContext.Context.Features.privateKey ?? "private";
+        }
+
+        private static string GetPublicAccessor(MemberModel member)
+        {
+            string acc = GetStaticKeyword(member);
+            if (!string.IsNullOrEmpty(acc)) acc += " ";
+            return acc + ASContext.Context.Features.publicKey ?? "public";
         }
 
         private static MemberModel GetLatestMemberForFunction(ClassModel inClass, Visibility funcVisi, MemberModel isStatic)
@@ -3749,15 +3767,11 @@ namespace ASCompletion.Completion
         static private string GetDeclaration(MemberModel member, bool addModifiers)
         {
             // modifiers
-            FlagType ft = member.Flags;
-            string modifiers = "";
-
-            modifiers += TemplateUtils.GetStaticExternOverride(member);
-
-            if (addModifiers)
-                modifiers += TemplateUtils.GetModifiers(member);
+            string modifiers = TemplateUtils.GetStaticExternOverride(member);
+            if (addModifiers) modifiers += TemplateUtils.GetModifiers(member);
             
             // signature
+            FlagType ft = member.Flags;
             if ((ft & FlagType.Getter) > 0)
                 return String.Format("{0}function get {1}", modifiers, member.ToDeclarationString());
             else if ((ft & FlagType.Setter) > 0)
@@ -3780,14 +3794,10 @@ namespace ASCompletion.Completion
         /// <returns>Completion was handled</returns>
         static private bool HandleOverrideCompletion(ScintillaNet.ScintillaControl Sci, bool autoHide)
         {
-            //int line = Sci.LineFromPosition(Sci.CurrentPos);
-
             // explore members
             IASContext ctx = ASContext.Context;
             ClassModel curClass = ctx.CurrentClass;
-            if (curClass.IsVoid())
-                return false;
-            ContextFeatures features = ASContext.Context.Features;
+            if (curClass.IsVoid()) return false;
 
             List<MemberModel> members = new List<MemberModel>();
             curClass.ResolveExtends(); // Resolve inheritance chain
@@ -3858,8 +3868,7 @@ namespace ASCompletion.Completion
             FlagType flags = member.Flags;
             string acc = "";
             string decl = "";
-            if (features.hasNamespaces && member.Namespace != null
-                && member.Namespace.Length > 0 && member.Namespace != "internal")
+            if (features.hasNamespaces && !string.IsNullOrEmpty(member.Namespace) && member.Namespace != "internal")
                 acc = member.Namespace;
             else if ((member.Access & Visibility.Public) > 0) acc = features.publicKey;
             else if ((member.Access & Visibility.Internal) > 0) acc = features.internalKey;

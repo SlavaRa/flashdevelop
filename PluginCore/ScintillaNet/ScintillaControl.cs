@@ -1,16 +1,19 @@
-using PluginCore;
-using PluginCore.FRService;
-using PluginCore.Managers;
-using PluginCore.ScintillaHelper;
-using PluginCore.Utilities;
-using ScintillaNet.Configuration;
 using System;
+using System.Reflection;
 using System.Collections;
-using System.Collections.Generic;
-using System.Drawing.Printing;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows.Forms;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
+using ScintillaNet.Configuration;
+using System.Drawing.Printing;
+using PluginCore.FRService;
+using PluginCore.Utilities;
+using PluginCore.Managers;
+using PluginCore.Controls;
+using System.Drawing;
+using System.Text;
+using PluginCore;
 
 namespace ScintillaNet
 {
@@ -19,40 +22,48 @@ namespace ScintillaNet
         private bool saveBOM;
         private Encoding encoding;
 		private int directPointer;
-		private bool hasHighlights = false;
+		private IntPtr hwndScintilla;
+        private bool hasHighlights = false;
 		private bool ignoreAllKeys = false;
 		private bool isBraceMatching = true;
         private bool isHiliteSelected = true;
         private bool useHighlightGuides = true;
+        private System.Timers.Timer highlightDelay;
 		private static Scintilla sciConfiguration = null;
-        private static Hashtable shortcutOverrides = new Hashtable();
+        private static Dictionary<String, ShortcutOverride> shortcutOverrides = new Dictionary<String, ShortcutOverride>();
         private Enums.IndentView indentView = Enums.IndentView.Real;
 		private Enums.SmartIndent smartIndent = Enums.SmartIndent.CPP;
 		private Hashtable ignoredKeys = new Hashtable();
         private string configLanguage = String.Empty;
         private string fileName = String.Empty;
+        private int lastSelectionLength = 0;
+        private int lastSelectionStart = 0;
+        private int lastSelectionEnd = 0;
 		
 		#region Scintilla Main
 
         public ScintillaControl() : this("SciLexer.dll")
         {
-            ScintillaHelper.View.DragAcceptFiles(Handle, 1);
+            if (Win32.ShouldUseWin32()) DragAcceptFiles(this.Handle, 1);
         }
 
         public ScintillaControl(string fullpath)
         {
             try
             {
-                OSHelper.API.LoadLibrary(fullpath);
-                ScintillaHelper.View.Create(WS_CHILD_VISIBLE_TABSTOP, 0, 0, Width, Height, Handle);
-                directPointer = (int)SlowPerform(2185, 0, 0);
-                UpdateUI += OnBraceMatch;
-                UpdateUI += OnCancelHighlight;
-                DoubleClick += OnBlockSelect;
-                DoubleClick += OnSelectHighlight;
-                CharAdded += OnSmartIndent;
-                Resize += OnResize;
-                directPointer = DirectPointer;
+                if (Win32.ShouldUseWin32())
+                {
+                    IntPtr lib = LoadLibrary(fullpath);
+                    hwndScintilla = CreateWindowEx(0, "Scintilla", "", WS_CHILD_VISIBLE_TABSTOP, 0, 0, this.Width, this.Height, this.Handle, 0, new IntPtr(0), null);
+                    directPointer = (int)SlowPerform(2185, 0, 0);
+                    directPointer = DirectPointer;
+                }
+                UpdateUI += new UpdateUIHandler(OnUpdateUI);
+                UpdateUI += new UpdateUIHandler(OnBraceMatch);
+                UpdateUI += new UpdateUIHandler(OnCancelHighlight);
+                DoubleClick += new DoubleClickHandler(OnBlockSelect);
+                CharAdded += new CharAddedHandler(OnSmartIndent);
+                Resize += new EventHandler(OnResize);
             }
             catch (Exception ex)
             {
@@ -60,9 +71,15 @@ namespace ScintillaNet
             }
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            if (highlightDelay != null) highlightDelay.Stop();
+            base.Dispose(disposing);
+        }
+
         public void OnResize(object sender, EventArgs e)
         {
-            ScintillaHelper.View.Resize(ClientRectangle.X, ClientRectangle.Y, ClientRectangle.Width, ClientRectangle.Height);
+            if (Win32.ShouldUseWin32()) SetWindowPos(this.hwndScintilla, 0, this.ClientRectangle.X, this.ClientRectangle.Y, this.ClientRectangle.Width, this.ClientRectangle.Height, 0);
         }
 
 		#endregion
@@ -109,6 +126,7 @@ namespace ScintillaNet
         public event AutoCCancelledHandler AutoCCancelled;
         public event AutoCCharDeletedHandler AutoCCharDeleted;
         public event UpdateSyncHandler UpdateSync;
+        public event SelectionChangedHandler SelectionChanged;
 		
 		#endregion
 
@@ -119,7 +137,7 @@ namespace ScintillaNet
         /// </summary>
         public IntPtr HandleSci
         {
-            get { return ScintillaHelper.View.Hwnd; }
+            get { return hwndScintilla; }
         }
 
         /// <summary>
@@ -943,6 +961,17 @@ namespace ScintillaNet
             get
             {
                 return (char)CharAt(CurrentPos);
+            }
+        }
+
+        /// <summary>
+        /// Returns the line containing the current position.
+        /// </summary>
+        public int CurrentLine
+        {
+            get
+            {
+                return LineFromPosition(CurrentPos);
             }
         }
 		
@@ -2043,7 +2072,7 @@ namespace ScintillaNet
 			{
 				SPerform(2422, (uint)value, 0);
 			}
-		}	
+		}
 
 		/// <summary>
 		/// Retrieve the lexing language of the document.
@@ -2230,7 +2259,7 @@ namespace ScintillaNet
 		/// </summary>
         public new bool Focus()
         {
-            return ScintillaHelper.View.Focus();
+            return SetFocus(hwndScintilla) != IntPtr.Zero;
         }
 
 		/// <summary>
@@ -2591,7 +2620,7 @@ namespace ScintillaNet
 		public void SetLineIndentation(int line, int indentSize)
 		{
 			SPerform(2126, (uint)line, (uint)indentSize);
-		}	
+		}
 
 		/// <summary>
 		/// Retrieve the position before the first non indentation character on a line.
@@ -2599,7 +2628,7 @@ namespace ScintillaNet
 		public int LineIndentPosition(int line)
 		{
 			return (int)SPerform(2128, (uint)line, 0);
-		}	
+		}
 
 		/// <summary>
 		/// Retrieve the column number of a position, taking tab width into account.
@@ -4934,15 +4963,19 @@ namespace ScintillaNet
         /// </summary>
         public static void InitShortcuts()
         {
-            shortcutOverrides.Add("Scintilla.ResetZoom", Keys.Control | Keys.NumPad0);
-            shortcutOverrides.Add("Scintilla.ZoomOut", Keys.Control | Keys.Subtract);
-            shortcutOverrides.Add("Scintilla.ZoomIn", Keys.Control | Keys.Add);
-            foreach (DictionaryEntry shortcut in shortcutOverrides)
-            {
-                String id = (String)shortcut.Key;
-                Keys keys = (Keys)shortcut.Value;
-                PluginBase.MainForm.RegisterShortcutItem(id, keys);
-            }
+            // reference: http://www.scintilla.org/SciTEDoc.html "Keyboard commands"
+            AddShortcut("ResetZoom", Keys.Control | Keys.NumPad0, sci => sci.ResetZoom());
+            AddShortcut("ZoomOut", Keys.Control | Keys.Subtract, sci => sci.ZoomOut());
+            AddShortcut("ZoomIn", Keys.Control | Keys.Add, sci => sci.ZoomIn());
+        }
+
+        /// <summary>
+        /// Adds a new shortcut override
+        /// </summary>
+        private static void AddShortcut(String displayName, Keys keys, Action<ScintillaControl> action)
+        {
+            shortcutOverrides.Add("Scintilla." + displayName, new ShortcutOverride(keys, action));
+            PluginBase.MainForm.RegisterShortcutItem("Scintilla." + displayName, keys);
         }
 
         /// <summary>
@@ -4950,7 +4983,7 @@ namespace ScintillaNet
         /// </summary>
         public static void UpdateShortcut(String id, Keys shortcut)
         {
-            if (id.StartsWith("Scintilla.")) shortcutOverrides[id] = shortcut;
+            if (id.StartsWith("Scintilla.")) shortcutOverrides[id].keys = shortcut;
         }
 
         /// <summary>
@@ -4960,19 +4993,32 @@ namespace ScintillaNet
         {
             try
             {
-                if (!shortcutOverrides.ContainsValue((Keys)keys)) return false;
-                foreach (DictionaryEntry shortcut in shortcutOverrides)
+                foreach (ShortcutOverride shortcut in shortcutOverrides.Values)
                 {
-                    if ((Keys)keys == (Keys)shortcut.Value)
+                    if ((Keys)keys == shortcut.keys)
                     {
-                        String id = shortcut.Key.ToString().Replace("Scintilla.", "");
-                        this.GetType().GetMethod(id).Invoke(this, null);
+                        shortcut.action(this);
                         return true;
                     }
                 }
                 return false;
             }
             catch (Exception) { return false; }
+        }
+
+        /// <summary>
+        /// Shortcut override object
+        /// </summary>
+        private class ShortcutOverride
+        {
+            public Keys keys;
+            public Action<ScintillaControl> action;
+
+            public ShortcutOverride(Keys keys, Action<ScintillaControl> action)
+            {
+                this.keys = keys;
+                this.action = action;
+            }
         }
 
         #endregion
@@ -4982,22 +5028,44 @@ namespace ScintillaNet
         // Stops all sci events from firing...
         public bool DisableAllSciEvents = false;
 
-        [DllImport("SciLexer.dll", EntryPoint = "Scintilla_DirectFunction")]
+        [DllImport("kernel32.dll")]
+        public extern static IntPtr LoadLibrary(string lpLibFileName);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr CreateWindowEx(uint dwExStyle, string lpClassName, string lpWindowName, uint dwStyle, int x, int y, int width, int height, IntPtr hWndParent, int hMenu, IntPtr hInstance, string lpParam);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr SetFocus(IntPtr hwnd);
+
+		[DllImport("gdi32.dll")] 
+		public static extern int GetDeviceCaps(IntPtr hdc, Int32 capindex);
+		
+		[DllImport("user32.dll")]
+		public static extern int SendMessage(int hWnd, uint Msg, int wParam, int lParam);
+
+		[DllImport("user32.dll")]
+		public static extern int SetWindowPos(IntPtr hWnd, int hWndInsertAfter, int X, int Y, int cx, int cy, int uFlags);
+		
+		[DllImport("shell32.dll")]
+        public static extern int DragQueryFileA(IntPtr hDrop, uint idx, IntPtr buff, int sz);
+                
+        [DllImport("shell32.dll")]
+        public static extern int DragFinish(IntPtr hDrop);
+                
+        [DllImport("shell32.dll")]
+        public static extern void DragAcceptFiles(IntPtr hwnd, int accept);
+        
+		[DllImport("scilexer.dll", EntryPoint = "Scintilla_DirectFunction")]
 		public static extern int Perform(int directPointer, UInt32 message, UInt32 wParam, UInt32 lParam);
 
 		public UInt32 SlowPerform(UInt32 message, UInt32 wParam, UInt32 lParam)
 		{
-            return (UInt32)OSHelper.API.SendMessage(ScintillaHelper.View.Hwnd, (int)message, (int)wParam, (int)lParam);
+			return (UInt32)SendMessage((int)hwndScintilla, message, (int)wParam, (int)lParam);
 		}
-
-		public UInt32 FastPerform(UInt32 message, UInt32 wParam, UInt32 lParam)
-		{
-			return (UInt32)Perform(directPointer, message, wParam, lParam);
-		}
-
 		public UInt32 SPerform(UInt32 message, UInt32 wParam, UInt32 lParam)
 		{
-			return (UInt32)Perform(directPointer, message, wParam, lParam);
+            if (Win32.ShouldUseWin32()) return (UInt32)Perform(directPointer, message, wParam, lParam);
+            else return (UInt32)Encoding.ASCII.CodePage;
 		}
 
         public override bool PreProcessMessage(ref Message m)
@@ -5047,7 +5115,7 @@ namespace ScintillaNet
             else if (m.Msg == WM_NOTIFY)
 			{
 				SCNotification scn = (SCNotification)Marshal.PtrToStructure(m.LParam, typeof(SCNotification));
-                if (scn.nmhdr.hwndFrom == ScintillaHelper.View.Hwnd && !this.DisableAllSciEvents) 
+                if (scn.nmhdr.hwndFrom == hwndScintilla && !this.DisableAllSciEvents) 
 				{
 					switch (scn.nmhdr.code)
 					{
@@ -5218,7 +5286,7 @@ namespace ScintillaNet
 			}
 			else if (m.Msg == WM_DROPFILES)
 			{
-				HandleFileDrop(m.WParam);
+				if (Win32.ShouldUseWin32()) HandleFileDrop(m.WParam);
 			}
 			else
 			{
@@ -5245,30 +5313,75 @@ namespace ScintillaNet
 		#region Automated Features
 
         /// <summary>
+        /// Support for selection highlighting and selection changed event
+        /// </summary>
+        private void OnUpdateUI(ScintillaControl sci)
+        {
+            if (lastSelectionStart != sci.SelectionStart || lastSelectionEnd != sci.SelectionEnd || lastSelectionLength != sci.SelText.Length)
+            {
+                if (SelectionChanged != null) SelectionChanged(sci);
+                switch (PluginBase.MainForm.Settings.HighlightMatchingWordsMode) // Handle selection highlighting
+                {
+                    case Enums.HighlightMatchingWordsMode.SelectionOrPosition:
+                    {
+                        StartHighlightSelectionTimer(sci);
+                        break;
+                    }
+                    case Enums.HighlightMatchingWordsMode.SelectedWord:
+                    {
+                        if (sci.SelText == sci.GetWordFromPosition(sci.CurrentPos))
+                        {
+                            StartHighlightSelectionTimer(sci);
+                        }
+                        break;
+                    }
+                }
+            }
+            lastSelectionStart = sci.SelectionStart;
+            lastSelectionEnd = sci.SelectionEnd;
+            lastSelectionLength = sci.SelText.Length;
+        }
+
+        /// <summary>
+        /// Use timer for aggressive selection highlighting
+        /// </summary>
+        private void StartHighlightSelectionTimer(ScintillaControl sci)
+        {
+            if (highlightDelay == null)
+            {
+                highlightDelay = new System.Timers.Timer(2000);
+                highlightDelay.Elapsed += highlightDelay_Elapsed;
+                highlightDelay.SynchronizingObject = this as Control;
+            }
+            else highlightDelay.Stop();
+            highlightDelay.Start();
+        }
+
+        void highlightDelay_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            highlightDelay.Stop();
+            HighlightWordsMatchingSelected();
+        }
+
+        /// <summary>
         /// Provides basic highlighting of selected text
         /// </summary>
-        private void OnSelectHighlight(ScintillaControl sci)
+        private void HighlightWordsMatchingSelected()
         {
-            sci.RemoveHighlights();
-            if (Control.ModifierKeys == Keys.Control && sci.SelText.Length != 0)
-            {
-                Language language = Configuration.GetLanguage(sci.ConfigurationLanguage);
-                Int32 color = language.editorstyle.HighlightBackColor;
-                String pattern = sci.SelText.Trim();
-                FRSearch search = new FRSearch(pattern);
-                search.WholeWord = true; search.NoCase = false;
-                search.Filter = SearchFilter.None; // Everywhere
-                sci.AddHighlights(search.Matches(sci.Text), color);
-                sci.hasHighlights = true;
-            }
-        }
-        private void OnCancelHighlight(ScintillaControl sci)
-        {
-            if (sci.isHiliteSelected && sci.hasHighlights && sci.SelText.Length == 0)
-            {
-                sci.RemoveHighlights();
-                sci.hasHighlights = false;
-            }
+            if (TextLength == 0 || TextLength > 64 * 1024) return;
+            Language language = Configuration.GetLanguage(ConfigurationLanguage);
+            Int32 color = language.editorstyle.HighlightBackColor;
+            String word = GetWordFromPosition(CurrentPos);
+            if (String.IsNullOrEmpty(word)) return;
+            String pattern = word.Trim();
+            FRSearch search = new FRSearch(pattern);
+            search.WholeWord = true; 
+            search.NoCase = false;
+            search.Filter = SearchFilter.OutsideCodeComments | SearchFilter.OutsideStringLiterals;
+            RemoveHighlights();
+            List<SearchMatch> test = search.Matches(Text);
+            AddHighlights(test, color);
+            hasHighlights = true;
         }
 
         /// <summary>
@@ -5286,6 +5399,19 @@ namespace ScintillaNet
                     int bracePosEnd = BraceMatch(position);
                     if (bracePosEnd != -1) SetSel(bracePosStart, bracePosEnd + 1);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Cancel highlights if not using aggressive highlighting
+        /// </summary>
+        private void OnCancelHighlight(ScintillaControl sci)
+        {
+            if (sci.isHiliteSelected && sci.hasHighlights && sci.SelText.Length == 0 
+                && PluginBase.MainForm.Settings.HighlightMatchingWordsMode != Enums.HighlightMatchingWordsMode.SelectionOrPosition)
+            {
+                sci.RemoveHighlights();
+                sci.hasHighlights = false;
             }
         }
 
@@ -5347,7 +5473,7 @@ namespace ScintillaNet
                         this.BeginUndoAction();
                         try
                         {
-                            int curLine = LineFromPosition(CurrentPos);
+                            int curLine = CurrentLine;
                             int previousIndent = GetLineIndentation(curLine - 1);
                             IndentLine(curLine, previousIndent);
                             int position = LineIndentPosition(curLine);
@@ -5365,7 +5491,7 @@ namespace ScintillaNet
                         this.BeginUndoAction();
                         try
                         {
-                            int curLine = LineFromPosition(CurrentPos);
+                            int curLine = CurrentLine;
                             int tempLine = curLine;
                             int previousIndent;
                             string tempText;
@@ -5392,7 +5518,7 @@ namespace ScintillaNet
                                     previousIndent += TabWidth;
                             }
                             // TODO: Should this test a config variable for indenting after case : statements?
-                            if (Lexer == 3 && tempText.EndsWith(":") && !tempText.EndsWith("::"))
+                            if (Lexer == 3 && tempText.EndsWith(":") && !tempText.EndsWith("::") && !this.PositionIsOnComment(PositionFromLine(tempLine)))
                             {
                                 int prevLine = tempLine;
                                 while (--prevLine > 0)
@@ -5512,8 +5638,8 @@ namespace ScintillaNet
 		private RangeToFormat GetRangeToFormat(IntPtr hdc, int charFrom, int charTo)
 		{
 			RangeToFormat frPrint;
-			int pageWidth = OSHelper.API.GetDeviceCaps(hdc, 110);
-            int pageHeight = OSHelper.API.GetDeviceCaps(hdc, 111);
+			int pageWidth = (int)GetDeviceCaps(hdc, 110);
+			int pageHeight = (int)GetDeviceCaps(hdc, 111);
 			frPrint.hdcTarget = hdc;
 			frPrint.hdc = hdc;
 			frPrint.rcPage.Left = 0;
@@ -6221,19 +6347,19 @@ namespace ScintillaNet
 		/// </summary>
 		unsafe void HandleFileDrop(IntPtr hDrop) 
 		{
-			int nfiles = OSHelper.API.DragQueryFileA(hDrop, 0xffffffff, (IntPtr)null, 0);
+			int nfiles = DragQueryFileA(hDrop, 0xffffffff, (IntPtr)null, 0);
 			string files = "";
 			byte[] buffer = new byte[PATH_LEN];
 			for (uint i = 0; i<nfiles; i++) 
 			{
 				fixed (byte* b = buffer) 
 				{
-                    OSHelper.API.DragQueryFileA(hDrop, i, (IntPtr)b, PATH_LEN);
+					DragQueryFileA(hDrop, i, (IntPtr)b, PATH_LEN);
 					if (files.Length > 0) files += ' ';
 					files += '"'+MarshalStr((IntPtr)b) + '"';
 				}
 			}
-            OSHelper.API.DragFinish(hDrop);
+			DragFinish(hDrop);
 			if (URIDropped != null) URIDropped(this, files);                        
 		}
 		
@@ -6616,7 +6742,7 @@ namespace ScintillaNet
         /// </summary>
         public void CutAllowLineEx()
         {
-            if (this.SelTextSize == 0 && this.GetLine(this.LineFromPosition(this.CurrentPos)).Trim() != "")
+            if (this.SelTextSize == 0 && this.GetLine(this.CurrentLine).Trim() != "")
             {
                 this.LineCut();
             }
@@ -6628,7 +6754,7 @@ namespace ScintillaNet
         /// </summary>
         public void CopyAllowLineEx()
         {
-            if (this.SelTextSize == 0 && this.GetLine(this.LineFromPosition(this.CurrentPos)).Trim() != "")
+            if (this.SelTextSize == 0 && this.GetLine(this.CurrentLine).Trim() != "")
             {
                 this.CopyAllowLine();
             }

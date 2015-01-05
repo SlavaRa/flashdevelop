@@ -40,6 +40,7 @@ namespace FlashDevelop.Settings
         private Int32 printMarginColumn = 0;
         private Int32 backupInterval = 15000;
         private Int32 filePollInterval = 3000;
+        private ScintillaNet.Enums.HighlightMatchingWordsMode highlightMatchingWordsMode = ScintillaNet.Enums.HighlightMatchingWordsMode.SelectionOrPosition;
         private LocaleVersion localeVersion = LocaleVersion.en_US;
         private List<String> previousDocuments = new List<String>();
         private List<String> disabledPlugins = new List<String>();
@@ -82,14 +83,19 @@ namespace FlashDevelop.Settings
         private Boolean viewBookmarks = true;
         private Boolean viewLineNumbers = true;
         private Boolean viewIndentationGuides = true;
+        private Boolean viewShortcuts = true;
         private Boolean viewToolBar = true;
         private Boolean viewStatusBar = true;
         private Boolean viewWhitespace = false;
         private Boolean viewModifiedLines = false;
         private Boolean wrapText = false;
         private FormWindowState windowState = FormWindowState.Maximized;
-        private Point windowPosition = new Point(100, 100);
-        private Size windowSize = new Size(800, 600);
+        private Point windowPosition = new Point(
+            Screen.PrimaryScreen.WorkingArea.Left + 100,
+            Screen.PrimaryScreen.WorkingArea.Top + 70);
+        private Size windowSize = new Size(
+            Screen.PrimaryScreen.WorkingArea.Right - 200,
+            Screen.PrimaryScreen.WorkingArea.Bottom - 140);
         private Int32 uiHoverDelay = 500;
         private Int32 uiDisplayDelay = 100;
         private Boolean uiShowDetails = false;

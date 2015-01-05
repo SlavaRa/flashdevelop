@@ -11,7 +11,7 @@
     <RootNamespace>ProjectManager</RootNamespace>
     <AssemblyName>ProjectManager</AssemblyName>
     <OldToolsVersion>3.5</OldToolsVersion>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <UpgradeBackupLocation>
@@ -53,15 +53,12 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>x86</PlatformTarget>
     <OutputPath>..\..\..\FlashDevelop\Bin\Debug\Plugins\</OutputPath>
-    <WarningLevel>4</WarningLevel>
-    <Optimize>false</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>x86</PlatformTarget>
     <OutputPath>..\..\..\FlashDevelop\Bin\Debug\Plugins\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
@@ -72,17 +69,18 @@
   </Target>
   -->
   <ItemGroup>
+    <Reference Include="SwfOp, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\FlashDevelop\Bin\Debug\SwfOp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Remoting" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="SwfOp">
-      <HintPath>..\..\..\FlashDevelop\Bin\Debug\SwfOp.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Xml" />
+    <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Actions\BuildActions.cs" />
@@ -203,7 +201,6 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Helpers\ProjectCreator.cs" />
-    <Compile Include="Helpers\Scrolling.cs" />
     <Compile Include="PluginMain.cs" />
     <Compile Include="PluginUI.cs">
       <SubType>UserControl</SubType>
@@ -220,23 +217,8 @@
     <EmbeddedResource Include="Icons\ActionscriptFile.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Icons\AddFile.png" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Icons\HtmlFile.png" />
     <EmbeddedResource Include="Icons\XmlFile.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Icons\HiddenItems.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Icons\HiddenFile.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Icons\BlankPage.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Icons\SilkPage.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Icons\MxmlFile.png" />

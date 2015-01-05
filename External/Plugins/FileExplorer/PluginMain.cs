@@ -29,6 +29,9 @@ namespace FileExplorer
         private PluginUI pluginUI;
         private Image pluginImage;
 
+        private const String explorerAction = "explorer.exe /e,{0}";
+	    private const String cmdAction = "cmd.exe";
+
 	    #region Required Properties
         
         /// <summary>
@@ -144,7 +147,7 @@ namespace FileExplorer
                             break;
 
                         case "FileExplorer.FindHere":
-                            FindHere(evnt.Data.ToString());
+                            FindHere((String[])evnt.Data);
                             evnt.Handled = true;
                             break;
 
@@ -188,7 +191,7 @@ namespace FileExplorer
                     return;
                 }
                 Dictionary<string, string> config = ConfigHelper.Parse(configFilename, true).Flatten();
-                if (!config.ContainsKey("explorer")) config["explorer"] = "explorer.exe /e,\"{0}\"";
+                if (!config.ContainsKey("explorer")) config["explorer"] = explorerAction;
                 String explorer = PluginBase.MainForm.ProcessArgString(config["explorer"]);
                 int start = explorer.StartsWith("\"") ? explorer.IndexOf("\"", 2) : 0;
                 int p = explorer.IndexOf(" ", start);
@@ -208,10 +211,17 @@ namespace FileExplorer
         /// <summary>
         /// Opens the selected path in command prompt
         /// </summary>
-        private void FindHere(string path)
+        private void FindHere(string[] paths)
         {
-            if (path != null && Directory.Exists(path))
+            if (paths == null)
+                return;
+
+            List<string> pathsList = new List<string>(paths);
+            pathsList.RemoveAll(p => !Directory.Exists(p));
+
+            if (pathsList.Count > 0)
             {
+                String path = String.Join(";", pathsList.ToArray());
                 PluginBase.MainForm.CallCommand("FindAndReplaceInFilesFrom", path);
             }
         }
@@ -230,7 +240,7 @@ namespace FileExplorer
                     return;
                 }*/
                 Dictionary<string, string> config = ConfigHelper.Parse(configFilename, true).Flatten();
-                if (!config.ContainsKey("cmd")) config["cmd"] = "cmd.exe";
+                if (!config.ContainsKey("cmd")) config["cmd"] = cmdAction;
                 String cmd = PluginBase.MainForm.ProcessArgString(config["cmd"]).Replace("{0}", path);
                 int start = cmd.StartsWith("\"") ? cmd.IndexOf("\"", 2) : 0;
                 int p = cmd.IndexOf(" ", start);
@@ -306,7 +316,7 @@ namespace FileExplorer
             }
             if (!File.Exists(configFilename))
             {
-                File.WriteAllText(configFilename, "[actions]\r\n#explorer=explorer.exe /e,\"{0}\"\r\n#cmd=cmd.exe\r\n");
+                File.WriteAllText(configFilename, "[actions]\r\n#explorer=" + explorerAction + "\r\n#cmd=" + cmdAction + "\r\n");
             }
         }
 

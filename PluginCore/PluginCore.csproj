@@ -7,9 +7,13 @@
     <ProjectGuid>{61885F70-B4DC-4B44-852D-5D6D03F2A734}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ApplicationIcon>
+    </ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
     <AssemblyName>PluginCore</AssemblyName>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
@@ -17,13 +21,15 @@
     <OutputType>Library</OutputType>
     <RootNamespace>PluginCore</RootNamespace>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+    <StartupObject>
+    </StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
     <SignAssembly>false</SignAssembly>
     <OldToolsVersion>3.5</OldToolsVersion>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile />
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
@@ -42,17 +48,24 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>..\FlashDevelop\Bin\Debug\</OutputPath>
+    <OutputPath>Bin\Debug\</OutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
     <DebugSymbols>true</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
+    <NoStdLib>false</NoStdLib>
+    <NoWarn>
+    </NoWarn>
     <Optimize>false</Optimize>
     <RegisterForComInterop>false</RegisterForComInterop>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
     <DebugType>full</DebugType>
   </PropertyGroup>
@@ -60,13 +73,21 @@
     <OutputPath>Bin\Release\</OutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>false</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
+    <NoStdLib>false</NoStdLib>
+    <NoWarn>
+    </NoWarn>
     <Optimize>false</Optimize>
     <RegisterForComInterop>false</RegisterForComInterop>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
     <DebugType>none</DebugType>
   </PropertyGroup>
@@ -74,8 +95,6 @@
     <PlatformTarget>x86</PlatformTarget>
     <OutputPath>..\FlashDevelop\Bin\Debug\</OutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <WarningLevel>4</WarningLevel>
-    <Optimize>false</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -83,7 +102,6 @@
     <DefineConstants>TRACE</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Optimize>true</Optimize>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System">
@@ -271,7 +289,13 @@
     <Compile Include="DockPanelSuite\Strings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>Strings.resX</DependentUpon>
+      <DependentUpon>Strings.resx</DependentUpon>
+    </Compile>
+    <Compile Include="DockPanelSuite\Win32\Enums.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DockPanelSuite\Win32\NativeMethods.cs">
+      <SubType>Code</SubType>
     </Compile>
     <Compile Include="LitJsonLib\IJsonWrapper.cs" />
     <Compile Include="LitJsonLib\JsonData.cs" />
@@ -291,6 +315,16 @@
     <Compile Include="BBCode\IndexTree.cs" />
     <Compile Include="BBCode\IPairTag.cs" />
     <Compile Include="BBCode\PairTag.cs" />
+    <Compile Include="Ookii.Dialogs\Interop\COMGuids.cs" />
+    <Compile Include="Ookii.Dialogs\Interop\ErrorHelper.cs" />
+    <Compile Include="Ookii.Dialogs\Interop\ShellComInterfaces.cs" />
+    <Compile Include="Ookii.Dialogs\Interop\ShellWrapperDefinitions.cs" />
+    <Compile Include="Ookii.Dialogs\Interop\WindowHandleWrapper.cs" />
+    <Compile Include="Ookii.Dialogs\NativeMethods.cs" />
+    <Compile Include="Ookii.Dialogs\SafeHandles.cs" />
+    <Compile Include="Ookii.Dialogs\VistaFolderBrowserDialog.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="PluginCore\Bridge\IBridgeSettings.cs" />
     <Compile Include="PluginCore\Controls\Common.cs">
       <SubType>Component</SubType>
@@ -312,12 +346,6 @@
     <Compile Include="PluginCore\Helpers\SnippetHelper.cs" />
     <Compile Include="PluginCore\Helpers\DrawHelper.cs" />
     <Compile Include="PluginCore\DataClasses.cs" />
-    <Compile Include="DockPanelSuite\Win32\Enums.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="DockPanelSuite\Win32\NativeMethods.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="PluginCore\Localization\Attributes.cs" />
     <Compile Include="PluginCore\Localization\LocaleVersion.cs" />
     <Compile Include="PluginCore\Localization\TextHelper.cs" />
@@ -333,6 +361,7 @@
     <Compile Include="PluginCore\Utilities\ProcessRunner.cs" />
     <Compile Include="PluginCore\Utilities\InteropSHFileOperation.cs" />
     <Compile Include="PluginCore\Utilities\SingleInstanceApp.cs" />
+    <Compile Include="PluginCore\Win32.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PluginCore\Controls\MethodCallTip.cs" />
     <Compile Include="PluginCore\Controls\CompletionList.cs" />
@@ -519,6 +548,11 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <EmbeddedResource Include="DockPanelSuite\Strings.resx">
+      <SubType>Designer</SubType>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="PluginCore\Resources\de_DE.resX">
       <SubType>Designer</SubType>
     </EmbeddedResource>
@@ -535,21 +569,16 @@
     <EmbeddedResource Include="PluginCore\Resources\zh_CN.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="DockPanelSuite\Strings.resX">
-      <SubType>Designer</SubType>
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="DockPanelSuite\Resources\DockIndicator_PaneDiamond.bmp" />
-    <Content Include="DockPanelSuite\Resources\DockIndicator_PaneDiamond_Bottom.bmp" />
-    <Content Include="DockPanelSuite\Resources\DockIndicator_PaneDiamond_Fill.bmp" />
-    <Content Include="DockPanelSuite\Resources\DockIndicator_PaneDiamond_Hotspot.bmp" />
-    <Content Include="DockPanelSuite\Resources\DockIndicator_PaneDiamond_HotspotIndex.bmp" />
-    <Content Include="DockPanelSuite\Resources\DockIndicator_PaneDiamond_Left.bmp" />
-    <Content Include="DockPanelSuite\Resources\DockIndicator_PaneDiamond_Right.bmp" />
-    <Content Include="DockPanelSuite\Resources\DockIndicator_PaneDiamond_Top.bmp" />
+    <Content Include="DockPanelSuite\Resources\DockIndicator_PaneDiamond.png" />
+    <Content Include="DockPanelSuite\Resources\DockIndicator_PaneDiamond_Bottom.png" />
+    <Content Include="DockPanelSuite\Resources\DockIndicator_PaneDiamond_Fill.png" />
+    <Content Include="DockPanelSuite\Resources\DockIndicator_PaneDiamond_Hotspot.png" />
+    <Content Include="DockPanelSuite\Resources\DockIndicator_PaneDiamond_HotspotIndex.png" />
+    <Content Include="DockPanelSuite\Resources\DockIndicator_PaneDiamond_Left.png" />
+    <Content Include="DockPanelSuite\Resources\DockIndicator_PaneDiamond_Right.png" />
+    <Content Include="DockPanelSuite\Resources\DockIndicator_PaneDiamond_Top.png" />
     <Content Include="DockPanelSuite\Resources\DockIndicator_PanelBottom.bmp" />
     <Content Include="DockPanelSuite\Resources\DockIndicator_PanelBottom_Active.bmp" />
     <Content Include="DockPanelSuite\Resources\DockIndicator_PanelFill.bmp" />
@@ -561,11 +590,13 @@
     <Content Include="DockPanelSuite\Resources\DockIndicator_PanelTop.bmp" />
     <Content Include="DockPanelSuite\Resources\DockIndicator_PanelTop_Active.bmp" />
     <Content Include="DockPanelSuite\Resources\DockPanel.bmp" />
-    <Content Include="DockPanelSuite\Resources\DockPane_AutoHide.bmp" />
-    <Content Include="DockPanelSuite\Resources\DockPane_Close.bmp" />
-    <Content Include="DockPanelSuite\Resources\DockPane_Dock.bmp" />
-    <Content Include="DockPanelSuite\Resources\DockPane_Option.bmp" />
-    <Content Include="DockPanelSuite\Resources\DockPane_OptionOverflow.bmp" />
+    <Content Include="DockPanelSuite\Resources\DockPane_AutoHide.png" />
+    <Content Include="DockPanelSuite\Resources\DockPane_Close.png" />
+    <Content Include="DockPanelSuite\Resources\DockPane_Dock.png" />
+    <Content Include="DockPanelSuite\Resources\DockPane_Option.png" />
+    <Content Include="DockPanelSuite\Resources\DockPane_OptionOverflow.png" />
+    <Content Include="Ookii.Dialogs\license.txt" />
+    <Content Include="Ookii.Dialogs\VistaFolderBrowserDialog.bmp" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
@@ -589,6 +620,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>
@@ -596,5 +628,4 @@
     <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>
-  <ItemGroup />
 </Project>

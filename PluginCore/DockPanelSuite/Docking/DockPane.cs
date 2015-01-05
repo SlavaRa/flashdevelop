@@ -126,22 +126,23 @@ namespace WeifenLuo.WinFormsUI.Docking
 			DockPanel.ResumeLayout(true, true);
 		}
 
-		private bool m_isDisposing;
-
+        private bool m_inDisposing;
 		protected override void Dispose(bool disposing)
 		{
+            // IMPORTANT: avoid nested call into this method on Mono. 
+            // https://github.com/dockpanelsuite/dockpanelsuite/issues/16
+            if (!NativeMethods.ShouldUseWin32() && m_inDisposing)
+            {
+                return;
+            }
+
+            if (!NativeMethods.ShouldUseWin32())
+            {
+                m_inDisposing = true;
+            }
+
 			if (disposing)
 			{
-				// IMPORTANT: avoid nested call into this method on Mono. 
-				// https://github.com/dockpanelsuite/dockpanelsuite/issues/16
-				if (Win32Helper.IsRunningOnMono)
-				{
-					if (m_isDisposing)
-						return;
-
-					m_isDisposing = true;
-				}
-
 				m_dockState = DockState.Unknown;
 
 				if (NestedPanesContainer != null)
@@ -908,8 +909,9 @@ namespace WeifenLuo.WinFormsUI.Docking
                 FloatWindow = DockPanel.FloatWindowFactory.CreateFloatWindow(DockPanel, this);
 
             if (contentFocused != null)
-				if (!Win32Helper.IsRunningOnMono)
-                	contentFocused.DockHandler.Activate();
+            {
+                if (NativeMethods.ShouldUseWin32()) contentFocused.DockHandler.Activate();
+            }
 
 			ResumeRefreshStateChange(oldContainer, oldDockState);
 		}

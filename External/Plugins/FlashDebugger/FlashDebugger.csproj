@@ -10,13 +10,16 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>FlashDebugger</RootNamespace>
     <AssemblyName>FlashDebugger</AssemblyName>
+    <StartupObject>
+    </StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
     <TargetFrameworkProfile />
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -29,7 +32,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -54,16 +56,16 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>x86</PlatformTarget>
     <OutputPath>..\..\..\FlashDevelop\Bin\Debug\Plugins\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <WarningLevel>4</WarningLevel>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <Optimize>false</Optimize>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>x86</PlatformTarget>
     <OutputPath>..\..\..\FlashDevelop\Bin\Debug\Plugins\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
@@ -74,11 +76,17 @@
   </Target>
   -->
   <ItemGroup>
-    <Reference Include="Aga, Version=1.7.0.0, Culture=neutral, PublicKeyToken=fcc90fbf924463a3, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Aga, Version=1.7.0.1, Culture=neutral, PublicKeyToken=fcc90fbf924463a3, processorArchitecture=MSIL">
       <HintPath>..\..\..\FlashDevelop\Bin\Debug\Aga.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="jni4net.n-0.8.4.0">
+    <Reference Include="fdb.j4n, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\fdb.j4n.dll</HintPath>
+    </Reference>
+    <Reference Include="jni4net.n-0.8.4.0, Version=0.8.4.0, Culture=neutral, PublicKeyToken=134a23405600bab4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>.\jni4net.n-0.8.4.0.dll</HintPath>
     </Reference>
     <Reference Include="System" />
@@ -86,10 +94,7 @@
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="fdb.j4n">
-      <HintPath>fdb.j4n.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Xml" />
+    <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controls\ThreadsUI.cs">
@@ -153,9 +158,11 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Utilities.cs" />
-    <Compile Include="Win32.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Controls\BreakPointUI.resx">
+      <DependentUpon>BreakPointUI.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resource.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
@@ -163,9 +170,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="jni4net.n.w32.v40-0.8.4.0.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <None Include="Icons\Breakpoints\CurLine.bmp" />
     <None Include="Icons\Breakpoints\Disabled.bmp" />
     <None Include="Icons\Breakpoints\Enabled.bmp" />
@@ -174,13 +178,21 @@
     </Content>
     <Content Include="Icons\Continue.png" />
     <Content Include="Icons\Current.png" />
+    <None Include="Icons\DeleteBreakpoints.png" />
+    <None Include="Icons\DeleteBreakpoint.png" />
+    <None Include="Icons\ExportBreakpoints.png" />
     <Content Include="Icons\Finish.png" />
+    <None Include="Icons\ImportBreakpoints.png" />
     <Content Include="Icons\Next.png" />
     <Content Include="Icons\Pause.png" />
     <Content Include="Icons\Step.png" />
     <Content Include="Icons\RunToCursor.png" />
     <Content Include="Icons\Stop.png" />
+    <None Include="Icons\ToggleBreakpoints.png" />
     <Content Include="jni4net.j-0.8.4.0.jar">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="jni4net.n.w32.v20-0.8.4.0.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
