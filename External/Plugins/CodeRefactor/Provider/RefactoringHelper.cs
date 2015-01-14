@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Linq;
 using PluginCore.FRService;
 using ASCompletion.Completion;
 using ASCompletion.Context;
@@ -89,17 +90,6 @@ namespace CodeRefactor.Provider
                 // open the file
                 if (model != ASContext.Context.CurrentModel)
                 {
-                    // cached files declarations have no line numbers
-                    if (model.CachedModel && model.Context != null)
-                    {
-                        ASFileParser.ParseFile(model);
-                        if (inClass != null && !inClass.IsVoid())
-                        {
-                            inClass = model.GetClassByName(inClass.Name);
-                            if (result.Member != null) result.Member = inClass.Members.Search(result.Member.Name, 0, 0);
-                        }
-                        else result.Member = model.Members.Search(result.Member.Name, 0, 0);
-                    }
                     if (model.FileName.Length > 0 && File.Exists(model.FileName))
                     {
                         ASContext.MainForm.OpenEditableDocument(model.FileName, false);
@@ -369,25 +359,14 @@ namespace CodeRefactor.Provider
             }
             else
             {
-                // NOTE: Could be simplified in .NET 3.5 with LINQ .Concat.Select.Distinct
-                var visited = new Dictionary<string, byte>();
-                foreach (string path in project.SourcePaths)
+                var lookupPaths = project.SourcePaths.
+                    Concat(ProjectManager.PluginMain.Settings.GetGlobalClasspaths(project.Language)).
+                    Select(project.GetAbsolutePath).Distinct();
+                foreach (string path in lookupPaths)
                 {
-                    string absolute = project.GetAbsolutePath(path);
-                    if (visited.ContainsKey(absolute)) continue;
-                    visited[absolute] = 1;
-                    if (Directory.Exists(absolute))
+                    if (Directory.Exists(path))
                         foreach (string filterMask in filters)
-                            files.AddRange(Directory.GetFiles(absolute, filterMask, SearchOption.AllDirectories));
-                }
-                foreach (string path in ProjectManager.PluginMain.Settings.GetGlobalClasspaths(project.Language))
-                {
-                    string absolute = project.GetAbsolutePath(path);
-                    if (visited.ContainsKey(absolute)) continue;
-                    visited[absolute] = 1;
-                    if (Directory.Exists(absolute))
-                        foreach (string filterMask in filters)
-                            files.AddRange(Directory.GetFiles(absolute, filterMask, SearchOption.AllDirectories));
+                            files.AddRange(Directory.GetFiles(path, filterMask, SearchOption.AllDirectories));
                 }
             }
             // If no source paths are defined, get files directly from project path
