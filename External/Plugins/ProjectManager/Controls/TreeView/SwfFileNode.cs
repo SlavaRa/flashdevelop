@@ -1,49 +1,47 @@
 using System;
-using System.IO;
-using System.Drawing;
 using System.Collections;
-using System.Diagnostics;
-using System.Windows.Forms;
-using PluginCore.Localization;
-using PluginCore.Utilities;
-using PluginCore.Helpers;
-using System.ComponentModel;
 using System.Collections.Generic;
-using ProjectManager.Projects;
+using System.ComponentModel;
+using System.Drawing;
+using System.IO;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
+using PluginCore;
+using PluginCore.Helpers;
+using PluginCore.Localization;
 using SwfOp;
 using SwfOp.Utils;
 
 namespace ProjectManager.Controls.TreeView
 {
-	public class WorkingNode : GenericNode
-	{
-		public WorkingNode(string swfPath) : base(Path.Combine(swfPath, "invalid"))
-		{
+    public class WorkingNode : GenericNode
+    {
+        public WorkingNode(string swfPath) : base(Path.Combine(swfPath, "invalid"))
+        {
             Text = TextHelper.GetString("Info.Exploring");
-			ImageIndex = SelectedImageIndex = Icons.Gear.Index;
-			ForeColor = Color.Gray;
-            NodeFont = new Font(PluginCore.PluginBase.Settings.DefaultFont, FontStyle.Regular);
-		}
+            ImageIndex = SelectedImageIndex = Icons.Gear.Index;
+            ForeColor = PluginBase.MainForm.GetThemeColor("ProjectTreeView.SubItemColor", Color.Gray);
+            NodeFont = new Font(PluginBase.Settings.DefaultFont, FontStyle.Regular);
+        }
 
         public void SetErrorText(string msg)
         {
             Text = msg;
-            ForeColor = Color.Red;
+            ForeColor = PluginBase.MainForm.GetThemeColor("ProjectTreeView.ErrorColor", Color.Red);
         }
-	}
+    }
 
-	public class FakeNode : GenericNode
-	{
-		public FakeNode(string filePath) : base(filePath) {}
-	}
+    public class FakeNode : GenericNode
+    {
+        public FakeNode(string filePath) : base(filePath) {}
+    }
 
-	public class ExportNode : FakeNode
-	{
+    public class ExportNode : FakeNode
+    {
         static public Regex reSafeChars = new Regex("[*\\:" + Regex.Escape(new String(Path.GetInvalidPathChars())) + "]");
 
-		public string Export;
-		public string ContainingSwfPath;
+        public string Export;
+        public string ContainingSwfPath;
 
         public ExportNode(string filePath, string export)
             : base(filePath + "::" + (export = reSafeChars.Replace(export, "_")))
@@ -51,7 +49,7 @@ namespace ProjectManager.Controls.TreeView
             ContainingSwfPath = filePath;
             Export = export;
             Text = export;
-            ForeColorRequest = Color.Gray;
+            ForeColorRequest = PluginBase.MainForm.GetThemeColor("ProjectTreeView.SubItemColor", Color.Gray);
             ImageIndex = SelectedImageIndex = Icons.ImageResource.Index;
         }
 
@@ -70,8 +68,8 @@ namespace ProjectManager.Controls.TreeView
         }
     }
 
-	public class ClassExportNode : ExportNode
-	{
+    public class ClassExportNode : ExportNode
+    {
         public ClassExportNode(string filePath, string export)
             : base(filePath, export)
         {
@@ -94,14 +92,14 @@ namespace ProjectManager.Controls.TreeView
             : base("")
         {
             Text = label;
-            ForeColorRequest = Color.Gray;
+            ForeColorRequest = PluginBase.MainForm.GetThemeColor("ProjectTreeView.SubItemColor", Color.Gray);
             ImageIndex = SelectedImageIndex = Icons.Info.Index;
         }
         public HeaderInfoNode(string label, object value)
             : base("")
         {
             Text = label + " : " + value;
-            ForeColorRequest = Color.Gray;
+            ForeColorRequest = PluginBase.MainForm.GetThemeColor("ProjectTreeView.SubItemColor", Color.Gray);
             ImageIndex = SelectedImageIndex = Icons.Info.Index;
         }
     }
@@ -112,20 +110,20 @@ namespace ProjectManager.Controls.TreeView
             : base(filePath + ";__header__")
         {
             Text = "Properties";
-            ForeColorRequest = Color.Gray;
+            ForeColorRequest = PluginBase.MainForm.GetThemeColor("ProjectTreeView.SubItemColor", Color.Gray);
             ImageIndex = SelectedImageIndex = Icons.HiddenFolder.Index;
         }
     }
 
-	public class ClassesNode : FakeNode
-	{
-		public ClassesNode(string filePath)
+    public class ClassesNode : FakeNode
+    {
+        public ClassesNode(string filePath)
             : base(filePath+";__classes__")
-		{
-			Text = "Classes";
-			ForeColorRequest = Color.Gray;
-			ImageIndex = SelectedImageIndex = Icons.HiddenFolder.Index;
-		}
+        {
+            Text = "Classes";
+            ForeColorRequest = PluginBase.MainForm.GetThemeColor("ProjectTreeView.SubItemColor", Color.Gray);
+            ImageIndex = SelectedImageIndex = Icons.HiddenFolder.Index;
+        }
     }
 
     public class SymbolsNode : FakeNode
@@ -134,7 +132,7 @@ namespace ProjectManager.Controls.TreeView
             : base(filePath + ";__symbols__")
         {
             Text = "Symbols";
-            ForeColorRequest = Color.Gray;
+            ForeColorRequest = PluginBase.MainForm.GetThemeColor("ProjectTreeView.SubItemColor", Color.Gray);
             ImageIndex = SelectedImageIndex = Icons.HiddenFolder.Index;
         }
     }
@@ -145,20 +143,20 @@ namespace ProjectManager.Controls.TreeView
             : base(filePath + ";__fonts__")
         {
             Text = "Fonts";
-            ForeColorRequest = Color.Gray;
+            ForeColorRequest = PluginBase.MainForm.GetThemeColor("ProjectTreeView.SubItemColor", Color.Gray);
             ImageIndex = SelectedImageIndex = Icons.HiddenFolder.Index;
         }
     }
 
-	public class SwfFileNode : FileNode
-	{
-		bool explored;
+    public class SwfFileNode : FileNode
+    {
+        bool explored;
         bool explorable;
-		BackgroundWorker runner;
+        BackgroundWorker runner;
         ContentParser parser;
 
-		public SwfFileNode(string filePath) : base(filePath)
-		{
+        public SwfFileNode(string filePath) : base(filePath)
+        {
             string ext = Path.GetExtension(filePath).ToLower();
             explorable = FileInspector.IsSwf(filePath, ext) || ext == ".swc" || ext == ".ane";
             if (explorable)
@@ -166,13 +164,13 @@ namespace ProjectManager.Controls.TreeView
                 isRefreshable = true;
                 Nodes.Add(new WorkingNode(filePath));
             }
-		}
+        }
 
         public bool FileExists { get { return File.Exists(BackingPath); } }
 
-		public override void Refresh(bool recursive)
-		{
-			base.Refresh (recursive);
+        public override void Refresh(bool recursive)
+        {
+            base.Refresh (recursive);
 
             if (explored && !IsExpanded)
             {
@@ -192,28 +190,28 @@ namespace ProjectManager.Controls.TreeView
 
             if (explored) 
                 Explore();
-		}
+        }
 
-		public void RefreshWithFeedback(bool recursive)
-		{
-			if (explored)
-			{
-				Nodes.Clear();
-				Nodes.Add(new WorkingNode(BackingPath));
-				
-				Refresh(recursive);
-			}
-		}
+        public void RefreshWithFeedback(bool recursive)
+        {
+            if (explored)
+            {
+                Nodes.Clear();
+                Nodes.Add(new WorkingNode(BackingPath));
+                
+                Refresh(recursive);
+            }
+        }
 
-		public override void BeforeExpand()
-		{
-			if (!explored)
-				Explore();
-		}
+        public override void BeforeExpand()
+        {
+            if (!explored)
+                Explore();
+        }
 
-		private void Explore()
-		{
-			explored = true;
+        private void Explore()
+        {
+            explored = true;
 
             if (parser != null) 
                 return;
@@ -223,21 +221,21 @@ namespace ProjectManager.Controls.TreeView
             runner.RunWorkerCompleted += new RunWorkerCompletedEventHandler(runner_ProcessEnded);
             runner.DoWork += new DoWorkEventHandler(runner_DoWork);
             runner.RunWorkerAsync(parser);
-		}
+        }
 
         private void runner_DoWork(object sender, DoWorkEventArgs e)
         {
             (e.Argument as ContentParser).Run();
         }
 
-		private void runner_ProcessEnded(object sender, RunWorkerCompletedEventArgs e)
-		{
-			// marshal to GUI thread
-			TreeView.Invoke(new MethodInvoker(AddExports));
-		}
+        private void runner_ProcessEnded(object sender, RunWorkerCompletedEventArgs e)
+        {
+            // marshal to GUI thread
+            TreeView.Invoke(new MethodInvoker(AddExports));
+        }
 
-		private void AddExports()
-		{
+        private void AddExports()
+        {
             // remove WorkingNode
             TreeView.BeginUpdate();
             try
@@ -432,18 +430,18 @@ namespace ProjectManager.Controls.TreeView
             }
 
         }
-	}
+    }
 
-	public class InputSwfNode : SwfFileNode
-	{
-		public InputSwfNode(string filePath) : base(filePath) {}
+    public class InputSwfNode : SwfFileNode
+    {
+        public InputSwfNode(string filePath) : base(filePath) {}
 
-		public override void Refresh(bool recursive)
-		{
-			base.Refresh (recursive);
-            ForeColorRequest = Color.Blue;
-		}
-	}
+        public override void Refresh(bool recursive)
+        {
+            base.Refresh (recursive);
+            ForeColorRequest = PluginBase.MainForm.GetThemeColor("ProjectTreeView.InputColor", SystemColors.Highlight);
+        }
+    }
 
     public class SwfFrameNode : GenericNode
     {

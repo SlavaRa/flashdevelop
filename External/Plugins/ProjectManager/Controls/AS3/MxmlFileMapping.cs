@@ -1,11 +1,8 @@
-using System;
-using System.IO;
 using System.Collections.Generic;
-using System.Text;
-using System.Xml;
-using ProjectManager.Projects;
-using ProjectManager.Controls.TreeView;
+using System.IO;
 using System.Text.RegularExpressions;
+using PluginCore.Helpers;
+using ProjectManager.Controls.TreeView;
 
 namespace ProjectManager.Controls.AS3
 {

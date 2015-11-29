@@ -1,15 +1,14 @@
 using System;
-using System.IO;
-using System.Xml;
-using System.Text;
-using System.Drawing;
-using System.Windows.Forms;
 using System.Collections.Generic;
-using PluginCore.Localization;
-using PluginCore.Managers;
+using System.Drawing;
+using System.IO;
+using System.Windows.Forms;
+using System.Xml;
+using PluginCore;
 using PluginCore.Controls;
 using PluginCore.Helpers;
-using PluginCore;
+using PluginCore.Localization;
+using PluginCore.Managers;
 
 namespace FlashDevelop.Managers
 {
@@ -27,7 +26,10 @@ namespace FlashDevelop.Managers
                 ToolStripItem item = Items[i];
                 if (item.Name == name) return item;
             }
-            return null;
+            ShortcutItem item2 = ShortcutManager.GetRegisteredItem(name);
+            if (item2 != null) return item2.Item;
+            ToolStripItem item3 = ShortcutManager.GetSecondaryItem(name);
+            return item3;
         }
 
         /// <summary>
@@ -41,6 +43,10 @@ namespace FlashDevelop.Managers
                 ToolStripItem item = Items[i];
                 if (item.Name == name) found.Add(item);
             }
+            ShortcutItem item2 = ShortcutManager.GetRegisteredItem(name);
+            if (item2 != null) found.Add(item2.Item);
+            ToolStripItem item3 = ShortcutManager.GetSecondaryItem(name);
+            if (item3 != null) found.Add(item3);
             return found;
         }
 
@@ -50,7 +56,7 @@ namespace FlashDevelop.Managers
         public static ToolStrip GetToolStrip(String file)
         {
             ToolStripEx toolStrip = new ToolStripEx();            
-			toolStrip.ImageScalingSize = ScaleHelper.Scale(new Size(16, 16));
+            toolStrip.ImageScalingSize = ScaleHelper.Scale(new Size(16, 16));
             XmlNode rootNode = XmlHelper.LoadXmlDocument(file);
             foreach (XmlNode subNode in rootNode.ChildNodes)
             {

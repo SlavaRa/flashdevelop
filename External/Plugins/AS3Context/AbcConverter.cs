@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using ASCompletion.Context;
 using ASCompletion.Model;
 using SwfOp;
 using SwfOp.Data;
-
 
 namespace AS3Context
 {
@@ -129,8 +129,17 @@ namespace AS3Context
                     type.Flags = FlagType.Class;
                     conflicts.Add(type.Name, type.QualifiedName);
 
-                    if (instance.flags == TraitMember.Function)
+                    if ((instance.flags & TraitFlag.Interface) > 0)
                         type.Flags |= FlagType.Interface;
+                    else
+                    {
+                        if ((instance.flags & TraitFlag.Final) > 0)
+                            type.Flags |= FlagType.Final;
+
+                        if ((instance.flags & TraitFlag.Sealed) == 0)
+                            type.Flags |= FlagType.Dynamic;
+
+                    }
 
                     thisDocs = GetDocs(model.Package);
                     if (thisDocs != null)
@@ -497,7 +506,7 @@ namespace AS3Context
                 {
                     if (metaInfo.name == "__go_to_definition_help") continue;
                     var meta = new ASMetaData(metaInfo.name);
-                    var rawParams = new System.Text.StringBuilder();
+                    var rawParams = new StringBuilder();
                     meta.Params = new Dictionary<string, string>(metaInfo.Count);
                     foreach (var entry in metaInfo)
                     {
@@ -627,12 +636,14 @@ namespace AS3Context
     {
         public bool IsFinal = false;
         public bool IsDynamic = false;
+        public bool IsStatic = false;
 
         public string ShortDesc = null;
         public string LongDesc = null;
         public string Returns = null;
         public string Value = null;
         public string ApiType = null;
+        public string DeclType = null;
 
         public List<ASMetaData> Meta;
         public Dictionary<string, string> Params = new Dictionary<string, string>();
@@ -670,10 +681,10 @@ namespace AS3Context
 
 
         //---------------------------
-        //	PRIMARY
+        //  PRIMARY
         //---------------------------
 
-        private void ReadDeclaration()
+        private void ReadDeclaration(string declType)
         {
             if (IsEmptyElement)
                 return;
@@ -682,6 +693,8 @@ namespace AS3Context
                 this.ExcludedASDocs = new List<string>();
 
             ASDocItem doc = new ASDocItem();
+            doc.DeclType = declType;
+
             string id = GetAttribute("id");
 
             if (id != null)
@@ -732,7 +745,9 @@ namespace AS3Context
                         if (!this.ExcludedASDocs.Contains(extraASDoc.Key))
                             doc.LongDesc += "\n@" + extraASDoc.Key + "\t" + extraASDoc.Value;
 
-                if (doc.ShortDesc.Length > 0 || doc.LongDesc.Length > 0)
+                // keep definitions including either documentation or static values
+                if (doc.ShortDesc.Length > 0 || doc.LongDesc.Length > 0
+                    || (doc.IsStatic && doc.Value != null && doc.DeclType == "apiValue"))
                     docs[id] = doc;
             }
         }
@@ -758,7 +773,7 @@ namespace AS3Context
                 case "apiValue":
                 case "apiOperation":
                 case "apiConstructor":
-                    ReadDeclaration();
+                    ReadDeclaration(Name);
                     break;
 
                 case "shortdesc": doc.ShortDesc = ReadValue(); break;
@@ -771,6 +786,8 @@ namespace AS3Context
                 case "adobeApiEvent": ReadEventMeta(doc); break;
 
                 case "apiFinal": doc.IsFinal = true; SkipContents(); break;
+                case "apiStatic": 
+                    doc.IsStatic = true; break;
 
                 case "apiParam": ReadParamDesc(doc); break;
                 case "apiReturn": ReadReturnsDesc(doc); break;
@@ -785,7 +802,7 @@ namespace AS3Context
 
 
         //---------------------------
-        //	COMMONS
+        //  COMMONS
         //---------------------------
 
         private void SkipContents()
@@ -854,7 +871,7 @@ namespace AS3Context
 
 
         //---------------------------
-        //	apiClassifierDetail
+        //  apiClassifierDetail
         //---------------------------
 
         private void ReadApiClassifierDetail(ASDocItem doc)
@@ -912,28 +929,28 @@ namespace AS3Context
 
 
         //---------------------------
-        //	prolog
+        //  prolog
         //---------------------------
 
         /// <summary>
         /// ---
         /// Example:
         /// <prolog>
-        ///		<asMetadata>
-        ///			<apiVersion>
-        ///				<apiLanguage version="3.0" />
-        ///				<apiPlatform description="" name="Flash" version="10" />
-        ///				<apiPlatform description="" name="AIR" version="1.5" />
-        ///				<apiTool description="" name="Flex" version="3" />
-        ///			</apiVersion>
-        ///		</asMetadata>
-        ///		<asCustoms>
-        ///			<customAsDoc>
-        ///				<type c="String" />
-        ///			</customAsDoc>
-        ///		</asCustoms>
-        ///	</prolog>
-        ///	---
+        ///     <asMetadata>
+        ///         <apiVersion>
+        ///             <apiLanguage version="3.0" />
+        ///             <apiPlatform description="" name="Flash" version="10" />
+        ///             <apiPlatform description="" name="AIR" version="1.5" />
+        ///             <apiTool description="" name="Flex" version="3" />
+        ///         </apiVersion>
+        ///     </asMetadata>
+        ///     <asCustoms>
+        ///         <customAsDoc>
+        ///             <type c="String" />
+        ///         </customAsDoc>
+        ///     </asCustoms>
+        /// </prolog>
+        /// ---
         /// </summary>
         /// <param name="doc"></param>
         private void ReadProlog(ASDocItem doc)
@@ -1066,7 +1083,7 @@ namespace AS3Context
 
 
         //---------------------------
-        //	apiType
+        //  apiType
         //---------------------------
 
         private void ReadApiType(ASDocItem doc)
@@ -1086,7 +1103,7 @@ namespace AS3Context
 
 
         //---------------------------
-        //	apiOperationDetail
+        //  apiOperationDetail
         //---------------------------
 
         private void ReadParamDesc(ASDocItem doc)
@@ -1162,7 +1179,7 @@ namespace AS3Context
 
 
         //---------------------------
-        //	apiException
+        //  apiException
         //---------------------------
 
         private void ReadApiException(ASDocItem doc)
@@ -1200,7 +1217,7 @@ namespace AS3Context
 
 
         //---------------------------
-        //	Meta tags
+        //  Meta tags
         //---------------------------
 
         private void ReadExcludeMeta(ASDocItem doc)

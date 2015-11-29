@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
-using SourceControl.Sources;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
+using PluginCore;
+using PluginCore.Helpers;
 using ProjectManager.Controls.TreeView;
 using SourceControl.Actions;
+using SourceControl.Sources;
 
 namespace SourceControl.Managers
 {
@@ -171,7 +174,7 @@ namespace SourceControl.Managers
 
         private static Image GetSkin()
         {
-            return ProjectWatcher.Skin; //can be changed by external SC-Plugin
+            return PluginBase.MainForm.ImageSetAdjust(ProjectWatcher.Skin); //can be changed by external SC-Plugin
         }
 
         static public void Reset()
@@ -201,10 +204,12 @@ namespace SourceControl.Managers
 
             Image original = tree.ImageList.Images[node.ImageIndex];
             Bitmap composed = original.Clone() as Bitmap;
+            Int32 curSize = ScaleHelper.GetScale() > 1.5 ? 32 : 16;
             using (Graphics destination = Graphics.FromImage(composed))
             {
-                destination.DrawImage(iconSkin, new Rectangle(0, 0, 16, 16), 
-                    new Rectangle((int)status * 16, 0, 16, 16), GraphicsUnit.Pixel);
+                destination.DrawImage(iconSkin, 
+                    new Rectangle(0, 0, composed.Width, composed.Height), 
+                    new Rectangle((int)status * curSize, 0, curSize, curSize), GraphicsUnit.Pixel);
             }
             int index = tree.ImageList.Images.Count;
             tree.ImageList.Images.Add(composed);

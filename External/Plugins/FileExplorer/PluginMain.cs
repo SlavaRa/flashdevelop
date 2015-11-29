@@ -1,22 +1,22 @@
 using System;
-using System.IO;
-using System.Drawing;
-using System.Diagnostics;
-using System.Windows.Forms;
-using System.ComponentModel;
 using System.Collections.Generic;
-using WeifenLuo.WinFormsUI.Docking;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using System.Windows.Forms;
+using PluginCore;
+using PluginCore.Bridge;
+using PluginCore.Helpers;
 using PluginCore.Localization;
 using PluginCore.Managers;
 using PluginCore.Utilities;
-using PluginCore.Helpers;
-using PluginCore.Bridge;
-using PluginCore;
+using WeifenLuo.WinFormsUI.Docking;
 
 namespace FileExplorer
 {
-	public class PluginMain : IPlugin
-	{
+    public class PluginMain : IPlugin
+    {
         private String pluginName = "FileExplorer";
         private String pluginGuid = "f534a520-bcc7-4fe4-a4b9-6931948b2686";
         private String pluginHelp = "www.flashdevelop.org/community/";
@@ -30,9 +30,9 @@ namespace FileExplorer
         private Image pluginImage;
 
         private const String explorerAction = "explorer.exe /e,{0}";
-	    private const String cmdAction = "cmd.exe";
+        private const String cmdAction = "cmd.exe";
 
-	    #region Required Properties
+        #region Required Properties
         
         /// <summary>
         /// Api level of the plugin
@@ -46,41 +46,41 @@ namespace FileExplorer
         /// Name of the plugin
         /// </summary> 
         public String Name
-		{
-			get { return this.pluginName; }
-		}
+        {
+            get { return this.pluginName; }
+        }
 
         /// <summary>
         /// GUID of the plugin
         /// </summary>
         public String Guid
-		{
-			get { return this.pluginGuid; }
-		}
+        {
+            get { return this.pluginGuid; }
+        }
 
         /// <summary>
         /// Author of the plugin
         /// </summary> 
         public String Author
-		{
-			get { return this.pluginAuth; }
-		}
+        {
+            get { return this.pluginAuth; }
+        }
 
         /// <summary>
         /// Description of the plugin
         /// </summary> 
         public String Description
-		{
-			get { return this.pluginDesc; }
-		}
+        {
+            get { return this.pluginDesc; }
+        }
 
         /// <summary>
         /// Web address for help
         /// </summary> 
         public String Help
-		{
-			get { return this.pluginHelp; }
-		}
+        {
+            get { return this.pluginHelp; }
+        }
 
         /// <summary>
         /// Object that contains the settings
@@ -99,35 +99,35 @@ namespace FileExplorer
         {
             get { return this.settingObject; }
         }
-		
-		#endregion
-		
-		#region Required Methods
-		
-		/// <summary>
-		/// Initializes the plugin
-		/// </summary>
-		public void Initialize()
-		{
+        
+        #endregion
+        
+        #region Required Methods
+        
+        /// <summary>
+        /// Initializes the plugin
+        /// </summary>
+        public void Initialize()
+        {
             this.InitBasics();
             this.LoadSettings();
             this.AddEventHandlers();
             this.CreatePluginPanel();
             this.CreateMenuItem();
         }
-		
-		/// <summary>
-		/// Disposes the plugin
-		/// </summary>
-		public void Dispose()
-		{
+        
+        /// <summary>
+        /// Disposes the plugin
+        /// </summary>
+        public void Dispose()
+        {
             this.SaveSettings();
-		}
-		
-		/// <summary>
-		/// Handles the incoming events
-		/// </summary>
-        public void HandleEvent(Object sender, NotifyEvent e, HandlingPriority prority)
+        }
+        
+        /// <summary>
+        /// Handles the incoming events
+        /// </summary>
+        public void HandleEvent(Object sender, NotifyEvent e, HandlingPriority priority)
         {
             switch (e.Type)
             {
@@ -172,8 +172,8 @@ namespace FileExplorer
                     break;
             }
         }
-		
-		#endregion
+        
+        #endregion
 
         #region Custom Methods
 
@@ -213,12 +213,9 @@ namespace FileExplorer
         /// </summary>
         private void FindHere(string[] paths)
         {
-            if (paths == null)
-                return;
-
-            List<string> pathsList = new List<string>(paths);
+            if (paths == null) return;
+            List<String> pathsList = new List<String>(paths);
             pathsList.RemoveAll(p => !Directory.Exists(p));
-
             if (pathsList.Count > 0)
             {
                 String path = String.Join(";", pathsList.ToArray());
@@ -244,7 +241,6 @@ namespace FileExplorer
                 String cmd = PluginBase.MainForm.ProcessArgString(config["cmd"]).Replace("{0}", path);
                 int start = cmd.StartsWith("\"") ? cmd.IndexOf("\"", 2) : 0;
                 int p = cmd.IndexOf(" ", start);
-                string quoted = !path.StartsWith("\"") ? path = "\"" + path + "\"" : path;
                 if (path.StartsWith("\"") && path.Length > 2) path = path.Substring(1, path.Length - 2);
                 // Start the process...
                 ProcessStartInfo psi = new ProcessStartInfo(p > 0 ? cmd.Substring(0, p) : cmd);
@@ -331,7 +327,7 @@ namespace FileExplorer
         /// <summary>
         /// Opens the plugin panel if closed
         /// </summary>
-        public void OpenPanel(Object sender, System.EventArgs e)
+        public void OpenPanel(Object sender, EventArgs e)
         {
             this.pluginPanel.Show();
         }
@@ -339,5 +335,5 @@ namespace FileExplorer
         #endregion
 
     }
-	
+    
 }

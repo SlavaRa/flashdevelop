@@ -1,10 +1,10 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using System.IO;
-using ASCompletion.Context;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
+using ASCompletion.Context;
 using PluginCore.Helpers;
 
 namespace ASCompletion.Model
@@ -100,7 +100,7 @@ namespace ASCompletion.Model
         static public FileModel Ignore = new FileModel();
 
         [NonSerialized]
-        public System.Windows.Forms.TreeState OutlineState;
+        public TreeState OutlineState;
 
         [NonSerialized]
         public IASContext Context;
@@ -161,7 +161,7 @@ namespace ASCompletion.Model
             Package = "";
             Module = "";
             FileName = fileName ?? "";
-            haXe = (FileName.Length > 3) ? FileHelper.IsHaxeExtension(Path.GetExtension(FileName)) : false;
+            haXe = (FileName.Length > 3) ? FileInspector.IsHaxeFile(FileName, Path.GetExtension(FileName)) : false;
             //
             Namespaces = new Dictionary<string, Visibility>();
             //
@@ -192,12 +192,12 @@ namespace ASCompletion.Model
 
         public void Check()
         {
-            if (this == FileModel.Ignore) return;
+            if (this == Ignore) return;
 
             if (OutOfDate)
             {
                 OutOfDate = false;
-                if (FileName != "" && File.Exists(FileName) && LastWriteTime < System.IO.File.GetLastWriteTime(FileName))
+                if (FileName != "" && File.Exists(FileName) && LastWriteTime < File.GetLastWriteTime(FileName))
                     try
                     {
                         ASFileParser.ParseFile(this);
@@ -270,7 +270,7 @@ namespace ASCompletion.Model
 
         public string GenerateIntrinsic(bool caching)
         {
-            if (this == FileModel.Ignore) return "";
+            if (this == Ignore) return "";
 
             StringBuilder sb = new StringBuilder();
             string nl = (caching) ? "" : "\r\n";
@@ -297,7 +297,7 @@ namespace ASCompletion.Model
             // event/style metadatas
             ASMetaData.GenerateIntrinsic(MetaDatas, sb, nl, tab);
 
-            // members			
+            // members          
             string decl;
             foreach (MemberModel member in Members)
             {

@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.IO;
+using System.Xml;
 
 namespace ProjectManager.Projects.AS3
 {
@@ -53,7 +52,7 @@ namespace ProjectManager.Projects.AS3
         // process AS3-specific stuff
         protected override void ProcessNode(string name)
         {
-            if (NodeType == System.Xml.XmlNodeType.Element)
+            if (NodeType == XmlNodeType.Element)
             switch (name)
             {
                 case "build": ReadBuildOptions(); break;
@@ -173,10 +172,24 @@ namespace ProjectManager.Projects.AS3
                     case "additional": options.Additional = Value.Split('\n'); break;
                     case "compilerConstants": options.CompilerConstants = Value.Split('\n'); break;
                     case "minorVersion": options.MinorVersion = Value; break;
+                    case "namespaces": options.Namespaces = ReadNamespaces(); break;
                 }
                 Read();
             }
             ReadEndElement();
+        }
+
+        private MxmlNamespace[] ReadNamespaces()
+        {
+            var data = Value.Split('\n');
+            int entriesNo = data.Length;
+            if (entriesNo < 2) return null;
+            var namespaces = new MxmlNamespace[entriesNo / 2];
+            int j = 0;
+            for (int i = 0; i < entriesNo; i += 2)
+                namespaces[j++] = new MxmlNamespace {Uri = data[i], Manifest = data[i + 1]};
+
+            return namespaces;
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Diagnostics;
 using System.IO;
 
 namespace PluginCore.Helpers
@@ -38,10 +38,18 @@ namespace PluginCore.Helpers
 
             args = ExpandArguments(args, config, 0);
 
+            // add language if not specified
             if (args.IndexOf("-Duser.language") < 0)
             {
                 args += " -Duser.language=en -Duser.region=US";
             }
+
+            // flex needs old Java 6 sort
+            if (args.IndexOf("-Djava.util.Arrays.useLegacyMergeSort") < 0)
+            {
+                args += " -Djava.util.Arrays.useLegacyMergeSort=true";
+            }
+
             config["java.args"] = args;
             return config;
         }
@@ -99,7 +107,7 @@ namespace PluginCore.Helpers
         // because JvmConfigHelper is used in external tool 'FDBuild'
         private static string ResolvePath(String path, String relativeTo, Boolean checkResolvedPathExisting)
         {
-            if (path == null || path.Length == 0) return null;
+            if (string.IsNullOrEmpty(path)) return null;
             Boolean isPathNetworked = path.StartsWith("\\\\") || path.StartsWith("//");
             Boolean isPathAbsSlashed = (path.StartsWith("\\") || path.StartsWith("/")) && !isPathNetworked;
             if (isPathAbsSlashed) path = Path.GetPathRoot(AppDir) + path.Substring(1);
@@ -119,7 +127,7 @@ namespace PluginCore.Helpers
         {
             get
             {
-                return Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
+                return Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
             }
         }
 

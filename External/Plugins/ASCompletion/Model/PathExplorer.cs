@@ -1,27 +1,24 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using PluginCore;
-using ASCompletion.Context;
 using System.Windows.Forms;
-using System.Diagnostics;
+using ASCompletion.Context;
+using ICSharpCode.SharpZipLib.Zip;
+using PluginCore.Helpers;
 using PluginCore.Localization;
 using PluginCore.Utilities;
-using PluginCore.Helpers;
-using System.Text;
-using ICSharpCode.SharpZipLib.Zip;
 
 namespace ASCompletion.Model
 {
-	/// <summary>
-	/// Deep classpath exploration & parsing
-	/// </summary>
-	public class PathExplorer
-	{
+    /// <summary>
+    /// Deep classpath exploration & parsing
+    /// </summary>
+    public class PathExplorer
+    {
         public delegate void ExplorationProgressHandler(string state, int value, int max);
-		public delegate void ExplorationDoneHandler(string path);
+        public delegate void ExplorationDoneHandler(string path);
 
         static public bool IsWorking
         {
@@ -73,12 +70,12 @@ namespace ASCompletion.Model
         }
 
         public event ExplorationProgressHandler OnExplorationProgress;
-		public event ExplorationDoneHandler OnExplorationDone;
+        public event ExplorationDoneHandler OnExplorationDone;
         public bool UseCache;
 
         private IASContext context;
         private PathModel pathModel;
-		private List<string> foundFiles;
+        private List<string> foundFiles;
         private List<string> explored;
         private string hashName;
         private char hiddenPackagePrefix;
@@ -103,8 +100,8 @@ namespace ASCompletion.Model
             }
         }
 
-		public void Run()
-		{
+        public void Run()
+        {
             lock (waiting)
             {
                 foreach (PathExplorer exp in waiting)
@@ -124,7 +121,7 @@ namespace ASCompletion.Model
                 explorerThread.Priority = ThreadPriority.Lowest;
                 explorerThread.Start();
             }
-		}
+        }
 
         private static void ExploreInBackground()
         {
@@ -165,7 +162,7 @@ namespace ASCompletion.Model
         /// Background search
         /// </summary>
         private void BackgroundRun()
-		{
+        {
             pathModel.Updating = true;
             try
             {
@@ -229,7 +226,7 @@ namespace ASCompletion.Model
                 }
             }
             finally { pathModel.Updating = false; }
-		}
+        }
 
         private void ExtractFilesFromArchive()
         {
@@ -348,10 +345,10 @@ namespace ASCompletion.Model
             return (ctx != null) ? ctx.GetFileModel(filename) : null;
         }
 
-		private void ExploreFolder(string path, string[] masks)
-		{
+        private void ExploreFolder(string path, string[] masks)
+        {
             if (stopExploration || !Directory.Exists(path)) return;
-			explored.Add(path);
+            explored.Add(path);
             Thread.Sleep(5);
 
             // The following try/catch is used to handle "There are no more files" IOException.
@@ -382,7 +379,7 @@ namespace ASCompletion.Model
                 }
             }
             catch { }
-		}
+        }
 
         private bool IgnoreDirectory(string dir)
         {
@@ -391,5 +388,5 @@ namespace ASCompletion.Model
             if (hiddenPackagePrefix != 0 && name[0] == hiddenPackagePrefix) return true;
             return false;
         }
-	}
+    }
 }

@@ -1,12 +1,13 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
-using PluginCore.Utilities;
-using ScintillaNet;
+using System.IO;
+using FlashDebugger.Properties;
 using PluginCore;
-using ScintillaNet.Configuration;
-using PluginCore.Managers;
 using PluginCore.Helpers;
+using PluginCore.Managers;
+using ScintillaNet;
+using ScintillaNet.Configuration;
+using ScintillaNet.Enums;
 
 namespace FlashDebugger
 {
@@ -37,7 +38,7 @@ namespace FlashDebugger
 
         static public void InitMarkers(ScintillaControl sci)
         {
-            sci.ModEventMask |= (Int32)ScintillaNet.Enums.ModificationFlags.ChangeMarker;
+            sci.ModEventMask |= (Int32)ModificationFlags.ChangeMarker;
             sci.MarkerChanged += new MarkerChangedHandler(SciControl_MarkerChanged);
             sci.MarginSensitiveN(0, true);
             int mask = sci.GetMarginMaskN(0);
@@ -46,9 +47,12 @@ namespace FlashDebugger
             mask |= GetMarkerMask(markerBPNotAvailable);
             mask |= GetMarkerMask(markerCurrentLine);
             sci.SetMarginMaskN(0, mask);
-            sci.MarkerDefinePixmap(markerBPEnabled, ScintillaNet.XPM.ConvertToXPM(Properties.Resource.Enabled, "#00FF00"));
-            sci.MarkerDefinePixmap(markerBPDisabled, ScintillaNet.XPM.ConvertToXPM(Properties.Resource.Disabled, "#00FF00"));
-            sci.MarkerDefinePixmap(markerCurrentLine, ScintillaNet.XPM.ConvertToXPM(Properties.Resource.CurLine, "#00FF00"));
+            var enabledImage = ScaleHelper.Scale(Resource.Enabled);
+            var disabledImage = ScaleHelper.Scale(Resource.Disabled);
+            var curlineImage = ScaleHelper.Scale(Resource.CurLine);
+            sci.MarkerDefineRGBAImage(markerBPEnabled, enabledImage);
+            sci.MarkerDefineRGBAImage(markerBPDisabled, disabledImage);
+            sci.MarkerDefineRGBAImage(markerCurrentLine, curlineImage);
             Language lang = PluginBase.MainForm.SciConfig.GetLanguage("as3"); // default
             sci.MarkerSetBack(markerBPEnabled, lang.editorstyle.ErrorLineBack); // enable
             sci.MarkerSetBack(markerBPDisabled, lang.editorstyle.DisabledLineBack); // disable
@@ -148,9 +152,9 @@ namespace FlashDebugger
             ITabbedDocument document = DocumentManager.FindDocument(Path.GetFileName(value));
             if (document != null && document.IsEditable)
             {
-                document.SplitSci1.ModEventMask |= (Int32)ScintillaNet.Enums.ModificationFlags.ChangeMarker;
+                document.SplitSci1.ModEventMask |= (Int32)ModificationFlags.ChangeMarker;
                 document.SplitSci1.MarkerChanged -= new MarkerChangedHandler(SciControl_MarkerChanged);
-                document.SplitSci2.ModEventMask |= (Int32)ScintillaNet.Enums.ModificationFlags.ChangeMarker;
+                document.SplitSci2.ModEventMask |= (Int32)ModificationFlags.ChangeMarker;
                 document.SplitSci2.MarkerChanged -= new MarkerChangedHandler(SciControl_MarkerChanged);
             }
         }
@@ -194,30 +198,29 @@ namespace FlashDebugger
         /// <summary>
         /// 
         /// </summary>
-        static public void AddHighlight(ScintillaControl sci, Int32 line, Int32 indicator, Int32 value)
+        public static void AddHighlight(ScintillaControl sci, Int32 line, Int32 indicator, Int32 value)
         {
+            if (sci == null) return;
             Int32 start = sci.PositionFromLine(line);
             Int32 length = sci.LineLength(line);
-            if (start < 0 || length < 1)
-            {
-                return;
-            }
-            // Remember previous EndStyled marker and restore it when we are done.
+            if (start < 0 || length < 1) return;
             Int32 es = sci.EndStyled;
-            // Mask for style bits used for restore.
             Int32 mask = (1 << sci.StyleBits) - 1;
             Language lang = PluginBase.MainForm.SciConfig.GetLanguage(sci.ConfigurationLanguage);
             if (indicator == indicatorDebugCurrentLine)
             {
                 sci.SetIndicFore(indicator, lang.editorstyle.DebugLineBack);
+                sci.SetIndicSetAlpha(indicator, 40); // Improve contrast
             }
             else if (indicator == indicatorDebugEnabledBreakpoint)
             {
                 sci.SetIndicFore(indicator, lang.editorstyle.ErrorLineBack);
+                sci.SetIndicSetAlpha(indicator, 40); // Improve contrast
             }
             else if (indicator == indicatorDebugDisabledBreakpoint)
             {
                 sci.SetIndicFore(indicator, lang.editorstyle.DisabledLineBack);
+                sci.SetIndicSetAlpha(indicator, 40); // Improve contrast
             }
             sci.SetIndicStyle(indicator, 7);
             sci.CurrentIndicator = indicator;
@@ -229,31 +232,29 @@ namespace FlashDebugger
         /// <summary>
         /// 
         /// </summary>
-        static public void RemoveHighlight(ScintillaControl sci, Int32 line, Int32 indicator)
+        public static void RemoveHighlight(ScintillaControl sci, Int32 line, Int32 indicator)
         {
             if (sci == null) return;
             Int32 start = sci.PositionFromLine(line);
             Int32 length = sci.LineLength(line);
-            if (start < 0 || length < 1)
-            {
-                return;
-            }
-            // Remember previous EndStyled marker and restore it when we are done.
+            if (start < 0 || length < 1) return;
             Int32 es = sci.EndStyled;
-            // Mask for style bits used for restore.
             Int32 mask = (1 << sci.StyleBits) - 1;
             Language lang = PluginBase.MainForm.SciConfig.GetLanguage(sci.ConfigurationLanguage);
             if (indicator == indicatorDebugCurrentLine)
             {
                 sci.SetIndicFore(indicator, lang.editorstyle.DebugLineBack);
+                sci.SetIndicSetAlpha(indicator, 40); // Improve contrast
             }
             else if (indicator == indicatorDebugEnabledBreakpoint)
             {
                 sci.SetIndicFore(indicator, lang.editorstyle.ErrorLineBack);
+                sci.SetIndicSetAlpha(indicator, 40); // Improve contrast
             }
             else if (indicator == indicatorDebugDisabledBreakpoint)
             {
                 sci.SetIndicFore(indicator, lang.editorstyle.DisabledLineBack);
+                sci.SetIndicSetAlpha(indicator, 40); // Improve contrast
             }
             sci.SetIndicStyle(indicator, 7);
             sci.CurrentIndicator = indicator;
@@ -264,14 +265,15 @@ namespace FlashDebugger
         /// <summary>
         /// 
         /// </summary>
-        static public void RemoveAllHighlights(ScintillaControl sci)
+        public static void RemoveAllHighlights(ScintillaControl sci)
         {
             if (sci == null) return;
             Int32 es = sci.EndStyled;
-            foreach (Int32 indicator in new Int32[] { indicatorDebugCurrentLine, indicatorDebugDisabledBreakpoint, indicatorDebugEnabledBreakpoint })
+            Int32[] indics = new Int32[] { indicatorDebugCurrentLine, indicatorDebugDisabledBreakpoint, indicatorDebugEnabledBreakpoint };
+            foreach (Int32 indicator in indics)
             {
                 sci.CurrentIndicator = indicator;
-                for (int position = 0; position < sci.Length; )
+                for (int position = 0; position < sci.Length;)
                 {
                     Int32 start = sci.IndicatorStart(indicator, position);
                     Int32 end = sci.IndicatorEnd(indicator, start);
@@ -334,30 +336,24 @@ namespace FlashDebugger
             ActivateDocument(filefullpath, -1, false);
         }
 
-        static public void ActivateDocument(string filefullpath, int line, Boolean bSelectLine)
+        static public ScintillaControl ActivateDocument(string filefullpath, int line, Boolean bSelectLine)
         {
-            ScintillaControl sci = GetScintillaControl(filefullpath);
-            if (sci == null)
+            var doc = PluginBase.MainForm.OpenEditableDocument(filefullpath, false) as ITabbedDocument;
+            if (doc == null || doc.FileName != filefullpath) return null;
+            ScintillaControl sci = doc.SciControl;
+            if (line >= 0)
             {
-                PluginBase.MainForm.OpenEditableDocument(filefullpath);
-                sci = GetScintillaControl(filefullpath);
-            }
-            Int32 i = GetScintillaControlIndex(sci);
-            if (i != -1)
-            {
-                PluginBase.MainForm.Documents[i].Activate();
-                if (line >= 0)
+                sci.EnsureVisible(line);
+                Int32 start = sci.PositionFromLine(line);
+                if (bSelectLine)
                 {
-                    sci.GotoLine(line);
-                    if (bSelectLine)
-                    {
-                        Int32 start = sci.PositionFromLine(line);
-                        Int32 end = start + sci.LineLength(line);
-                        sci.SelectionStart = start;
-                        sci.SelectionEnd = end;
-                    }
+                    Int32 end = start + sci.LineLength(line);
+                    sci.SetSel(start, end);
                 }
+                else
+                    sci.SetSel(start, start);
             }
+            return sci;
         }
 
         #endregion

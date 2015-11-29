@@ -70,25 +70,11 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Aga, Version=1.7.0.0, Culture=neutral, PublicKeyToken=fcc90fbf924463a3, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Antlr3, Version=3.1.3.42154, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Scripting, Version=2.7.0.0, Culture=neutral, PublicKeyToken=70fcc3d18c749033, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
-    <Reference Include="SwfOp, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -211,7 +197,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\BookmarkIcon.bmp" />
     <EmbeddedResource Include="Resources\FlashDevelopIcon.ico" />
     <EmbeddedResource Include="Resources\QuickFindClose.png" />
     <EmbeddedResource Include="Resources\QuickFindNext.png" />
@@ -235,7 +220,7 @@
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
       <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
+      <ProductName>Microsoft .NET Framework 4 %28x86 und x64%29</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -255,7 +240,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
+    <EmbeddedResource Include="Resources\BookmarkIcon.png" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
@@ -265,10 +250,11 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <PropertyGroup Condition=" '$(OS)' != 'Unix'">
+  <PropertyGroup>
     <PreBuildEvent>"$(SolutionDir)\SetVersion.bat" "$(SolutionDir)"</PreBuildEvent>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(OS)' == 'Unix'">
-    <PreBuildEvent>"$(SolutionDir)\SetVersion.sh" "$(SolutionDir)"</PreBuildEvent>
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
 </Project>

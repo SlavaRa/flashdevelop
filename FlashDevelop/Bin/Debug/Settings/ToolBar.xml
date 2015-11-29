@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <toolbar>
-	<button label="Label.New" click="New" image="275" keyid="NewMenu.BlankDocument" />
+	<button label="Label.New" click="SmartNew" image="275" keyid="NewMenu.BlankDocument" />
 	<button label="Label.Open" click="Open" image="214" keyid="FileMenu.Open" />
 	<button label="Label.Save" click="Save" image="168" keyid="FileMenu.Save" flags="Enable:IsEditable|IsModified" />
 	<button label="Label.SaveAll" click="SaveAll" image="169" keyid="FileMenu.SaveAll" flags="Enable:HasModified" />
-	<button label="Label.Print" click="Print" image="343" keyid="FileMenu.Print" flags="Enable:IsEditable" />
+	<!--<button label="Label.Print" click="Print" image="343" keyid="FileMenu.Print" flags="Enable:IsEditable" />-->
 	<separator />
 	<button label="Label.ToggleBookmark" click="ToggleBookmark" image="402" keyid="SearchMenu.ToggleBookmark" flags="Enable:IsEditable" />
 	<button label="Label.NextBookmark" click="NextBookmark" image="402|9|3|3" keyid="SearchMenu.NextBookmark" flags="Enable:IsEditable|HasBookmarks" />

@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Net;
 using System.Text;
-using System.Data;
 using System.Timers;
 using System.Drawing;
 using System.Diagnostics;
@@ -22,6 +21,7 @@ namespace FlashDevelop.Dialogs
         private System.Windows.Forms.Button downloadButton;
         private System.ComponentModel.BackgroundWorker worker;
         private String URL = "http://www.flashdevelop.org/latest.txt";
+        private static Boolean silentCheck = false;
 
         public UpdateDialog()
         {
@@ -200,6 +200,7 @@ namespace FlashDevelop.Dialogs
                 String info = TextHelper.GetString("Info.UpdateCheckFailed");
                 String formatted = String.Format(info, "\n\n");
                 this.infoLabel.Text = formatted;
+                if (silentCheck) this.Close();
             }
             else if (this.updateInfo.NeedsUpdate)
             {
@@ -207,21 +208,24 @@ namespace FlashDevelop.Dialogs
                 String info = TextHelper.GetString("Info.UpdateAvailable");
                 String formatted = String.Format(info, "\n\n", this.updateInfo.UserVersion, this.updateInfo.ServerVersion);
                 this.infoLabel.Text = formatted;
+                if (silentCheck) this.ShowDialog();
             }
             else if (!this.updateInfo.NeedsUpdate)
             {
                 String info = TextHelper.GetString("Info.NoUpdateAvailable");
                 this.infoLabel.Text = info;
+                if (silentCheck) this.Close();
             }
         }
 
         /// <summary>
         /// Shows the update dialog
         /// </summary>
-        public static new void Show()
+        public static void Show(Boolean silent)
         {
+            silentCheck = silent;
             UpdateDialog updateDialog = new UpdateDialog();
-            updateDialog.ShowDialog();
+            if (!silentCheck) updateDialog.ShowDialog();
         }
 
         #endregion

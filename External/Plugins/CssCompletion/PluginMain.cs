@@ -1,23 +1,23 @@
 using System;
-using System.IO;
-using System.Drawing;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using System.Windows.Forms;
 using System.ComponentModel;
+using System.Drawing;
+using System.IO;
+using System.Timers;
+using System.Windows.Forms;
+using PluginCore;
+using PluginCore.Controls;
 using PluginCore.Helpers;
+using PluginCore.Localization;
 using PluginCore.Managers;
 using PluginCore.Utilities;
-using PluginCore.Controls;
-using PluginCore.Localization;
 using ScintillaNet;
-using PluginCore;
+using Timer = System.Timers.Timer;
 
 namespace CssCompletion
 {
-	public class PluginMain : IPlugin
-	{
+    public class PluginMain : IPlugin
+    {
         private String pluginName = "CssCompletion";
         private String pluginGuid = "c156cdec-5c88-4bcb-b186-a5678516698c";
         private String pluginHelp = "www.flashdevelop.org/community/";
@@ -29,11 +29,11 @@ namespace CssCompletion
         private SimpleIni config;
         private Completion completion;
         private CssFeatures features;
-        private System.Timers.Timer updater;
+        private Timer updater;
         private string updateFile;
         private CssFeatures updateFeatures;
 
-	    #region Required Properties
+        #region Required Properties
 
         /// <summary>
         /// Api level of the plugin
@@ -47,41 +47,41 @@ namespace CssCompletion
         /// Name of the plugin
         /// </summary> 
         public String Name
-		{
-			get { return this.pluginName; }
-		}
+        {
+            get { return this.pluginName; }
+        }
 
         /// <summary>
         /// GUID of the plugin
         /// </summary>
         public String Guid
-		{
-			get { return this.pluginGuid; }
-		}
+        {
+            get { return this.pluginGuid; }
+        }
 
         /// <summary>
         /// Author of the plugin
         /// </summary> 
         public String Author
-		{
-			get { return this.pluginAuth; }
-		}
+        {
+            get { return this.pluginAuth; }
+        }
 
         /// <summary>
         /// Description of the plugin
         /// </summary> 
         public String Description
-		{
-			get { return this.pluginDesc; }
-		}
+        {
+            get { return this.pluginDesc; }
+        }
 
         /// <summary>
         /// Web address for help
         /// </summary> 
         public String Help
-		{
-			get { return this.pluginHelp; }
-		}
+        {
+            get { return this.pluginHelp; }
+        }
 
         /// <summary>
         /// Object that contains the settings
@@ -91,34 +91,34 @@ namespace CssCompletion
         {
             get { return this.settingObject; }
         }
-		
-		#endregion
-		
-		#region Required Methods
-		
-		/// <summary>
-		/// Initializes the plugin
-		/// </summary>
-		public void Initialize()
-		{
+        
+        #endregion
+        
+        #region Required Methods
+        
+        /// <summary>
+        /// Initializes the plugin
+        /// </summary>
+        public void Initialize()
+        {
             this.InitBasics();
             this.LoadSettings();
             this.AddEventHandlers();
         }
-		
-		/// <summary>
-		/// Disposes the plugin
-		/// </summary>
-		public void Dispose()
-		{
+        
+        /// <summary>
+        /// Disposes the plugin
+        /// </summary>
+        public void Dispose()
+        {
             this.SaveSettings();
-		}
-		
-		/// <summary>
-		/// Handles the incoming events
-		/// </summary>
-		public void HandleEvent(Object sender, NotifyEvent e, HandlingPriority prority)
-		{
+        }
+        
+        /// <summary>
+        /// Handles the incoming events
+        /// </summary>
+        public void HandleEvent(Object sender, NotifyEvent e, HandlingPriority priority)
+        {
             ITabbedDocument document = PluginBase.MainForm.CurrentDocument;
             if (document == null || !document.IsEditable) return;
             switch (e.Type)
@@ -171,9 +171,9 @@ namespace CssCompletion
                     break;
                 }
             }
-		}
+        }
 
-		#endregion
+        #endregion
 
         #region Custom Methods
 
@@ -187,21 +187,21 @@ namespace CssCompletion
             this.settingFilename = Path.Combine(dataPath, "Settings.fdb");
             this.pluginDesc = TextHelper.GetString("Info.Description");
 
-            updater = new System.Timers.Timer();
+            updater = new Timer();
             updater.Interval = 100;
             updater.AutoReset = false;
-            updater.SynchronizingObject = PluginCore.PluginBase.MainForm as Form;
+            updater.SynchronizingObject = PluginBase.MainForm as Form;
             updater.Elapsed += updater_Elapsed;
 
-            CompletionItem.TagIcon = (System.Drawing.Bitmap)PluginBase.MainForm.FindImage("417");
-            CompletionItem.PropertyIcon = (System.Drawing.Bitmap)PluginBase.MainForm.FindImage("532");
-            CompletionItem.VariableIcon = (System.Drawing.Bitmap)PluginBase.MainForm.FindImage("5");
-            CompletionItem.ValueIcon = (System.Drawing.Bitmap)PluginBase.MainForm.FindImage("237");
-            CompletionItem.PseudoIcon = (System.Drawing.Bitmap)PluginBase.MainForm.FindImage("509");
-            CompletionItem.PrefixesIcon = (System.Drawing.Bitmap)PluginBase.MainForm.FindImage("480");
+            CompletionItem.TagIcon = (Bitmap)PluginBase.MainForm.FindImage("417");
+            CompletionItem.PropertyIcon = (Bitmap)PluginBase.MainForm.FindImage("532");
+            CompletionItem.VariableIcon = (Bitmap)PluginBase.MainForm.FindImage("5");
+            CompletionItem.ValueIcon = (Bitmap)PluginBase.MainForm.FindImage("237");
+            CompletionItem.PseudoIcon = (Bitmap)PluginBase.MainForm.FindImage("509");
+            CompletionItem.PrefixesIcon = (Bitmap)PluginBase.MainForm.FindImage("480");
         }
 
-        void updater_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        void updater_Elapsed(object sender, ElapsedEventArgs e)
         {
             Optimizer.ProcessFile(updateFile, updateFeatures, settingObject);
         }
@@ -263,7 +263,7 @@ namespace CssCompletion
             return lang == "css";
         }
 
-		#endregion
+        #endregion
 
         #region UI events
 

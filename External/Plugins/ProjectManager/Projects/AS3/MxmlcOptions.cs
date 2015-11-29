@@ -1,10 +1,6 @@
 using System;
-using System.Text;
 using System.ComponentModel;
-using System.Collections.Generic;
 using PluginCore.Localization;
-using System.Windows.Forms.Design;
-using System.Drawing.Design;
 
 namespace ProjectManager.Projects.AS3
 {
@@ -54,6 +50,12 @@ namespace ProjectManager.Projects.AS3
         [LocalizedDescription("ProjectManager.Description.Locale")]
         [DefaultValue("")]
         public string Locale { get { return locale; } set { locale = value; } }
+
+        [LocalizedCategory("ProjectManager.Category.Advanced")]
+        [DisplayName("MXML Namespaces")]
+        [LocalizedDescription("ProjectManager.Description.Namespaces")]
+        [DefaultValue(null)]
+        public MxmlNamespace[] Namespaces { get; set; }
 
         bool optimize = false;
         [LocalizedCategory("ProjectManager.Category.CompilerOptions")]

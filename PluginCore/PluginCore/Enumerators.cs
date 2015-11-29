@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 
 namespace PluginCore
 {
@@ -42,7 +43,15 @@ namespace PluginCore
         Trace = 4294967296, // NotifyEvent
         Keys = 8589934592, // KeyEvent (keys)
         Completion = 17179869184, // NotifyEvent
-        AppChanges = 34359738368 // NotifyEvent
+        AppChanges = 34359738368, // NotifyEvent
+        ApplyTheme = 68719476736 // NotifyEvent
+    }
+
+    public enum UpdateInterval
+    {
+        Never = -1,
+        Monthly = 0,
+        Weekly = 1
     }
 
     public enum SessionType
@@ -94,6 +103,7 @@ namespace PluginCore
         EightBits = 0,
         BigEndian = 1201,
         LittleEndian = 1200,
+        [Browsable(false)]
         UTF32 = 65005,
         UTF8 = 65001,
         UTF7 = 65000

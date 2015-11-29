@@ -26,10 +26,11 @@ namespace PluginCore.Controls
         {
             this.ItemAdded += new ToolStripItemEventHandler(this.OnItemAdded);
             ((Form)PluginBase.MainForm).Deactivate += new EventHandler(this.OnFormDeactivate);
+            ((Form)PluginBase.MainForm).Activated += new EventHandler(this.OnFormDeactivate);
         }
 
         /// <summary>
-        /// When the main form loses input focus, clear all selections and repaint
+        /// When the main form loses or gains input focus, clear all selections and repaint
         /// </summary>
         private void OnFormDeactivate(object sender, EventArgs e)
         {
@@ -77,11 +78,15 @@ namespace PluginCore.Controls
         /// </summary>
         protected override void WndProc(ref Message m)
         {
-            base.WndProc(ref m);
-            if (this.clickThrough && m.Msg == WM_MOUSEACTIVATE && m.Result == (IntPtr)MA_ACTIVATEANDEAT)
+            try
             {
-                m.Result = (IntPtr)MA_ACTIVATE;
+                base.WndProc(ref m);
+                if (this.clickThrough && m.Msg == WM_MOUSEACTIVATE && m.Result == (IntPtr)MA_ACTIVATEANDEAT)
+                {
+                    m.Result = (IntPtr)MA_ACTIVATE;
+                }
             }
+            catch {}
         }
 
     }

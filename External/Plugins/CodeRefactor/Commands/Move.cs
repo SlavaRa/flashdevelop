@@ -7,12 +7,14 @@ using ASCompletion.Completion;
 using ASCompletion.Context;
 using ASCompletion.Model;
 using CodeRefactor.Provider;
+using PluginCore;
 using PluginCore.Controls;
 using PluginCore.FRService;
-using PluginCore.Localization;
-using ScintillaNet;
-using PluginCore;
 using PluginCore.Helpers;
+using PluginCore.Localization;
+using PluginCore.Managers;
+using ProjectManager.Projects;
+using ScintillaNet;
 
 /* Considerations and known problems: 
  *  A. When moving a model that makes use of other models in the old package there will be a problem
@@ -108,7 +110,13 @@ namespace CodeRefactor.Commands
                 msg = TextHelper.GetString("Info.MovingFile");
                 title = TextHelper.GetString("Title.MoveDialog");
             }
-            if (targets.Count > 0 && MessageBox.Show(msg, title, MessageBoxButtons.YesNo) == DialogResult.Yes)
+            var dialogResult = MessageBox.Show(msg, title, MessageBoxButtons.YesNoCancel);
+            if (dialogResult == DialogResult.Cancel)
+            {
+                FireOnRefactorComplete();
+                return;
+            }
+            if (targets.Count > 0 && dialogResult == DialogResult.Yes)
             {
                 // We must keep the original files for validating references
                 CopyTargets();
@@ -358,7 +366,9 @@ namespace CodeRefactor.Commands
                 oldType = oldType.Trim('.');
                 MessageBar.Locked = true;
                 string newFilePath = currentTarget.NewFilePath;
-                ScintillaControl sci = AssociatedDocumentHelper.LoadDocument(currentTarget.TmpFilePath ?? newFilePath);
+                var doc = AssociatedDocumentHelper.LoadDocument(currentTarget.TmpFilePath ?? newFilePath);
+                ScintillaControl sci = doc.SciControl;
+                search.SourceFile = sci.FileName;
                 List<SearchMatch> matches = search.Matches(sci.Text);
                 string packageReplacement = "package";
                 if (currentTarget.NewPackage != "")
@@ -376,16 +386,23 @@ namespace CodeRefactor.Commands
                     if (!Results.ContainsKey(newFilePath)) Results[newFilePath] = new List<SearchMatch>();
                     Results[newFilePath].AddRange(matches);
                 }
+                else if (sci.ConfigurationLanguage == "haxe")
+                {
+                    // haxe modules don't need to specify a package if it's empty
+                    sci.InsertText(0, packageReplacement + ";\n\n");
+                }
                 //Do we want to open modified files?
                 //if (sci.IsModify) AssociatedDocumentHelper.MarkDocumentToKeep(file);
-                PluginBase.MainForm.CurrentDocument.Save();
+                doc.Save();
                 MessageBar.Locked = false;
                 UserInterfaceManager.ProgressDialog.Show();
                 UserInterfaceManager.ProgressDialog.SetTitle(TextHelper.GetString("Info.FindingReferences"));
                 UserInterfaceManager.ProgressDialog.UpdateStatusMessage(TextHelper.GetString("Info.SearchingFiles"));
                 currentTargetResult = RefactoringHelper.GetRefactorTargetFromFile(oldFileModel.FileName, AssociatedDocumentHelper);
                 if (currentTargetResult != null)
-                    RefactoringHelper.FindTargetInFiles(currentTargetResult, UserInterfaceManager.ProgressDialog.UpdateProgress, FindFinished, true, true);
+                {
+                    RefactoringHelper.FindTargetInFiles(currentTargetResult, UserInterfaceManager.ProgressDialog.UpdateProgress, FindFinished, true, true, true);
+                }
                 else
                 {
                     currentTargetIndex++;
@@ -433,7 +450,7 @@ namespace CodeRefactor.Commands
 
                     // Look for document class changes
                     // Do not use RefactoringHelper to avoid possible dialogs that we don't want
-                    ProjectManager.Projects.Project project = (ProjectManager.Projects.Project)PluginBase.CurrentProject;
+                    Project project = (Project)PluginBase.CurrentProject;
                     string newDocumentClass = null;
                     string searchPattern = project.DefaultSearchFilter;
                     foreach (string pattern in searchPattern.Split(';'))
@@ -454,13 +471,13 @@ namespace CodeRefactor.Commands
                     {
                         string tmpPath = oldPath + "$renaming$";
                         FileHelper.ForceMoveDirectory(oldPath, tmpPath);
-                        PluginCore.Managers.DocumentManager.MoveDocuments(oldPath, tmpPath);
+                        DocumentManager.MoveDocuments(oldPath, tmpPath);
                         oldPath = tmpPath;
                     }
 
                     // Move directory contents to final location
                     FileHelper.ForceMoveDirectory(oldPath, newPath);
-                    PluginCore.Managers.DocumentManager.MoveDocuments(oldPath, newPath);
+                    DocumentManager.MoveDocuments(oldPath, newPath);
 
                     if (!string.IsNullOrEmpty(newDocumentClass))
                     {
@@ -500,6 +517,7 @@ namespace CodeRefactor.Commands
                     entry.Key == currentTarget.NewFilePath) continue;
                 string file = entry.Key;
                 UserInterfaceManager.ProgressDialog.UpdateStatusMessage(TextHelper.GetString("Info.Updating") + " \"" + file + "\"");
+                ITabbedDocument doc;
                 ScintillaControl sci;
                 var actualMatches = new List<SearchMatch>();
                 foreach (SearchMatch match in entry.Value)
@@ -507,39 +525,54 @@ namespace CodeRefactor.Commands
                     // we have to open/reopen the entry's file
                     // there are issues with evaluating the declaration targets with non-open, non-current files
                     // we have to do it each time as the process of checking the declaration source can change the currently open file!
-                    sci = AssociatedDocumentHelper.LoadDocument(file);
+                    sci = AssociatedDocumentHelper.LoadDocument(file).SciControl;
                     // if the search result does point to the member source, store it
                     if (RefactoringHelper.DoesMatchPointToTarget(sci, match, currentTargetResult, this.AssociatedDocumentHelper))
                         actualMatches.Add(match);
                 }
                 if (actualMatches.Count == 0) continue;
                 int currLine = -1;
-                sci = AssociatedDocumentHelper.LoadDocument(file);
-                for (int i = actualMatches.Count - 1; i >= 0; i--)
-                {
-                    var sm = actualMatches[i];
-                    if (currLine == -1) currLine = sm.Line - 1;
-                    if (sm.LineText.Contains(oldType))
-                    {
-                        sm.Index -= sci.MBSafeTextLength(oldType) - sci.MBSafeTextLength(targetName);
-                        sm.Value = oldType;
-                        RefactoringHelper.SelectMatch(sci, sm);
-                        sm.Column = sm.Index - sm.LineStart;
-                        sci.ReplaceSel(newType);
-                        sm.LineEnd = sci.SelectionEnd;
-                        sm.LineText = sci.GetLine(sm.Line - 1);
-                        sm.Value = newType;
-                    }
-                    else
-                    {
-                        actualMatches.RemoveAt(i);
-                    }
-                }
+                doc = AssociatedDocumentHelper.LoadDocument(file);
+                sci = doc.SciControl;
                 string directory = Path.GetDirectoryName(file);
                 // Let's check if we need to add the import. Check the considerations at the start of the file
                 // directory != currentTarget.OwnerPath -> renamed owner directory, so both files in the same place
-                if (directory != Path.GetDirectoryName(currentTarget.NewFilePath) && directory != currentTarget.OwnerPath 
-                    && ASContext.Context.CurrentModel.Imports.Search(targetName, FlagType.Class & FlagType.Function & FlagType.Namespace, 0) == null)
+                bool needsImport = directory != Path.GetDirectoryName(currentTarget.NewFilePath) &&
+                                   directory != currentTarget.OwnerPath &&
+                                   ASContext.Context.CurrentModel.Imports.Search(targetName,
+                                                                                 FlagType.Class & FlagType.Function &
+                                                                                 FlagType.Namespace, 0) == null;
+
+                // Replace matches
+                int typeDiff = sci.MBSafeTextLength(oldType) - sci.MBSafeTextLength(targetName);
+                int newTypeDiff = sci.MBSafeTextLength(newType) - sci.MBSafeTextLength(oldType);
+                int accumulatedDiff = 0;
+                int j = 0;
+                for (int i = 0, count = actualMatches.Count; i < count; i++)
+                {
+                    var sm = actualMatches[j];
+                    if (currLine == -1) currLine = sm.Line - 1;
+                    if (sm.LineText.Contains(oldType))
+                    {
+                        sm.Index -= typeDiff - accumulatedDiff;
+                        sm.Value = oldType;
+                        RefactoringHelper.SelectMatch(sci, sm);
+                        sm.Column -= typeDiff;
+                        sci.ReplaceSel(newType);
+                        sm.LineEnd = sci.SelectionEnd;
+                        sm.LineText = sm.LineText.Replace(oldType, newType);
+                        sm.Length = oldType.Length;
+                        sm.Value = newType;
+                        if (needsImport) sm.Line++;
+                        accumulatedDiff += newTypeDiff;
+                        j++;
+                    }
+                    else
+                    {
+                        actualMatches.RemoveAt(j);
+                    }
+                }
+                if (needsImport)
                 {
                     sci.GotoLine(currLine);
                     ASGenerator.InsertImport(new MemberModel(targetName, newType, FlagType.Import, 0), false);
@@ -558,7 +591,7 @@ namespace CodeRefactor.Commands
                 Results[file].AddRange(actualMatches);
                 //Do we want to open modified files?
                 //if (sci.IsModify) AssociatedDocumentHelper.MarkDocumentToKeep(file);
-                PluginBase.MainForm.CurrentDocument.Save();
+                doc.Save();
             }
 
             currentTargetIndex++;

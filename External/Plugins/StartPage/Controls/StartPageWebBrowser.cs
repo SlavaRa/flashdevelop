@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Data;
 using System.Text;
 using System.Drawing;
 using System.Windows.Forms;
@@ -204,6 +203,14 @@ namespace StartPage.Controls
             public void ShowAbout()
             {
                 PluginBase.MainForm.CallCommand("About", null);
+            }
+
+            /// <summary>
+            /// Opens appman to install new software
+            /// </summary>
+            public void InstallSoftware()
+            {
+                PluginBase.MainForm.CallCommand("RunProcess", "$(Quote)$(AppDir)\\Tools\\appman\\AppMan.exe$(Quote);-locale=$(Locale)");
             }
 
             /// <summary>

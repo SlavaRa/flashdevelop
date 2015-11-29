@@ -12,19 +12,19 @@ using PluginCore.Helpers;
 
 namespace ProjectManager.Controls
 {
-	public class FDMenus
-	{
+    public class FDMenus
+    {
         public ToolStripMenuItem View;
         public ToolStripMenuItem GlobalClasspaths;
         public ToolStripButton TestMovie;
         public ToolStripButton BuildProject;
-        public ToolStripComboBox ConfigurationSelector;
-        public ToolStripComboBox TargetBuildSelector;
+        public ToolStripComboBoxEx ConfigurationSelector;
+        public ToolStripComboBoxEx TargetBuildSelector;
         public RecentProjectsMenu RecentProjects;
-		public ProjectMenu ProjectMenu;
+        public ProjectMenu ProjectMenu;
 
-		public FDMenus(IMainForm mainForm)
-		{
+        public FDMenus(IMainForm mainForm)
+        {
             // modify the file menu
             ToolStripMenuItem fileMenu = (ToolStripMenuItem)mainForm.FindMenuItem("FileMenu");
             RecentProjects = new RecentProjectsMenu();
@@ -33,25 +33,25 @@ namespace ProjectManager.Controls
             // modify the view menu
             ToolStripMenuItem viewMenu = (ToolStripMenuItem)mainForm.FindMenuItem("ViewMenu");
             View = new ToolStripMenuItem(TextHelper.GetString("Label.MainMenuItem"));
-			View.Image = Icons.Project.Img;
-			viewMenu.DropDownItems.Add(View);
+            View.Image = Icons.Project.Img;
+            viewMenu.DropDownItems.Add(View);
             PluginBase.MainForm.RegisterShortcutItem("ViewMenu.ShowProject", View);
 
-			// modify the tools menu - add a nice GUI classpath editor
+            // modify the tools menu - add a nice GUI classpath editor
             ToolStripMenuItem toolsMenu = (ToolStripMenuItem)mainForm.FindMenuItem("ToolsMenu");
             GlobalClasspaths = new ToolStripMenuItem(TextHelper.GetString("Label.GlobalClasspaths"));
-			GlobalClasspaths.ShortcutKeys = Keys.F9 | Keys.Control;
+            GlobalClasspaths.ShortcutKeys = Keys.F9 | Keys.Control;
             GlobalClasspaths.Image = Icons.Classpath.Img;
             toolsMenu.DropDownItems.Insert(toolsMenu.DropDownItems.Count - 4, GlobalClasspaths);
             PluginBase.MainForm.RegisterShortcutItem("ToolsMenu.GlobalClasspaths", GlobalClasspaths);
 
-			ProjectMenu = new ProjectMenu();
+            ProjectMenu = new ProjectMenu();
 
             MenuStrip mainMenu = mainForm.MenuStrip;
             mainMenu.Items.Insert(5, ProjectMenu);
 
             ToolStrip toolBar = mainForm.ToolStrip;
-			toolBar.Items.Add(new ToolStripSeparator());
+            toolBar.Items.Add(new ToolStripSeparator());
 
             toolBar.Items.Add(RecentProjects.ToolbarSelector);
 
@@ -67,7 +67,7 @@ namespace ProjectManager.Controls
             PluginBase.MainForm.RegisterSecondaryItem("ProjectMenu.TestMovie", TestMovie);
             toolBar.Items.Add(TestMovie);
 
-            ConfigurationSelector = new ToolStripComboBox();
+            ConfigurationSelector = new ToolStripComboBoxEx();
             ConfigurationSelector.Name = "ConfigurationSelector";
             ConfigurationSelector.ToolTipText = TextHelper.GetString("ToolTip.SelectConfiguration");
             ConfigurationSelector.Items.AddRange(new string[] { TextHelper.GetString("Info.Debug"), TextHelper.GetString("Info.Release") });
@@ -81,8 +81,8 @@ namespace ProjectManager.Controls
             toolBar.Items.Add(ConfigurationSelector);
             PluginBase.MainForm.RegisterShortcutItem("ProjectMenu.ConfigurationSelectorToggle", Keys.Control | Keys.F5);
             PluginBase.MainForm.RegisterSecondaryItem("ProjectMenu.ConfigurationSelectorToggle", ConfigurationSelector);
-            
-            TargetBuildSelector = new ToolStripComboBox();
+
+            TargetBuildSelector = new ToolStripComboBoxEx();
             TargetBuildSelector.Name = "TargetBuildSelector";
             TargetBuildSelector.ToolTipText = TextHelper.GetString("ToolTip.TargetBuild");
             TargetBuildSelector.AutoSize = false;
@@ -98,7 +98,9 @@ namespace ProjectManager.Controls
 
         public void EnableTargetBuildSelector(bool enabled)
         {
+            var target = TargetBuildSelector.Text; // prevent occasional loss of value when the control is disabled
             TargetBuildSelector.Enabled = enabled;
+            TargetBuildSelector.Text = target;
         }
 
         public bool DisabledForBuild
@@ -106,7 +108,7 @@ namespace ProjectManager.Controls
             get { return !TestMovie.Enabled; }
             set
             {
-                BuildProject.Enabled = TestMovie.Enabled = ProjectMenu.AllItemsEnabled = ConfigurationSelector.Enabled = !value;
+                BuildProject.Enabled = TestMovie.Enabled = ProjectMenu.ProjectItemsEnabledForBuild = ConfigurationSelector.Enabled = !value;
                 EnableTargetBuildSelector(!value);
             }
         }
@@ -121,29 +123,42 @@ namespace ProjectManager.Controls
             ProjectChanged(project);
         }
 
+        public void CloseProject()
+        {
+            TargetBuildSelector.Text = "";
+            EnableTargetBuildSelector(false);
+        }
+
         public void ProjectChanged(Project project)
         {
             TargetBuildSelector.Items.Clear();
-            if (project.MovieOptions.TargetBuildTypes != null)
+            if (project.MovieOptions.DefaultBuildTargets != null && project.MovieOptions.DefaultBuildTargets.Length > 0)
+            {
+                TargetBuildSelector.Items.AddRange(project.MovieOptions.DefaultBuildTargets);
+                TargetBuildSelector.Text = project.MovieOptions.DefaultBuildTargets[0];
+            }
+            else if (project.MovieOptions.TargetBuildTypes != null && project.MovieOptions.TargetBuildTypes.Length > 0)
             {
                 TargetBuildSelector.Items.AddRange(project.MovieOptions.TargetBuildTypes);
                 string target = project.TargetBuild ?? project.MovieOptions.TargetBuildTypes[0];
-                if (target != "" && !TargetBuildSelector.Items.Contains(target)) TargetBuildSelector.Items.Insert(0, target);
+                AddTargetBuild(target);
                 TargetBuildSelector.Text = target;
-                EnableTargetBuildSelector(true);
-            }
-            else if (project.OutputType == OutputType.CustomBuild)
-            {
-                string target = project.TargetBuild ?? "";
-                if (target != "") TargetBuildSelector.Items.Insert(0, target);
-                TargetBuildSelector.Text = target;
-                EnableTargetBuildSelector(true);
             }
             else
             {
-                TargetBuildSelector.Text = "";
-                EnableTargetBuildSelector(false);
+                string target = project.TargetBuild ?? "";
+                AddTargetBuild(target);
+                TargetBuildSelector.Text = target;
             }
+            EnableTargetBuildSelector(true);
+        }
+
+        internal void AddTargetBuild(string target)
+        {
+            if (target == null) return;
+            target = target.Trim();
+            if (target.Length > 0 && !TargetBuildSelector.Items.Contains(target)) 
+                TargetBuildSelector.Items.Insert(0, target);
         }
 
         
@@ -153,12 +168,12 @@ namespace ProjectManager.Controls
         }
     }
 
-	/// <summary>
-	/// The "Project" menu for FD's main menu
-	/// </summary>
-	public class ProjectMenu : ToolStripMenuItem
-	{
-		public ToolStripMenuItem NewProject;
+    /// <summary>
+    /// The "Project" menu for FD's main menu
+    /// </summary>
+    public class ProjectMenu : ToolStripMenuItem
+    {
+        public ToolStripMenuItem NewProject;
         public ToolStripMenuItem OpenProject;
         public ToolStripMenuItem ImportProject;
         public ToolStripMenuItem CloseProject;
@@ -171,12 +186,12 @@ namespace ProjectManager.Controls
 
         private List<ToolStripItem> AllItems;
 
-		public ProjectMenu()
-		{
+        public ProjectMenu()
+        {
             AllItems = new List<ToolStripItem>();
 
             NewProject = new ToolStripMenuItem(TextHelper.GetString("Label.NewProject"));
-			NewProject.Image = Icons.NewProject.Img;
+            NewProject.Image = Icons.NewProject.Img;
             PluginBase.MainForm.RegisterShortcutItem("ProjectMenu.NewProject", NewProject);
             //AllItems.Add(NewProject);
 
@@ -199,7 +214,7 @@ namespace ProjectManager.Controls
             AllItems.Add(OpenResource);
 
             TestMovie = new ToolStripMenuItem(TextHelper.GetString("Label.TestMovie"));
-			TestMovie.Image = Icons.GreenCheck.Img;
+            TestMovie.Image = Icons.GreenCheck.Img;
             TestMovie.ShortcutKeys = Keys.F5;
             PluginBase.MainForm.RegisterShortcutItem("ProjectMenu.TestMovie", TestMovie);
             AllItems.Add(TestMovie);
@@ -209,7 +224,7 @@ namespace ProjectManager.Controls
             AllItems.Add(RunProject);
 
             BuildProject = new ToolStripMenuItem(TextHelper.GetString("Label.BuildProject"));
-			BuildProject.Image = Icons.Gear.Img;
+            BuildProject.Image = Icons.Gear.Img;
             BuildProject.ShortcutKeys = Keys.F8;
             PluginBase.MainForm.RegisterShortcutItem("ProjectMenu.BuildProject", BuildProject);
             AllItems.Add(BuildProject);
@@ -220,7 +235,7 @@ namespace ProjectManager.Controls
             AllItems.Add(CleanProject);
 
             Properties = new ToolStripMenuItem(TextHelper.GetString("Label.Properties"));
-			Properties.Image = Icons.Options.Img;
+            Properties.Image = Icons.Options.Img;
             PluginBase.MainForm.RegisterShortcutItem("ProjectMenu.Properties", Properties);
             AllItems.Add(Properties);
 
@@ -238,20 +253,33 @@ namespace ProjectManager.Controls
             base.DropDownItems.Add(CleanProject);
             base.DropDownItems.Add(new ToolStripSeparator());
             base.DropDownItems.Add(Properties);
-		}
+        }
 
-		public bool ProjectItemsEnabled
-		{
-			set
-			{
-				CloseProject.Enabled = value;
-				TestMovie.Enabled = value;
+        public bool ProjectItemsEnabled
+        {
+            set
+            {
+                RunProject.Enabled = value;
+                CloseProject.Enabled = value;
+                TestMovie.Enabled = value;
                 BuildProject.Enabled = value;
                 CleanProject.Enabled = value;
-				Properties.Enabled = value;
+                Properties.Enabled = value;
                 OpenResource.Enabled = value;
-			}
-		}
+            }
+        }
+
+        public bool ProjectItemsEnabledForBuild
+        {
+            set
+            {
+                RunProject.Enabled = value;
+                CloseProject.Enabled = value;
+                TestMovie.Enabled = value;
+                BuildProject.Enabled = value;
+                CleanProject.Enabled = value;
+            }
+        }
 
         public bool AllItemsEnabled
         {
@@ -264,6 +292,6 @@ namespace ProjectManager.Controls
                 }
             }
         }
-	}
+    }
 
 }

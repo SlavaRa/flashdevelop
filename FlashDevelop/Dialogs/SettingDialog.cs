@@ -1,5 +1,4 @@
 using System;
-using System.Data;
 using System.Text;
 using System.Drawing;
 using System.Reflection;
@@ -324,7 +323,7 @@ namespace FlashDevelop.Dialogs
         {
             this.itemListView.Items.Clear();
             Int32 count = PluginServices.AvailablePlugins.Count;
-            ListViewItem main = new ListViewItem("FlashDevelop", 2);
+            ListViewItem main = new ListViewItem(DistroConfig.DISTRIBUTION_NAME, 2);
             this.itemListView.Items.Add(main);
             this.mainGroup.Items.Add(main);
             for (Int32 i = 0; i < count; i++)
@@ -390,8 +389,8 @@ namespace FlashDevelop.Dialogs
                     this.itemPropertyGrid.Enabled = true;
                     this.itemPropertyGrid.SelectedObject = Globals.Settings;
                     this.descLabel.Text = TextHelper.GetString("Info.AppDescription");
-                    this.helpUrl = "http://www.flashdevelop.org/wikidocs/";
-                    this.nameLabel.Text = "FlashDevelop";
+                    this.helpUrl = DistroConfig.DISTRIBUTION_HELP;
+                    this.nameLabel.Text = DistroConfig.DISTRIBUTION_NAME;
                     this.nameLabel.Enabled = true;
                     this.ShowInfoControls(false);
                     this.FilterPropertySheet();
@@ -429,7 +428,6 @@ namespace FlashDevelop.Dialogs
         private void FilterPropertySheet()
         {
             if (Win32.IsRunningOnMono()) return;
-            LocalizedDescriptionAttribute lda = null;
             Object settingsObj = this.itemPropertyGrid.SelectedObject;
             String text = this.filterText.Text;
             if (settingsObj != null)
@@ -439,9 +437,7 @@ namespace FlashDevelop.Dialogs
                 PropertyInfo[] props = settingsObj.GetType().GetProperties();
                 foreach (PropertyInfo prop in props)
                 {
-                    var atts = prop.GetCustomAttributes(typeof(LocalizedDescriptionAttribute), true);
-                    if (atts.Length > 0) lda = atts[0] as LocalizedDescriptionAttribute;
-                    if (prop.Name.ToLower().ToLower().Contains(text.ToLower()) || lda != null && lda.Description.ToLower().Contains(text.ToLower()))
+                    if (PropertyMatches(prop, text))
                     {
                         Array.Resize(ref browsables, i + 1);
                         browsables.SetValue(prop.Name, i);
@@ -466,10 +462,21 @@ namespace FlashDevelop.Dialogs
                 PropertyInfo[] props = settingsObj.GetType().GetProperties();
                 foreach (PropertyInfo prop in props)
                 {
-                    if (prop.Name.ToLower().Contains(text.ToLower())) ok = true;
+                    if (PropertyMatches(prop, text)) ok = true;
                 }
             }
             return ok;
+        }
+
+        /// <summary>
+        /// Checks if the property matches in any property infos
+        /// </summary>
+        private Boolean PropertyMatches(PropertyInfo prop, String text)
+        {
+            LocalizedDescriptionAttribute lda = null;
+            var atts = prop.GetCustomAttributes(typeof(LocalizedDescriptionAttribute), true);
+            if (atts.Length > 0) lda = atts[0] as LocalizedDescriptionAttribute;
+            return prop.Name.ToLower().Contains(text.ToLower()) || lda != null && lda.Description.ToLower().Contains(text.ToLower());
         }
 
         /// <summary>
@@ -544,7 +551,7 @@ namespace FlashDevelop.Dialogs
         /// </summary>
         private void DialogShown(Object sender, EventArgs e)
         {
-            if (String.IsNullOrEmpty(this.itemFilter) || this.itemFilter == "FlashDevelop")
+            if (String.IsNullOrEmpty(this.itemFilter) || this.itemFilter == DistroConfig.DISTRIBUTION_NAME)
             {
                 this.itemListView.SelectedIndices.Add(lastItemIndex);
                 this.itemListView.EnsureVisible(lastItemIndex);

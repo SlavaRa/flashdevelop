@@ -1,24 +1,26 @@
 using System;
-using System.IO;
-using System.Drawing;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using System.Windows.Forms;
 using System.ComponentModel;
+using System.Drawing;
+using System.IO;
+using System.Text.RegularExpressions;
+using System.Timers;
+using System.Windows.Forms;
+using PluginCore;
+using PluginCore.Controls;
 using PluginCore.Helpers;
+using PluginCore.Localization;
 using PluginCore.Managers;
 using PluginCore.Utilities;
-using PluginCore.Controls;
-using PluginCore.Localization;
-using ScintillaNet.Configuration;
 using ScintillaNet;
-using PluginCore;
+using ScintillaNet.Configuration;
+using Timer = System.Timers.Timer;
 
 namespace BasicCompletion
 {
-	public class PluginMain : IPlugin
-	{
+    public class PluginMain : IPlugin
+    {
         private String pluginName = "BasicCompletion";
         private String pluginGuid = "c5564dec-5288-4bbb-b286-a5678536698b";
         private String pluginHelp = "www.flashdevelop.org/community/";
@@ -27,14 +29,14 @@ namespace BasicCompletion
         private Hashtable updateTable = new Hashtable();
         private Hashtable baseTable = new Hashtable();
         private Hashtable fileTable = new Hashtable();
-        private System.Timers.Timer updateTimer;
+        private Timer updateTimer;
         private Boolean isActive;
         private Boolean isSupported;
         private String settingFilename;
         private Settings settingObject;
         private String[] projKeywords;
 
-	    #region Required Properties
+        #region Required Properties
 
         /// <summary>
         /// Api level of the plugin
@@ -48,41 +50,41 @@ namespace BasicCompletion
         /// Name of the plugin
         /// </summary> 
         public String Name
-		{
-			get { return this.pluginName; }
-		}
+        {
+            get { return this.pluginName; }
+        }
 
         /// <summary>
         /// GUID of the plugin
         /// </summary>
         public String Guid
-		{
-			get { return this.pluginGuid; }
-		}
+        {
+            get { return this.pluginGuid; }
+        }
 
         /// <summary>
         /// Author of the plugin
         /// </summary> 
         public String Author
-		{
-			get { return this.pluginAuth; }
-		}
+        {
+            get { return this.pluginAuth; }
+        }
 
         /// <summary>
         /// Description of the plugin
         /// </summary> 
         public String Description
-		{
-			get { return this.pluginDesc; }
-		}
+        {
+            get { return this.pluginDesc; }
+        }
 
         /// <summary>
         /// Web address for help
         /// </summary> 
         public String Help
-		{
-			get { return this.pluginHelp; }
-		}
+        {
+            get { return this.pluginHelp; }
+        }
 
         /// <summary>
         /// Object that contains the settings
@@ -92,35 +94,35 @@ namespace BasicCompletion
         {
             get { return this.settingObject; }
         }
-		
-		#endregion
-		
-		#region Required Methods
-		
-		/// <summary>
-		/// Initializes the plugin
-		/// </summary>
-		public void Initialize()
-		{
+        
+        #endregion
+        
+        #region Required Methods
+        
+        /// <summary>
+        /// Initializes the plugin
+        /// </summary>
+        public void Initialize()
+        {
             this.InitTimer();
             this.InitBasics();
             this.LoadSettings();
             this.AddEventHandlers();
         }
-		
-		/// <summary>
-		/// Disposes the plugin
-		/// </summary>
-		public void Dispose()
-		{
+        
+        /// <summary>
+        /// Disposes the plugin
+        /// </summary>
+        public void Dispose()
+        {
             this.SaveSettings();
-		}
-		
-		/// <summary>
-		/// Handles the incoming events
-		/// </summary>
-		public void HandleEvent(Object sender, NotifyEvent e, HandlingPriority prority)
-		{
+        }
+        
+        /// <summary>
+        /// Handles the incoming events
+        /// </summary>
+        public void HandleEvent(Object sender, NotifyEvent e, HandlingPriority priority)
+        {
             ITabbedDocument document = PluginBase.MainForm.CurrentDocument;
             if (document == null || !document.IsEditable) return;
             switch (e.Type)
@@ -203,13 +205,13 @@ namespace BasicCompletion
                     break;
                 }
             }
-		}
+        }
 
         /// <summary>
         /// Handles the completion and config for a file
         /// </summary>
-	    private void HandleFile(ITabbedDocument document)
-	    {
+        private void HandleFile(ITabbedDocument document)
+        {
             if (this.isSupported)
             {
                 String language = document.SciControl.ConfigurationLanguage;
@@ -226,9 +228,9 @@ namespace BasicCompletion
             {
                 this.updateTable.Remove(document.FileName);
             }
-	    }
+        }
 
-	    #endregion
+        #endregion
 
         #region Custom Methods
 
@@ -237,16 +239,16 @@ namespace BasicCompletion
         /// </summary>
         public void InitTimer()
         {
-            this.updateTimer = new System.Timers.Timer();
-            this.updateTimer.SynchronizingObject = PluginCore.PluginBase.MainForm as Form;
-            this.updateTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.UpdateTimerElapsed);
+            this.updateTimer = new Timer();
+            this.updateTimer.SynchronizingObject = PluginBase.MainForm as Form;
+            this.updateTimer.Elapsed += new ElapsedEventHandler(this.UpdateTimerElapsed);
             this.updateTimer.Interval = 500;
         }
 
         /// <summary>
         /// After the timer elapses, update doc keywords
         /// </summary>
-        private void UpdateTimerElapsed(Object sender, System.Timers.ElapsedEventArgs e)
+        private void UpdateTimerElapsed(Object sender, ElapsedEventArgs e)
         {
             ITabbedDocument doc = PluginBase.MainForm.CurrentDocument;
             if (doc != null && doc.IsEditable && this.isSupported)
@@ -418,7 +420,6 @@ namespace BasicCompletion
         /// </summary>
         private void SciControlCharAdded(ScintillaControl sci, Int32 value)
         {
-            ITabbedDocument doc = DocumentManager.FindDocument(sci);
             if (this.isSupported && !settingObject.DisableAutoCompletion)
             {
                 String lang = sci.ConfigurationLanguage;
@@ -450,7 +451,6 @@ namespace BasicCompletion
         /// </summary>
         private void SciControlTextChanged(ScintillaControl sci, Int32 position, Int32 length, Int32 linesAdded)
         {
-            ITabbedDocument doc = DocumentManager.FindDocument(sci);
             if (this.isSupported)
             {
                 this.updateTimer.Stop();
@@ -459,9 +459,9 @@ namespace BasicCompletion
             }
         }
 
-		#endregion
+        #endregion
 
-	}
+    }
 
     #region Extra Classes
 
@@ -483,9 +483,9 @@ namespace BasicCompletion
         {
             get { return TextHelper.GetString("Info.CompletionItemDesc"); }
         }
-        public System.Drawing.Bitmap Icon
+        public Bitmap Icon
         {
-            get { return (System.Drawing.Bitmap)PluginBase.MainForm.FindImage("315"); }
+            get { return (Bitmap)PluginBase.MainForm.FindImage("315"); }
         }
         public string Value
         {

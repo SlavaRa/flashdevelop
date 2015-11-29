@@ -1,10 +1,11 @@
 using System;
-using System.Collections;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Globalization;
-using System.Collections.Generic;
+using PluginCore;
+using ProjectManager.Controls;
 
 namespace ProjectManager.Projects
 {
@@ -24,14 +25,14 @@ namespace ProjectManager.Projects
     public delegate void ProjectUpdatingHandler(Project project);
     public delegate bool BeforeSaveHandler(Project project, string fileName);
 
-    public abstract class Project : PluginCore.IProject
-	{
+    public abstract class Project : IProject
+    {
         string path; // full path to this project, including filename
 
         protected MovieOptions movieOptions;
         CompilerOptions compilerOptions;
-		PathCollection classpaths;
-		PathCollection compileTargets;
+        PathCollection classpaths;
+        PathCollection compileTargets;
         HiddenPathCollection hiddenPaths;
         AssetCollection libraryAssets;
         internal Dictionary<string, string> storage;
@@ -45,10 +46,10 @@ namespace ProjectManager.Projects
         public OutputType OutputType = OutputType.Unknown;
         public string InputPath; // For code injection
         public string OutputPath;
-		public string PreBuildEvent;
-		public string PostBuildEvent;
-		public bool AlwaysRunPostBuild;
-		public bool ShowHiddenPaths;
+        public string PreBuildEvent;
+        public string PostBuildEvent;
+        public bool AlwaysRunPostBuild;
+        public bool ShowHiddenPaths;
         public TestMovieBehavior TestMovieBehavior;
         public string TestMovieCommand;
 
@@ -56,26 +57,27 @@ namespace ProjectManager.Projects
         public event BeforeSaveHandler BeforeSave;
         public event ProjectUpdatingHandler ProjectUpdating;
 
-		public Project(string path, CompilerOptions compilerOptions)
-		{
-			this.path = path;
+        public Project(string path, CompilerOptions compilerOptions)
+        {
+            this.path = path;
             this.compilerOptions = compilerOptions;
 
             TestMovieBehavior = TestMovieBehavior.Default;
 
-			classpaths = new PathCollection();
-			compileTargets = new PathCollection();
-			hiddenPaths = new HiddenPathCollection();
+            classpaths = new PathCollection();
+            compileTargets = new PathCollection();
+            hiddenPaths = new HiddenPathCollection();
             libraryAssets = new AssetCollection(this);
             storage = new Dictionary<string, string>();
 
             InputPath = "";
-			OutputPath = "";
-			PreBuildEvent = "";
-			PostBuildEvent = "";
-		}
+            OutputPath = "";
+            PreBuildEvent = "";
+            PostBuildEvent = "";
+        }
 
         public abstract string Language { get; }
+        public abstract string LanguageDisplayName { get; }
         public virtual bool IsCompilable { get { return false; } }
         public virtual bool ReadOnly { get { return false; } }
         public virtual bool UsesInjection { get { return false; } }
@@ -100,9 +102,9 @@ namespace ProjectManager.Projects
             OnClasspathChanged();
         }
 
-        public virtual ProjectManager.Controls.PropertiesDialog CreatePropertiesDialog()
+        public virtual PropertiesDialog CreatePropertiesDialog()
         {
-            return new ProjectManager.Controls.PropertiesDialog();
+            return new PropertiesDialog();
         }
 
         public void OnClasspathChanged()
@@ -111,21 +113,21 @@ namespace ProjectManager.Projects
             if (ClasspathChanged != null) ClasspathChanged(this);
         }
 
-		#region Simple Properties
+        #region Simple Properties
 
-		public string ProjectPath { get { return path; } }
+        public string ProjectPath { get { return path; } }
         public virtual string Name { get { return Path.GetFileNameWithoutExtension(path); } }
-		public string Directory { get { return Path.GetDirectoryName(path); } }
+        public string Directory { get { return Path.GetDirectoryName(path); } }
         public bool TraceEnabled { set { traceEnabled = value; } get { return traceEnabled; } }
         public string TargetBuild { set { targetBuild = value; } get { return targetBuild; } }
         public virtual bool EnableInteractiveDebugger { get { return movieOptions.DebuggerSupported(TargetBuild); } }
         public string[] AdditionalPaths; // temporary storage of resolved classpaths
-		
-		// we only provide getters for these to preserve the original pointer
+        
+        // we only provide getters for these to preserve the original pointer
         public MovieOptions MovieOptions { get { return movieOptions; } }
         public PathCollection Classpaths { get { return classpaths; } }
         public PathCollection CompileTargets { get { return compileTargets; } }
-		public HiddenPathCollection HiddenPaths { get { return hiddenPaths; } }
+        public HiddenPathCollection HiddenPaths { get { return hiddenPaths; } }
         public AssetCollection LibraryAssets { get { return libraryAssets; } }
         public virtual String LibrarySWFPath { get { return OutputPath; } }
         public Dictionary<string, string> Storage { get { return storage; } }
@@ -136,26 +138,26 @@ namespace ProjectManager.Projects
             set { compilerOptions = value; }
         }
 
-		public PathCollection AbsoluteClasspaths
-		{
-			get
-			{
+        public PathCollection AbsoluteClasspaths
+        {
+            get
+            {
                 // property is accessed quite intensively, adding some caching here
                 if (absClasspaths != null) return absClasspaths;
 
-				PathCollection absolute = new PathCollection();
+                PathCollection absolute = new PathCollection();
                 foreach (string cp in classpaths)
                 {
                     absolute.Add(GetAbsolutePath(cp));
                 }
                 absClasspaths = absolute;
-				return absolute;
-			}
-		}
+                return absolute;
+            }
+        }
 
         public string[] SourcePaths { get { return classpaths.ToArray(); } }
 
-		public string OutputPathAbsolute 
+        public string OutputPathAbsolute 
         {
             get { return GetAbsolutePath(OutputPath); } 
         }
@@ -183,42 +185,42 @@ namespace ProjectManager.Projects
             }
         }
 
-		#endregion
+        #endregion
 
-		#region Project Methods
+        #region Project Methods
 
-		// all the Set/Is methods expect absolute paths (as opposed to the way they're
-		// actually stored)
+        // all the Set/Is methods expect absolute paths (as opposed to the way they're
+        // actually stored)
 
-		public void SetPathHidden(string path, bool isHidden)
-		{
-			path = GetRelativePath(path);
+        public void SetPathHidden(string path, bool isHidden)
+        {
+            path = GetRelativePath(path);
 
-			if (isHidden)
-			{
-				hiddenPaths.Add(path);				
-				compileTargets.RemoveAtOrBelow(path); // can't compile hidden files
+            if (isHidden)
+            {
+                hiddenPaths.Add(path);              
+                compileTargets.RemoveAtOrBelow(path); // can't compile hidden files
                 libraryAssets.RemoveAtOrBelow(path); // can't embed hidden resources
-			}
-			else hiddenPaths.Remove(path);
-		}
+            }
+            else hiddenPaths.Remove(path);
+        }
 
-		public bool IsPathHidden(string path)
-		{
-			return hiddenPaths.IsHidden(GetRelativePath(path));
-		}
-		
-		public virtual void SetCompileTarget(string path, bool isCompileTarget)
-		{
+        public bool IsPathHidden(string path)
+        {
+            return hiddenPaths.IsHidden(GetRelativePath(path));
+        }
+        
+        public virtual void SetCompileTarget(string path, bool isCompileTarget)
+        {
             string relPath = Path.IsPathRooted(path) ? GetRelativePath(path) : path;
-			if (isCompileTarget) compileTargets.Add(relPath);
-			else compileTargets.Remove(relPath);
-		}
+            if (isCompileTarget) compileTargets.Add(relPath);
+            else compileTargets.Remove(relPath);
+        }
 
         public virtual void SetDocumentClass(string path, bool isMain)
-		{
+        {
             // to be implemented
-		}
+        }
 
         public bool IsCompileTarget(string path) { return compileTargets.Contains(GetRelativePath(path)); }
 
@@ -248,29 +250,29 @@ namespace ProjectManager.Projects
         }
 
         public bool IsInput(string path) { return GetRelativePath(path) == InputPath; }
-		public bool IsOutput(string path) { return GetRelativePath(path) == OutputPath; }
+        public bool IsOutput(string path) { return GetRelativePath(path) == OutputPath; }
 
-		/// <summary>
-		/// Call this when you delete a path so we can remove all our references to it
-		/// </summary>
-		public void NotifyPathsDeleted(string path)
-		{
-			path = GetRelativePath(path);
-			hiddenPaths.Remove(path);
-			compileTargets.RemoveAtOrBelow(path);
+        /// <summary>
+        /// Call this when you delete a path so we can remove all our references to it
+        /// </summary>
+        public void NotifyPathsDeleted(string path)
+        {
+            path = GetRelativePath(path);
+            hiddenPaths.Remove(path);
+            compileTargets.RemoveAtOrBelow(path);
             libraryAssets.RemoveAtOrBelow(path);
-		}
+        }
 
-		/// <summary>
-		/// Returns the path to the "obj\" subdirectory, creating it if necessary.
-		/// </summary>
-		public string GetObjDirectory()
-		{
-			string objPath = Path.Combine(this.Directory, "obj");
-			if (!System.IO.Directory.Exists(objPath))
-				System.IO.Directory.CreateDirectory(objPath);
-			return objPath;
-		}
+        /// <summary>
+        /// Returns the path to the "obj\" subdirectory, creating it if necessary.
+        /// </summary>
+        public string GetObjDirectory()
+        {
+            string objPath = Path.Combine(this.Directory, "obj");
+            if (!System.IO.Directory.Exists(objPath))
+                System.IO.Directory.CreateDirectory(objPath);
+            return objPath;
+        }
 
         /// <summary>
         /// Return text to "Insert Into Document"
@@ -310,19 +312,19 @@ namespace ProjectManager.Projects
             return null;
         }
 
-		#endregion
+        #endregion
 
-		#region Path Helpers
+        #region Path Helpers
 
         public String[] GetHiddenPaths()
         {
             return this.hiddenPaths.ToArray();
         }
 
-		public string GetRelativePath(string path)
-		{
-			return ProjectPaths.GetRelativePath(this.Directory, path);
-		}
+        public string GetRelativePath(string path)
+        {
+            return ProjectPaths.GetRelativePath(this.Directory, path);
+        }
 
         public void UpdateVars(bool silent)
         {
@@ -330,14 +332,14 @@ namespace ProjectManager.Projects
             vars = new BuildEventVars(this).GetVars();
         }
 
-		public string GetAbsolutePath(string path)
-		{
+        public string GetAbsolutePath(string path)
+        {
             path = Environment.ExpandEnvironmentVariables(path);
             if (vars != null && path.IndexOf('$') >= 0)
                 foreach (BuildEventInfo arg in vars) 
                     path = path.Replace(arg.FormattedName, arg.Value);
             return ProjectPaths.GetAbsolutePath(this.Directory, path);
-		}
+        }
 
         /// <summary>
         /// When in Release configuration, remove 'debug' from the given path.
@@ -369,7 +371,7 @@ namespace ProjectManager.Projects
             return stringBuilder.ToString();
         }
 
-		#endregion
+        #endregion
 
 
         public bool IsDirectory(string path)

@@ -1,22 +1,21 @@
 using System;
-using System.Runtime;
 using System.Xml.Serialization;
 
 namespace ScintillaNet.Configuration
 {
-    [SerializableAttribute()]
+    [Serializable()]
     public class UseStyle : StyleClass
     {
-        [XmlAttributeAttribute("class")]
+        [XmlAttribute("class")]
         public string cls;
 
-		[XmlAttributeAttribute()]
-		public int key;
+        [XmlAttribute()]
+        public int key;
 
         public override void init(ConfigurationUtility utility, ConfigFile theParent)
         {
             base.init(utility, theParent);
-            if (cls != null && cls.Length > 0) inheritstyle = cls;
+            if (!string.IsNullOrEmpty(cls)) inheritstyle = cls;
         }
         
     }

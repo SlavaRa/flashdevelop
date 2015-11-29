@@ -2,54 +2,51 @@ using System;
 using System.Collections;
 using System.Diagnostics;
 using System.IO;
-using System.Windows.Forms;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Ipc;
+using System.Windows.Forms;
 using PluginCore;
-using PluginCore.Managers;
 using PluginCore.Helpers;
 using PluginCore.Localization;
+using PluginCore.Managers;
 using ProjectManager.Helpers;
 using ProjectManager.Projects;
-using ProjectManager.Projects.AS2;
-using ProjectManager.Projects.AS3;
-using ProjectManager.Controls;
 
 namespace ProjectManager.Actions
 {
-	public delegate void BuildCompleteHandler(IProject project, bool runOutput);
+    public delegate void BuildCompleteHandler(IProject project, bool runOutput);
 
-	/// <summary>
-	/// Provides methods for building a project inside FlashDevelop
-	/// </summary>
-	public class BuildActions
-	{
+    /// <summary>
+    /// Provides methods for building a project inside FlashDevelop
+    /// </summary>
+    public class BuildActions
+    {
         static public int LatestSDKMatchQuality;
         static bool setPlayerglobalHomeEnv;
 
-		IMainForm mainForm;
+        IMainForm mainForm;
         PluginMain pluginMain;
-		FDProcessRunner fdProcess;
+        FDProcessRunner fdProcess;
         string ipcName;
 
-		public event BuildCompleteHandler BuildComplete;
+        public event BuildCompleteHandler BuildComplete;
         public event BuildCompleteHandler BuildFailed;
 
         public string IPCName { get { return ipcName; } }
 
-		public BuildActions(IMainForm mainForm, PluginMain pluginMain)
-		{
-			this.mainForm = mainForm;
+        public BuildActions(IMainForm mainForm, PluginMain pluginMain)
+        {
+            this.mainForm = mainForm;
             this.pluginMain = pluginMain;
 
-			// setup FDProcess helper class
-			this.fdProcess = new FDProcessRunner(mainForm);
+            // setup FDProcess helper class
+            this.fdProcess = new FDProcessRunner(mainForm);
 
             // setup remoting service so FDBuild can use our in-memory services like FlexCompilerShell
             this.ipcName = Guid.NewGuid().ToString();
             SetupRemotingServer();
-		}
+        }
 
         private void SetupRemotingServer()
         {
@@ -117,7 +114,7 @@ namespace ProjectManager.Actions
                     return false;
                 }
 
-                if (project.OutputPath.Length < 1)
+                if (project.OutputPath.Length == 0)
                 {
                     String info = TextHelper.GetString("Info.SpecifyValidOutputSWF");
                     ErrorManager.ShowInfo(info);
@@ -169,14 +166,14 @@ namespace ProjectManager.Actions
         }
 
         public bool FDBuild(Project project, bool runOutput, bool releaseMode, InstalledSDK sdk)
-		{
+        {
             string directory = Environment.CurrentDirectory;
             Environment.CurrentDirectory = project.Directory;
 
-			string fdBuildDir = Path.Combine(PathHelper.ToolDir, "fdbuild");
-			string fdBuildPath = Path.Combine(fdBuildDir, "fdbuild.exe");
+            string fdBuildDir = Path.Combine(PathHelper.ToolDir, "fdbuild");
+            string fdBuildPath = Path.Combine(fdBuildDir, "fdbuild.exe");
 
-			string arguments = " -ipc " + ipcName;
+            string arguments = " -ipc " + ipcName;
             if (sdk != null)
             {
                 if (!string.IsNullOrEmpty(sdk.Version))
@@ -195,8 +192,8 @@ namespace ProjectManager.Actions
 
             if (project.TargetBuild != null)
                 arguments += " -target \"" + project.TargetBuild + "\"";
-			
-			arguments = arguments.Replace("\\\"", "\""); // c# console args[] bugfix
+            
+            arguments = arguments.Replace("\\\"", "\""); // c# console args[] bugfix
 
             SetStatusBar(TextHelper.GetString("Info.BuildStarted"));
             pluginMain.UpdateUIStatus(ProjectManagerUIStatus.Building);
@@ -207,9 +204,13 @@ namespace ProjectManager.Actions
                 string playerglobalHome = Environment.ExpandEnvironmentVariables("%PLAYERGLOBAL_HOME%");
                 if (playerglobalHome.StartsWith("%")) setPlayerglobalHomeEnv = true;
                 if (setPlayerglobalHomeEnv)
-                    Environment.SetEnvironmentVariable("PLAYERGLOBAL_HOME", 
-                        Path.Combine(project.CurrentSDK, "frameworks/libs/player"));
+                {
+                    Environment.SetEnvironmentVariable("PLAYERGLOBAL_HOME", Path.Combine(project.CurrentSDK, "frameworks/libs/player"));
+                }
             }
+
+            // Lets expose current sdk
+            Environment.SetEnvironmentVariable("FD_CUR_SDK", project.CurrentSDK ?? "");
 
             // run FDBuild
             fdProcess.StartProcess(fdBuildPath, "\"" + project.ProjectPath + "\"" + arguments,
@@ -230,7 +231,7 @@ namespace ProjectManager.Actions
                     Environment.CurrentDirectory = directory;
                 });
             return true;
-		}
+        }
 
         void OnBuildComplete(IProject project, bool runOutput)
         {
@@ -251,8 +252,8 @@ namespace ProjectManager.Actions
             EventManager.DispatchEvent(this, de);
         }
 
-		public void NotifyBuildStarted() { fdProcess.ProcessStartedEventCaught(); }
-		public void NotifyBuildEnded(string result) { fdProcess.ProcessEndedEventCaught(result); }
+        public void NotifyBuildStarted() { fdProcess.ProcessStartedEventCaught(); }
+        public void NotifyBuildEnded(string result) { fdProcess.ProcessEndedEventCaught(result); }
         public void SetStatusBar(string text) { mainForm.StatusLabel.Text = " " + text; }
 
         /* SDK MANAGEMENT */

@@ -84,9 +84,11 @@ namespace AirProperties
                 new PropertyManager.AirApplicationIconField("50", PropertyManager.AirVersion.V34),
                 new PropertyManager.AirApplicationIconField("57", PropertyManager.AirVersion.V20),
                 new PropertyManager.AirApplicationIconField("58", PropertyManager.AirVersion.V34),
+                new PropertyManager.AirApplicationIconField("64", PropertyManager.AirVersion.V170),
                 new PropertyManager.AirApplicationIconField("72", PropertyManager.AirVersion.V20),
                 new PropertyManager.AirApplicationIconField("76", PropertyManager.AirVersion.V39),
                 new PropertyManager.AirApplicationIconField("80", PropertyManager.AirVersion.V39),
+                new PropertyManager.AirApplicationIconField("87", PropertyManager.AirVersion.V170),
                 new PropertyManager.AirApplicationIconField("96", PropertyManager.AirVersion.V20),
                 new PropertyManager.AirApplicationIconField("100", PropertyManager.AirVersion.V34),
                 new PropertyManager.AirApplicationIconField("114", PropertyManager.AirVersion.V26),
@@ -94,7 +96,9 @@ namespace AirProperties
                 new PropertyManager.AirApplicationIconField("128", PropertyManager.AirVersion.V10),
                 new PropertyManager.AirApplicationIconField("144", PropertyManager.AirVersion.V33),
                 new PropertyManager.AirApplicationIconField("152", PropertyManager.AirVersion.V39),
+                new PropertyManager.AirApplicationIconField("180", PropertyManager.AirVersion.V170),
                 new PropertyManager.AirApplicationIconField("192", PropertyManager.AirVersion.V150),
+                new PropertyManager.AirApplicationIconField("320", PropertyManager.AirVersion.V170),
                 new PropertyManager.AirApplicationIconField("512", PropertyManager.AirVersion.V20),
                 new PropertyManager.AirApplicationIconField("1024", PropertyManager.AirVersion.V34)
             };
@@ -290,22 +294,22 @@ namespace AirProperties
                     new PropertyManager.AndroidPermission("android.permission.AUTHENTICATE_ACCOUNTS", "Allows an application to act as an AccountAuthenticator for the AccountManager"),
                     new PropertyManager.AndroidPermission("android.permission.BATTERY_STATS", "Allows an application to collect battery statistics"),
                     new PropertyManager.AndroidPermission("android.permission.BIND_ACCESSIBILITY_SERVICE", "Must be required by an AccessibilityService, to ensure that only the system can bind to it."),
-                    new PropertyManager.AndroidPermission("android.permission.BIND_APPWIDGET",	"Allows an application to tell the AppWidget service which application can access AppWidget's data."),
+                    new PropertyManager.AndroidPermission("android.permission.BIND_APPWIDGET",  "Allows an application to tell the AppWidget service which application can access AppWidget's data."),
                     new PropertyManager.AndroidPermission("android.permission.BIND_DEVICE_ADMIN", "Must be required by device administration receiver, to ensure that only the system can interact with it."),
                     new PropertyManager.AndroidPermission("android.permission.BIND_INPUT_METHOD", "Must be required by an InputMethodService, to ensure that only the system can bind to it."),
                     new PropertyManager.AndroidPermission("android.permission.BIND_NFC_SERVICE", "Must be required by a HostApduService or OffHostApduService to ensure that only the system can bind to it."),
-                    new PropertyManager.AndroidPermission("android.permission.BIND_NOTIFICATION_LISTENER_SERVICE",	"Must be required by an NotificationListenerService, to ensure that only the system can bind to it."),
-                    new PropertyManager.AndroidPermission("android.permission.BIND_PRINT_SERVICE",	"Must be required by a PrintService, to ensure that only the system can bind to it."),
+                    new PropertyManager.AndroidPermission("android.permission.BIND_NOTIFICATION_LISTENER_SERVICE",  "Must be required by an NotificationListenerService, to ensure that only the system can bind to it."),
+                    new PropertyManager.AndroidPermission("android.permission.BIND_PRINT_SERVICE",  "Must be required by a PrintService, to ensure that only the system can bind to it."),
                     new PropertyManager.AndroidPermission("android.permission.BIND_REMOTEVIEWS", "Must be required by a RemoteViewsService, to ensure that only the system can bind to it."),
                     new PropertyManager.AndroidPermission("android.permission.BIND_TEXT_SERVICE", "Must be required by a TextService (e.g. SpellCheckerService) to ensure that only the system can bind to it."),
                     new PropertyManager.AndroidPermission("android.permission.BIND_VPN_SERVICE", "Must be required by a VpnService, to ensure that only the system can bind to it."),
                     new PropertyManager.AndroidPermission("android.permission.BIND_WALLPAPER", "Must be required by a WallpaperService, to ensure that only the system can bind to it."),
                     new PropertyManager.AndroidPermission("android.permission.BLUETOOTH", "Allows applications to connect to paired bluetooth devices"),
-                    new PropertyManager.AndroidPermission("android.permission.BLUETOOTH_ADMIN"	,"Allows applications to discover and pair bluetooth devices"),
+                    new PropertyManager.AndroidPermission("android.permission.BLUETOOTH_ADMIN"  ,"Allows applications to discover and pair bluetooth devices"),
                     new PropertyManager.AndroidPermission("android.permission.BLUETOOTH_PRIVILEGED", "Allows applications to pair bluetooth devices without user interaction."),
-                    new PropertyManager.AndroidPermission("android.permission.BODY_SENSORS",	"Allows an application to access data from sensors that the user uses to measure what is happening inside his/her body, such as heart rate."),
-                    new PropertyManager.AndroidPermission("android.permission.BRICK",	"Required to be able to disable the device (very dangerous!)."),
-                    new PropertyManager.AndroidPermission("android.permission.BROADCAST_PACKAGE_REMOVED"	,"Allows an application to broadcast a notification that an application package has been removed."),
+                    new PropertyManager.AndroidPermission("android.permission.BODY_SENSORS",    "Allows an application to access data from sensors that the user uses to measure what is happening inside his/her body, such as heart rate."),
+                    new PropertyManager.AndroidPermission("android.permission.BRICK",   "Required to be able to disable the device (very dangerous!)."),
+                    new PropertyManager.AndroidPermission("android.permission.BROADCAST_PACKAGE_REMOVED"    ,"Allows an application to broadcast a notification that an application package has been removed."),
                     new PropertyManager.AndroidPermission("android.permission.BROADCAST_SMS","Allows an application to broadcast an SMS receipt notification."),
                     new PropertyManager.AndroidPermission("android.permission.BROADCAST_STICKY", "Allows an application to broadcast sticky intents."),
                     new PropertyManager.AndroidPermission("android.permission.BROADCAST_WAP_PUSH","Allows an application to broadcast a WAP PUSH receipt notification."),
@@ -1879,11 +1883,11 @@ namespace AirProperties
                 // always true;
                 fileType.DescriptionIsValid = true;
                 // set validity based on validation requirements
-                if (fileType.Name.Length <= 0) fileType.NameIsValid = false;
+                if (fileType.Name.Length == 0) fileType.NameIsValid = false;
                 else fileType.NameIsValid = true;
                 if (!Regex.IsMatch(fileType.Extension, _FileNameRegexPattern)) fileType.ExtensionIsValid = false;
                 else fileType.ExtensionIsValid = true;
-                if (fileType.ContentType.Length <= 0) fileType.ContentTypeIsValid = false;
+                if (fileType.ContentType.Length == 0) fileType.ContentTypeIsValid = false;
                 else fileType.ContentTypeIsValid = true;
                 foreach (PropertyManager.AirFileType.AirFileTypeIcon icon in fileType.Icons)
                 {
@@ -1960,7 +1964,7 @@ namespace AirProperties
 
         private void VersionField_Validating(object sender, CancelEventArgs e)
         {
-            if (VersionField.Text.Length <= 0 && PropertyManager.MajorVersion < PropertyManager.AirVersion.V25)
+            if (VersionField.Text.Length == 0 && PropertyManager.MajorVersion < PropertyManager.AirVersion.V25)
             {
                 this.ValidationErrorProvider.SetError(VersionField, String.Format(TextHelper.GetString("Validation.InvalidProperty"), VersionLabel.Text));
                 e.Cancel = true;
@@ -2160,7 +2164,7 @@ namespace AirProperties
             {
                 FileTypeNameField.Text = FileTypeNameField.Text.Trim();
                 selectedFileType.Name = FileTypeNameField.Text;
-                if (FileTypeNameField.Text.Length <= 0)
+                if (FileTypeNameField.Text.Length == 0)
                 {
                     selectedFileType.NameIsValid = false;
                     this.ValidationErrorProvider.SetError(FileTypeNameField, String.Format(TextHelper.GetString("Validation.InvalidProperty"), FTNameLabel.Text));
@@ -2216,7 +2220,7 @@ namespace AirProperties
                 FileTypeContentTypeField.Text = FileTypeContentTypeField.Text.Trim();
                 selectedFileType.ContentType = FileTypeContentTypeField.Text;
                 // validate as required field for AIR 1.5+
-                if (FileTypeContentTypeField.Text.Length <= 0 && PropertyManager.MajorVersion >= PropertyManager.AirVersion.V15)
+                if (FileTypeContentTypeField.Text.Length == 0 && PropertyManager.MajorVersion >= PropertyManager.AirVersion.V15)
                 {
                     selectedFileType.ContentTypeIsValid = false;
                     this.ValidationErrorProvider.SetError(FileTypeContentTypeField, String.Format(TextHelper.GetString("Validation.InvalidProperty"), FTContentTypeLabel.Text));

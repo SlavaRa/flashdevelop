@@ -1,25 +1,21 @@
 using System;
 using System.Drawing;
-using System.Collections;
 using System.Runtime.InteropServices;
-using System.Drawing.Drawing2D;
-using System.ComponentModel;
-using System.Windows.Forms;
 
 namespace PluginCore.Utilities
 {
     public class IconExtractor
-	{
+    {
         /// <summary>
         /// Gets the system icon specified by index in shell32.dll
         /// </summary>
         public static Icon GetSysIcon(Int32 icNo)
-		{
+        {
             IntPtr hIcon = Win32.ExtractIcon(Win32.GetModuleHandle(String.Empty), "shell32.dll", icNo);
             Icon icon = (Icon)Icon.FromHandle(hIcon).Clone();
             Win32.DestroyIcon(hIcon);
             return icon;
-		}
+        }
 
         /// <summary>
         /// Get the associated Icon for a file or application, this method always returns
@@ -64,6 +60,6 @@ namespace PluginCore.Utilities
             return GetFileIcon(path, small, false);
         }
 
-	}
-	
+    }
+    
 }

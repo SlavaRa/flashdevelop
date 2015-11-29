@@ -20,7 +20,7 @@ using PluginCore;
 namespace FlashDevelop.Docking
 {
     public class TabbedDocument : DockContent, ITabbedDocument
-	{
+    {
         private Timer focusTimer;
         private Timer backupTimer;
         private String previousText;
@@ -34,7 +34,7 @@ namespace FlashDevelop.Docking
         private FileInfo fileInfo;
 
         public TabbedDocument()
-		{
+        {
             this.focusTimer = new Timer();
             this.focusTimer.Interval = 100;
             this.bookmarks = new List<Int32>();
@@ -47,7 +47,7 @@ namespace FlashDevelop.Docking
             this.BackColor = Color.White;
             this.useCustomIcon = false;
             this.StartBackupTiming();
-		}
+        }
 
         /// <summary>
         /// Disables the automatic update of the icon
@@ -124,6 +124,23 @@ namespace FlashDevelop.Docking
         public Boolean HasBookmarks
         {
             get { return bookmarks.Count > 0; }
+        }
+
+        /// <summary>
+        /// Does this document's pane have any other documents?
+        /// </summary> 
+        public Boolean IsAloneInPane
+        {
+            get
+            {
+                int count = 0;
+                foreach (ITabbedDocument document in Globals.MainForm.Documents)
+                {
+                    if (document.DockHandler.PanelPane == DockHandler.PanelPane)
+                        count++;
+                }
+                return count <= 1;
+            }
         }
 
         /// <summary>
@@ -232,6 +249,7 @@ namespace FlashDevelop.Docking
                 this.focusTimer.Stop();
                 this.focusTimer.Start();
             }
+            ButtonManager.UpdateFlaggedButtons();
         }
         private void OnFocusTimer(Object sender, EventArgs e)
         {
@@ -276,6 +294,7 @@ namespace FlashDevelop.Docking
             this.editor2.Dock = DockStyle.Fill;
             this.splitContainer = new SplitContainer();
             this.splitContainer.Name = "fdSplitView";
+            this.splitContainer.SplitterWidth = ScaleHelper.Scale(this.splitContainer.SplitterWidth);
             this.splitContainer.Orientation = Orientation.Horizontal;
             this.splitContainer.BackColor = SystemColors.Control;
             this.splitContainer.Panel1.Controls.Add(this.editor);
@@ -345,13 +364,20 @@ namespace FlashDevelop.Docking
             if (!Globals.MainForm.ClosingEntirely && File.Exists(this.FileName))
             {
                 FileInfo fi = new FileInfo(this.FileName);
-                if (this.fileInfo.LastWriteTime != fi.LastWriteTime)
-                {
-                    this.fileInfo = fi;
-                    return true;
-                }
+                if (this.fileInfo.LastWriteTime != fi.LastWriteTime) return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Updates the file info after user dismisses the change notification
+        /// </summary>
+        public void RefreshFileInfo()
+        {
+            if (!Globals.MainForm.ClosingEntirely && File.Exists(this.FileName))
+            {
+                this.fileInfo = new FileInfo(this.FileName);
+            }
         }
 
         /// <summary>
@@ -437,12 +463,10 @@ namespace FlashDevelop.Docking
                 Encoding encoding = Encoding.GetEncoding(info.CodePage);
                 this.SciControl.IsReadOnly = false;
                 this.SciControl.Encoding = encoding;
-                this.SciControl.CodePage = ScintillaManager.SelectCodePage(info.CodePage);
                 this.SciControl.Text = info.Contents;
                 this.SciControl.IsReadOnly = FileHelper.FileIsReadOnly(this.FileName);
                 this.SciControl.SetSel(position, position);
                 this.SciControl.EmptyUndoBuffer();
-                this.SciControl.Focus();
                 this.InitBookmarks();
             }
             Globals.MainForm.OnDocumentReload(this);
@@ -546,6 +570,16 @@ namespace FlashDevelop.Docking
             this.UpdateDocumentIcon(this.FileName);
         }
 
+        /// <summary>
+        /// Close the document and update buttons
+        /// </summary>
+        public new void Close()
+        {
+            base.Close();
+            ButtonManager.UpdateFlaggedButtons();
+        }
+
     }
-	
+
 }
+

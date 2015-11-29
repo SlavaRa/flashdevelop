@@ -37,7 +37,7 @@ namespace ProjectManager.Controls.TreeView
         public ToolStripMenuItem Copy = new ToolStripMenuItem(TextHelper.GetString("Label.Copy"), Icons.Copy.Img);
         public ToolStripMenuItem Paste = new ToolStripMenuItem(TextHelper.GetString("Label.Paste"), Icons.Paste.Img);
         public ToolStripMenuItem Delete = new ToolStripMenuItem(TextHelper.GetString("Label.Delete"), Icons.Delete.Img);
-        public ToolStripMenuItem Rename = new ToolStripMenuItem(TextHelper.GetString("Label.Rename"));
+        public ToolStripMenuItem Rename = new ToolStripMenuItem(TextHelper.GetString("Label.Rename"), Icons.Rename.Img);
         public ToolStripMenuItem LibraryOptions = new ToolStripMenuItem(TextHelper.GetString("Label.Options"), Icons.Options.Img);
         public ToolStripMenuItem NothingToDo = new ToolStripMenuItem(TextHelper.GetString("Label.NotValidGroup"));
         public ToolStripMenuItem NoProjectOutput = new ToolStripMenuItem(TextHelper.GetString("Label.NoProjectOutput"));
@@ -170,7 +170,6 @@ namespace ProjectManager.Controls.TreeView
             string actualName = Path.GetFileNameWithoutExtension(actualFile); // strip ext
             Image image = Icons.GetImageForFile(actualFile).Img;
             image = Icons.Overlay(image, Icons.BulletAdd.Img, 5, 4);
-            String label = TextHelper.GetString("Label.New");
             ToolStripMenuItem item = new ToolStripMenuItem("New " + actualName + "...", image);
             item.Click += delegate
             {
@@ -357,9 +356,8 @@ namespace ProjectManager.Controls.TreeView
             AddCompileTargetItems(menu, path, true);
 
             bool addLibrary = project.IsLibraryAsset(path);
-            menu.Add(AddLibrary, 1, addLibrary);
-            if (addLibrary) menu.Add(LibraryOptions, 1);
-
+            menu.Add(AddLibrary, 2, addLibrary);
+            if (addLibrary) menu.Add(LibraryOptions, 2);
 
             if (projectTree.SelectedPaths.Length == 1 && project.IsCompilable)
             {

@@ -1,28 +1,26 @@
 using System;
-using System.Drawing;
-using System.Resources;
-using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
-using ScintillaNet.Configuration;
-using WeifenLuo.WinFormsUI;
-using WeifenLuo.WinFormsUI.Docking;
 using PluginCore.Localization;
-using PluginCore.Managers;
 using ScintillaNet;
+using ScintillaNet.Configuration;
+using ScintillaNet.Enums;
+using WeifenLuo.WinFormsUI.Docking;
+using Keys = System.Windows.Forms.Keys;
 
 namespace PluginCore
 {
     public interface IPlugin : IEventHandler
     {
-	    #region IPlugin Methods
-		
-	    void Dispose();
-	    void Initialize();
-		
-	    #endregion
-		
-	    #region IPlugin Properties
+        #region IPlugin Methods
+        
+        void Dispose();
+        void Initialize();
+        
+        #endregion
+        
+        #region IPlugin Properties
 
         Int32 Api { get; }
         String Name { get; }
@@ -34,20 +32,20 @@ namespace PluginCore
 
         // List of valid API levels:
         // FlashDevelop 4.0 = 1
-		
-	    #endregion
+        
+        #endregion
     }
 
     public interface IEventHandler
-	{
+    {
         #region IEventHandler Methods
 
         void HandleEvent(Object sender, NotifyEvent e, HandlingPriority priority);
 
         #endregion
-	}
+    }
 
-    public interface ITabbedDocument
+    public interface ITabbedDocument : IDockContent
     {
         #region ITabbedDocument Properties
 
@@ -66,6 +64,7 @@ namespace PluginCore
         Boolean IsUntitled { get; }
         Boolean IsEditable { get; }
         Boolean HasBookmarks { get; }
+        Boolean IsAloneInPane { get; }
 
         #endregion
 
@@ -94,7 +93,7 @@ namespace PluginCore
         #endregion
     }
 
-    public interface IMainForm : IWin32Window
+    public interface IMainForm : IContainerControl, IWin32Window
     {
         #region IMainForm Methods
 
@@ -116,7 +115,7 @@ namespace PluginCore
         DockContent OpenEditableDocument(String file);
         DockContent CreateCustomDocument(Control ctrl);
         DockContent CreateEditableDocument(String file, String text, Int32 codepage);
-		DockContent CreateDockablePanel(Control form, String guid, Image image, DockState defaultDockState);
+        DockContent CreateDockablePanel(Control form, String guid, Image image, DockState defaultDockState);
         Boolean CallCommand(String command, String arguments);
         List<ToolStripItem> FindMenuItems(String name);
         ToolStripItem FindMenuItem(String name);
@@ -124,6 +123,8 @@ namespace PluginCore
         Keys GetShortcutItemKeys(String id);
         String GetThemeValue(String id);
         Color GetThemeColor(String id);
+        String GetThemeValue(String id, String fallback);
+        Color GetThemeColor(String id, Color fallback);
         IPlugin FindPlugin(String guid);
         Image ImageSetAdjust(Image image);
         Image FindImage(String data);
@@ -231,6 +232,7 @@ namespace PluginCore
         Boolean DisableFindTextUpdating { get; set; }
         Boolean ApplyFileExtension { get; set; }
         Boolean RestoreFileStates { get; set; }
+        Boolean RestoreFileSession { get; set; }
         Boolean BackSpaceUnIndents { get; set; }
         Boolean BraceMatchingEnabled { get; set; }
         Boolean CaretLineVisible { get; set; }
@@ -260,12 +262,13 @@ namespace PluginCore
         Boolean ViewWhitespace { get; set; }
         Boolean ViewShortcuts { get; set; }
         Boolean WrapText { get; set; }
-        ScintillaNet.Enums.EndOfLine EOLMode { get; set; }
-        ScintillaNet.Enums.FoldFlag FoldFlags { get; set; }
-        ScintillaNet.Enums.SmartIndent SmartIndentType { get; set; }
-        ScintillaNet.Enums.VirtualSpaceMode VirtualSpaceMode { get; set; }
-        ScintillaNet.Enums.IndentView IndentView { get; set; }
-        ScintillaNet.Enums.HighlightMatchingWordsMode HighlightMatchingWordsMode { get; set; }
+        EndOfLine EOLMode { get; set; }
+        FoldFlag FoldFlags { get; set; }
+        SmartIndent SmartIndentType { get; set; }
+        VirtualSpaceMode VirtualSpaceMode { get; set; }
+        IndentView IndentView { get; set; }
+        HighlightMatchingWordsMode HighlightMatchingWordsMode { get; set; }
+        Int32 HighlightMatchingWordsDelay { get; set; }
         CodePage DefaultCodePage { get; set; }
         Int32 TabWidth { get; set; }
         Int32 IndentSize { get; set; }

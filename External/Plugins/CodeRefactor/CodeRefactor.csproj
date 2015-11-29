@@ -74,8 +74,10 @@
   -->
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\ExtractLocalVariableCommand.cs" />
@@ -87,6 +89,9 @@
     <Compile Include="Commands\Rename.cs" />
     <Compile Include="Commands\RenameFile.cs" />
     <Compile Include="Commands\SurroundWithCommand.cs" />
+    <Compile Include="Controls\BatchProcessDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Controls\DelegateMethodsDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -110,6 +115,7 @@
     <Compile Include="Provider\MovingHelper.cs" />
     <Compile Include="Provider\RefactoringHelper.cs" />
     <Compile Include="Provider\UserInterfaceManager.cs" />
+    <Compile Include="RefactorItem.cs" />
     <Compile Include="Settings.cs" />
   </ItemGroup>
   <ItemGroup>

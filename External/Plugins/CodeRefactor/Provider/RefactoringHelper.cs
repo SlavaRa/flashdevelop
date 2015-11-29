@@ -1,14 +1,16 @@
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using PluginCore.FRService;
 using ASCompletion.Completion;
 using ASCompletion.Context;
 using ASCompletion.Model;
-using ScintillaNet;
 using PluginCore;
+using PluginCore.FRService;
 using PluginCore.Helpers;
+using PluginCore.Managers;
+using ProjectManager.Projects;
+using ScintillaNet;
 
 namespace CodeRefactor.Provider
 {
@@ -54,6 +56,40 @@ namespace CodeRefactor.Provider
         }
 
         /// <summary>
+        /// Gets if the language is valid for refactoring
+        /// </summary>
+        public static Boolean GetLanguageIsValid()
+        {
+            ITabbedDocument document = PluginBase.MainForm.CurrentDocument;
+            if (document == null || !document.IsEditable) return false;
+            string lang = document.SciControl.ConfigurationLanguage;
+            return lang == "as2" || lang == "as3" || lang == "haxe" || lang == "loom"; // TODO: look for /Snippets/Generators
+        }
+
+        /// <summary>
+        /// Checks if the model is not null and file exists
+        /// </summary>
+        public static Boolean ModelFileExists(FileModel model)
+        {
+            if (model != null && File.Exists(model.FileName)) return true;
+            else return false;
+        }
+
+        /// <summary>
+        /// Checks if the file is under the current SDK
+        /// </summary>
+        public static Boolean IsUnderSDKPath(FileModel model)
+        {
+            return IsUnderSDKPath(model.FileName);
+        }
+        public static Boolean IsUnderSDKPath(String file)
+        {
+            InstalledSDK sdk = PluginBase.CurrentSDK;
+            if (sdk != null && !String.IsNullOrEmpty(sdk.Path) && file.StartsWith(sdk.Path)) return true;
+            return false;
+        }
+
+        /// <summary>
         /// Retrieves the refactoring target based on the current location.
         /// Note that this will look up to the declaration source.  
         /// This allows users to execute the rename from a reference to the source rather than having to navigate to the source first.
@@ -73,7 +109,8 @@ namespace CodeRefactor.Provider
         {
             String fileName = Path.GetFileNameWithoutExtension(path);
             Int32 line = 0;
-            ScintillaControl sci = associatedDocumentHelper.LoadDocument(path);
+            var doc = associatedDocumentHelper.LoadDocument(path);
+            ScintillaControl sci = doc != null ? doc.SciControl : null;
             if (sci == null) return null; // Should not happen...
             List<ClassModel> classes = ASContext.Context.CurrentModel.Classes;
             if (classes.Count > 0)
@@ -115,7 +152,7 @@ namespace CodeRefactor.Provider
         /// Checks if a given search match actually points to the given target source
         /// </summary>
         /// <returns>True if the SearchMatch does point to the target source.</returns>
-        public static ASResult DeclarationLookupResult(ScintillaNet.ScintillaControl Sci, int position)
+        public static ASResult DeclarationLookupResult(ScintillaControl Sci, int position)
         {
             if (!ASContext.Context.IsFileValid || (Sci == null)) return null;
             // get type at cursor position
@@ -206,7 +243,7 @@ namespace CodeRefactor.Provider
         /// <summary>
         /// Checks if the given match actually is the declaration.
         /// </summary>
-        public static bool IsMatchTheTarget(ScintillaNet.ScintillaControl Sci, SearchMatch match, ASResult target)
+        public static bool IsMatchTheTarget(ScintillaControl Sci, SearchMatch match, ASResult target)
         {
             if (Sci == null || target == null || target.InFile == null || target.Member == null)
             {
@@ -222,7 +259,7 @@ namespace CodeRefactor.Provider
         /// Checks if a given search match actually points to the given target source
         /// </summary>
         /// <returns>True if the SearchMatch does point to the target source.</returns>
-        public static bool DoesMatchPointToTarget(ScintillaNet.ScintillaControl Sci, SearchMatch match, ASResult target, DocumentHelper associatedDocumentHelper)
+        public static bool DoesMatchPointToTarget(ScintillaControl Sci, SearchMatch match, ASResult target, DocumentHelper associatedDocumentHelper)
         {
             if (Sci == null || target == null) return false;
             FileModel targetInFile = null;
@@ -281,7 +318,7 @@ namespace CodeRefactor.Provider
         /// <returns>If "asynchronous" is false, will return the search results, otherwise returns null on bad input or if running in asynchronous mode.</returns>
         public static FRResults FindTargetInFiles(ASResult target, FRProgressReportHandler progressReportHandler, FRFinishedHandler findFinishedHandler, Boolean asynchronous)
         {
-            return FindTargetInFiles(target, progressReportHandler, findFinishedHandler, asynchronous, false);
+            return FindTargetInFiles(target, progressReportHandler, findFinishedHandler, asynchronous, false, false);
         }
 
         /// <summary>
@@ -296,7 +333,7 @@ namespace CodeRefactor.Provider
         /// <param name="asynchronous">executes in asynchronous mode</param>
         /// <param name="onlySourceFiles">searches only on defined classpaths</param>
         /// <returns>If "asynchronous" is false, will return the search results, otherwise returns null on bad input or if running in asynchronous mode.</returns>
-        public static FRResults FindTargetInFiles(ASResult target, FRProgressReportHandler progressReportHandler, FRFinishedHandler findFinishedHandler, Boolean asynchronous, Boolean onlySourceFiles)
+        public static FRResults FindTargetInFiles(ASResult target, FRProgressReportHandler progressReportHandler, FRFinishedHandler findFinishedHandler, Boolean asynchronous, Boolean onlySourceFiles, Boolean ignoreSdkFiles)
         {
             Boolean currentFileOnly = false;
             // checks target is a member
@@ -310,8 +347,8 @@ namespace CodeRefactor.Provider
                 // if the target we are trying to rename exists as a local variable or a function parameter we only need to search the current file
                 if (target.Member != null && (
                         target.Member.Access == Visibility.Private
-                        || RefactoringHelper.CheckFlag(target.Member.Flags, FlagType.LocalVar)
-                        || RefactoringHelper.CheckFlag(target.Member.Flags, FlagType.ParameterVar))
+                        || CheckFlag(target.Member.Flags, FlagType.LocalVar)
+                        || CheckFlag(target.Member.Flags, FlagType.ParameterVar))
                     )
                 {
                     currentFileOnly = true;
@@ -337,12 +374,12 @@ namespace CodeRefactor.Provider
             }
             else if (target.Member != null && !CheckFlag(target.Member.Flags, FlagType.Constructor))
             {
-                config = new FRConfiguration(GetAllProjectRelatedFiles(project, onlySourceFiles), GetFRSearch(target.Member.Name));
+                config = new FRConfiguration(GetAllProjectRelatedFiles(project, onlySourceFiles, ignoreSdkFiles), GetFRSearch(target.Member.Name));
             }
             else
             {
                 target.Member = null;
-                config = new FRConfiguration(GetAllProjectRelatedFiles(project, onlySourceFiles), GetFRSearch(target.Type.Name));
+                config = new FRConfiguration(GetAllProjectRelatedFiles(project, onlySourceFiles, ignoreSdkFiles), GetFRSearch(target.Type.Name));
             }
             config.CacheDocuments = true;
             FRRunner runner = new FRRunner();
@@ -365,6 +402,7 @@ namespace CodeRefactor.Provider
         /// </summary>
         public static Boolean IsProjectRelatedFile(IProject project, String file)
         {
+            if (project == null) return false;
             IASContext context = ASContext.GetLanguageContext(project.Language);
             if (context == null) return false;
             foreach (PathModel pathModel in context.Classpath)
@@ -386,6 +424,10 @@ namespace CodeRefactor.Provider
         /// </summary>
         private static List<String> GetAllProjectRelatedFiles(IProject project, bool onlySourceFiles)
         {
+            return GetAllProjectRelatedFiles(project, onlySourceFiles, false);
+        }
+        private static List<String> GetAllProjectRelatedFiles(IProject project, bool onlySourceFiles, Boolean ignoreSdkFiles)
+        {
             List<String> files = new List<String>();
             string filter = project.DefaultSearchFilter;
             if (string.IsNullOrEmpty(filter)) return files;
@@ -398,8 +440,13 @@ namespace CodeRefactor.Provider
                 {
                     string absolute = project.GetAbsolutePath(pathModel.Path);
                     if (Directory.Exists(absolute))
+                    {
+                        if (ignoreSdkFiles && IsUnderSDKPath(absolute)) continue;
                         foreach (string filterMask in filters)
+                        {
                             files.AddRange(Directory.GetFiles(absolute, filterMask, SearchOption.AllDirectories));
+                        }
+                    }
                 }
             }
             else
@@ -410,8 +457,13 @@ namespace CodeRefactor.Provider
                 foreach (string path in lookupPaths)
                 {
                     if (Directory.Exists(path))
+                    {
+                        if (ignoreSdkFiles && IsUnderSDKPath(path)) continue;
                         foreach (string filterMask in filters)
+                        {
                             files.AddRange(Directory.GetFiles(path, filterMask, SearchOption.AllDirectories));
+                        }
+                    }
                 }
             }
             // If no source paths are defined, get files directly from project path
@@ -419,23 +471,11 @@ namespace CodeRefactor.Provider
             {
                 String projRoot = Path.GetDirectoryName(project.ProjectPath);
                 foreach (string filterMask in filters)
+                {
                     files.AddRange(Directory.GetFiles(projRoot, filterMask, SearchOption.AllDirectories));
+                }
             }
             return files;
-        }
-
-        public static string GetSearchPatternFromLang(string lang)
-        {
-            if (lang == "haxe")
-                return "*.hx";
-            if (lang == "as2")
-                return "*.as";
-            if (lang == "as3")
-                return "*.as;*.mxml";
-            if (lang == "loom")
-                return "*.ls";
-
-            return null;
         }
 
         /// <summary>
@@ -500,16 +540,14 @@ namespace CodeRefactor.Provider
         {
             Copy(oldPath, newPath, true);
         }
-
         public static void Copy(string oldPath, string newPath, bool renaming)
         {
             Copy(oldPath, newPath, renaming, true);
         }
-
         public static void Copy(string oldPath, string newPath, bool renaming, bool simulateMove)
         {
             if (string.IsNullOrEmpty(oldPath) || string.IsNullOrEmpty(newPath)) return;
-            ProjectManager.Projects.Project project = (ProjectManager.Projects.Project)PluginBase.CurrentProject;
+            Project project = (Project)PluginBase.CurrentProject;
             string newDocumentClass = null;
 
             if (File.Exists(oldPath) && FileHelper.ConfirmOverwrite(newPath))
@@ -517,7 +555,7 @@ namespace CodeRefactor.Provider
                 File.Copy(oldPath, newPath, true);
                 if (simulateMove)
                 {
-                    PluginCore.Managers.DocumentManager.MoveDocuments(oldPath, newPath);
+                    DocumentManager.MoveDocuments(oldPath, newPath);
                     if (project.IsDocumentClass(oldPath)) newDocumentClass = newPath;
                 }
             }
@@ -539,7 +577,7 @@ namespace CodeRefactor.Provider
                                 newDocumentClass = file.Replace(oldPath, newPath);
                                 break;
                             }
-                            PluginCore.Managers.DocumentManager.MoveDocuments(oldPath, newPath);
+                            DocumentManager.MoveDocuments(oldPath, newPath);
                         }
                         if (newDocumentClass != null) break;
                     }
@@ -562,17 +600,16 @@ namespace CodeRefactor.Provider
         {
             Move(oldPath, newPath, true);
         }
-
         public static void Move(string oldPath, string newPath, bool renaming)
         {
             if (string.IsNullOrEmpty(oldPath) || string.IsNullOrEmpty(newPath)) return;
-            ProjectManager.Projects.Project project = (ProjectManager.Projects.Project)PluginBase.CurrentProject;
+            Project project = (Project)PluginBase.CurrentProject;
             string newDocumentClass = null;
 
             if (File.Exists(oldPath) && FileHelper.ConfirmOverwrite(newPath))
             {
                 FileHelper.ForceMove(oldPath, newPath);
-                PluginCore.Managers.DocumentManager.MoveDocuments(oldPath, newPath);
+                DocumentManager.MoveDocuments(oldPath, newPath);
                 if (project.IsDocumentClass(oldPath)) newDocumentClass = newPath;
             }
             else if (Directory.Exists(oldPath))
@@ -594,7 +631,7 @@ namespace CodeRefactor.Provider
                 }
                 // We need to use our own method for moving directories if folders in the new path already exist
                 FileHelper.ForceMoveDirectory(oldPath, newPath);
-                PluginCore.Managers.DocumentManager.MoveDocuments(oldPath, newPath);
+                DocumentManager.MoveDocuments(oldPath, newPath);
             }
             if (!string.IsNullOrEmpty(newDocumentClass))
             {
@@ -602,5 +639,7 @@ namespace CodeRefactor.Provider
                 project.Save();
             }
         }
+
     }
+
 }

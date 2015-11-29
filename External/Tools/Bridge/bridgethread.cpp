@@ -2,25 +2,29 @@
 #include <QDebug>
 #include <QSettings>
 #include "bridgethread.h"
-
 #define EOL "*"
+
+bool BridgeThread::pathNotified = false;
 
 BridgeThread::BridgeThread(int descriptor, QObject *parent) : QObject(parent)
 {
     socketDescriptor = descriptor;
     handler = 0;
     client = new QTcpSocket();
-
     if (!client->setSocketDescriptor(socketDescriptor))
     {
-        //emit error(client.error());
         qDebug() << "Socket init error:" << client->errorString();
         return;
     }
-
+    if (!BridgeThread::pathNotified)
+    {
+        qDebug() << "Notify bridge path...";
+        BridgeThread::pathNotified = true;
+        QString path = QCoreApplication::applicationDirPath();
+        BridgeThread::sendMessage("BRIDGE:" + path.toUtf8());
+    }
     connect(client, SIGNAL(disconnected()), this, SLOT(client_disconnected()));
     connect(client, SIGNAL(readyRead()), this, SLOT(client_readyRead()));
-
     timer.setSingleShot(true);
     connect(&timer, SIGNAL(timeout()), this, SLOT(timer_elapsed()));
 }
@@ -71,11 +75,9 @@ void BridgeThread::client_disconnected()
 void BridgeThread::sendMessage(QString message)
 {
     QMutexLocker locker(&mutex);
-    if (!queue.contains(message))
-        queue << message;
+    if (!queue.contains(message)) queue << message;
     timer.start(100);
 }
-
 
 /* COMMANDS HANDLING */
 
@@ -103,7 +105,6 @@ void BridgeHandler::command(QString name, QString param)
 void BridgeHandler::watchPath(QString param)
 {
     watched = param;
-
     QStringList hasFilter(param.split('*'));
     if (hasFilter.length() > 1)
     {
@@ -111,22 +112,17 @@ void BridgeHandler::watchPath(QString param)
         remotePath = hasFilter[0].replace('\\', '/');
     }
     else remotePath = param.replace('\\', '/');
-
     localPath = getLocalPath(remotePath);
-
     bool isDir = localPath.endsWith('/');
     if (isDir)
     {
         remotePath.chop(1);
         localPath.chop(1);
     }
-
     watchedPath = localPath;
-    //qDebug() << "watch" << watchedPath << filter;
-
+    qDebug() << "watch" << watchedPath << filter;
     fsw = new FileSystemWatcherEx(this);
     connect(fsw, SIGNAL(fileSystemChanged(QString)), this, SLOT(localChanged(QString)));
-
     if (isSpecial)
     {
         watchedPath = getSpecialPath();
@@ -162,7 +158,6 @@ QString BridgeHandler::getLocalPath(QString path)
         }
     }
     if (local.isEmpty()) local = path;
-
     if (local.contains(".FlashDevelop"))
     {
         special = QDir(local).dirName();
@@ -174,10 +169,7 @@ QString BridgeHandler::getLocalPath(QString path)
 
 QString BridgeHandler::getRemotePath(QString path)
 {
-    if (isSpecial)
-    {
-        return remotePath;
-    }
+    if (isSpecial) return remotePath;
     else
     {
         int len = localPath.length();
@@ -196,16 +188,13 @@ void BridgeHandler::localChanged(QString path)
         QDir dir(path);
         dir.setNameFilters(filter);
         QStringList files(dir.entryList());
-        if (files.length() == 0)
-            return; // no file matches filter
-
+        if (files.length() == 0) return; // no file matches filter
         foreach(QString name, files)
         {
             copyPatched(path + name, localPath + "/" + name);
         }
         path = localPath;
     }
-
     path = getRemotePath(path);
     if (path.length() > 0)
     {
@@ -220,7 +209,6 @@ void BridgeHandler::copyPatched(QString filePath, QString destPath)
     if (!file.open(QIODevice::ReadOnly)) return;
     QString src = QString::fromUtf8(file.readAll().data());
     file.close();
-
     // replace local paths by remote paths
     QSettings settings;
     settings.beginGroup("localRemoteMap");
@@ -230,7 +218,6 @@ void BridgeHandler::copyPatched(QString filePath, QString destPath)
         QString local(settings.value(key).toString());
         src = src.replace(local, remote);
     }
-
     QFile dest(destPath);
     if (!dest.open(QIODevice::WriteOnly)) return;
     dest.write(src.toUtf8());

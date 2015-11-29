@@ -1,20 +1,19 @@
 using System;
-using System.IO;
-using System.Drawing;
-using System.Windows.Forms;
 using System.ComponentModel;
-using WeifenLuo.WinFormsUI;
-using WeifenLuo.WinFormsUI.Docking;
+using System.Drawing;
+using System.IO;
+using System.Windows.Forms;
+using PluginCore;
+using PluginCore.Helpers;
 using PluginCore.Localization;
 using PluginCore.Managers;
 using PluginCore.Utilities;
-using PluginCore.Helpers;
-using PluginCore;
+using WeifenLuo.WinFormsUI.Docking;
 
 namespace LayoutManager
 {
-	public class PluginMain : IPlugin
-	{
+    public class PluginMain : IPlugin
+    {
         private String pluginName = "LayoutManager";
         private String pluginGuid = "3450fd43-3112-4b3f-a02a-e6bdbadcb971";
         private String pluginHelp = "www.flashdevelop.org/community/";
@@ -26,7 +25,7 @@ namespace LayoutManager
         private PluginUI pluginUI;
         private Image pluginImage;
 
-	    #region Required Properties
+        #region Required Properties
 
         /// <summary>
         /// Api level of the plugin
@@ -40,41 +39,41 @@ namespace LayoutManager
         /// Name of the plugin
         /// </summary> 
         public String Name
-		{
-			get { return this.pluginName; }
-		}
+        {
+            get { return this.pluginName; }
+        }
 
         /// <summary>
         /// GUID of the plugin
         /// </summary>
         public String Guid
-		{
-			get { return this.pluginGuid; }
-		}
+        {
+            get { return this.pluginGuid; }
+        }
 
         /// <summary>
         /// Author of the plugin
         /// </summary> 
         public String Author
-		{
-			get { return this.pluginAuth; }
-		}
+        {
+            get { return this.pluginAuth; }
+        }
 
         /// <summary>
         /// Description of the plugin
         /// </summary> 
         public String Description
-		{
-			get { return this.pluginDesc; }
-		}
+        {
+            get { return this.pluginDesc; }
+        }
 
         /// <summary>
         /// Web address for help
         /// </summary> 
         public String Help
-		{
-			get { return this.pluginHelp; }
-		}
+        {
+            get { return this.pluginHelp; }
+        }
 
         /// <summary>
         /// Object that contains the settings
@@ -84,36 +83,36 @@ namespace LayoutManager
         {
             get { return this.settingObject; }
         }
-		
-		#endregion
-		
-		#region Required Methods
-		
-		/// <summary>
-		/// Initializes the plugin
-		/// </summary>
-		public void Initialize()
-		{
+        
+        #endregion
+        
+        #region Required Methods
+        
+        /// <summary>
+        /// Initializes the plugin
+        /// </summary>
+        public void Initialize()
+        {
             this.InitBasics();
             this.LoadSettings();
             this.AddEventHandlers();
             this.CreatePluginPanel();
             this.CreateMenuItem();
         }
-		
-		/// <summary>
-		/// Disposes the plugin
-		/// </summary>
-		public void Dispose()
-		{
+        
+        /// <summary>
+        /// Disposes the plugin
+        /// </summary>
+        public void Dispose()
+        {
             this.SaveSettings();
-		}
-		
-		/// <summary>
-		/// Handles the incoming events
-		/// </summary>
-		public void HandleEvent(Object sender, NotifyEvent e, HandlingPriority prority)
-		{
+        }
+        
+        /// <summary>
+        /// Handles the incoming events
+        /// </summary>
+        public void HandleEvent(Object sender, NotifyEvent e, HandlingPriority priority)
+        {
             switch (e.Type)
             {
                 case EventType.FileOpening:
@@ -125,9 +124,9 @@ namespace LayoutManager
                     }
                     break;
             }
-		}
-		
-		#endregion
+        }
+        
+        #endregion
 
         #region Custom Methods
        
@@ -199,13 +198,13 @@ namespace LayoutManager
         /// <summary>
         /// Opens the plugin panel if closed
         /// </summary>
-        public void OpenPanel(Object sender, System.EventArgs e)
+        public void OpenPanel(Object sender, EventArgs e)
         {
             this.pluginPanel.Show();
         }
 
-		#endregion
+        #endregion
 
-	}
-	
+    }
+    
 }

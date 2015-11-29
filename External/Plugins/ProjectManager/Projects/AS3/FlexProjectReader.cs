@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Xml;
-using System.Runtime.InteropServices;
 using PluginCore;
 using PluginCore.Helpers;
 
@@ -74,7 +72,7 @@ namespace ProjectManager.Projects.AS3
             }
             else
             {
-                project.MovieOptions.Platform = PluginCore.PlatformData.FLASHPLAYER_PLATFORM;
+                project.MovieOptions.Platform = PlatformData.FLASHPLAYER_PLATFORM;
                 project.TestMovieBehavior = TestMovieBehavior.Default;
             }
             project.MovieOptions.Version = fpVersion ?? project.MovieOptions.DefaultVersion(project.MovieOptions.Platform);
@@ -90,7 +88,7 @@ namespace ProjectManager.Projects.AS3
                         {
                             target = 3;
                             additional = "-compatibility-version=3.0.0\n" + additional;
-                            if (project.MovieOptions.Platform == PluginCore.PlatformData.FLASHPLAYER_PLATFORM)
+                            if (project.MovieOptions.Platform == PlatformData.FLASHPLAYER_PLATFORM)
                                 project.MovieOptions.Version = "9.0";
                         }
                 }
@@ -205,7 +203,6 @@ namespace ProjectManager.Projects.AS3
         private void ReadModules()
         {
             ReadStartElement("modules");
-            PathCollection targets = new PathCollection();
             while (Name == "module")
             {
                 string app = GetAttribute("application") ?? "";
@@ -303,7 +300,7 @@ namespace ProjectManager.Projects.AS3
 
         public static String ResolvePath(String path, String relativeTo)
         {
-            if (path == null || path.Length == 0) return null;
+            if (string.IsNullOrEmpty(path)) return null;
             Boolean isPathNetworked = path.StartsWith("\\\\") || path.StartsWith("//");
             if (Path.IsPathRooted(path) || isPathNetworked) return path;
             String resolvedPath = Path.Combine(relativeTo, path);
@@ -347,7 +344,7 @@ namespace ProjectManager.Projects.AS3
                     // The path should be the first one by default, but depending of Java versions may be resolved in other ways.
                     // It can be customized as well, in which case it cannot be easily got (we should check FB Java parameters, and then maybe
                     // Eclipse configuration files to get workspaces and their settings if further inspection is needed)
-                    // For the later one in this list some Java versions are not even returning the right path... it's using this registry key:
+                    // For the second one in this list some Java versions are not even returning the right path... it's using this registry key:
                     // HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders\Desktop
                     // which use is discouraged to use, and other registry key should take precendence, but it's suggested to use the method here
                     string path;

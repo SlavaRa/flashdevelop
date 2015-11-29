@@ -1,14 +1,13 @@
 using System;
-using System.Collections;
-using System.Collections.Specialized;
 using System.Collections.Generic;
-using System.Text;
 using System.IO;
-using ASCompletion.Context;
-using PluginCore.Managers;
-using System.Windows.Forms;
-using PluginCore.Bridge;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Windows.Forms;
+using ASCompletion.Context;
+using PluginCore;
+using PluginCore.Bridge;
+using PluginCore.Managers;
+using Timer = System.Timers.Timer;
 
 namespace ASCompletion.Model
 {
@@ -93,7 +92,7 @@ namespace ASCompletion.Model
         private bool inited;
         private bool inUse;
         private WatcherEx watcher;
-        private System.Timers.Timer updater;
+        private Timer updater;
         private string[] masks;
         private string basePath;
         private Dictionary<string, FileModel> files;
@@ -151,9 +150,9 @@ namespace ASCompletion.Model
         {
             if (inited && IsValid) return;
             inited = true;
-            updater = new System.Timers.Timer();
+            updater = new Timer();
             updater.Interval = 500;
-            updater.SynchronizingObject = PluginCore.PluginBase.MainForm as Form;
+            updater.SynchronizingObject = PluginBase.MainForm as Form;
             updater.Elapsed += updater_Tick;
             toExplore = new List<string>();
             toRemove = new List<string>();
@@ -463,25 +462,25 @@ namespace ASCompletion.Model
             if (!Directory.Exists(path)) return;
             explored.Add(path);
 
-            // convert classes
             try
             {
+                // convert classes
                 foreach (string mask in masks)
                 {
                     string[] files = Directory.GetFiles(path, mask);
                     if (files != null)
                         foreach (string file in files) foundFiles.Add(file);
                 }
+
+                // explore subfolders
+                string[] dirs = Directory.GetDirectories(path);
+                foreach (string dir in dirs)
+                {
+                    if (!explored.Contains(dir) && (File.GetAttributes(dir) & FileAttributes.Hidden) == 0)
+                        ExploreFolder(dir, masks, explored, foundFiles);
+                }
             }
             catch { }
-
-            // explore subfolders
-            string[] dirs = Directory.GetDirectories(path);
-            foreach (string dir in dirs)
-            {
-                if (!explored.Contains(dir) && (File.GetAttributes(dir) & FileAttributes.Hidden) == 0)
-                    ExploreFolder(dir, masks, explored, foundFiles);
-            }
         }
         #endregion
 
@@ -628,6 +627,9 @@ namespace ASCompletion.Model
                             var aFile = newFiles[key];
                             if (File.Exists(aFile.FileName))
                             {
+                                var info = new FileInfo(aFile.FileName);
+                                if (info.LastWriteTime != aFile.LastWriteTime) aFile.OutOfDate = true;
+
                                 aFile.Context = Owner;
                                 files[key] = aFile;
                             }

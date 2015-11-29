@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Text;
 using System.Drawing;
-using System.Windows.Forms;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Windows.Forms;
+using Microsoft.Win32;
 
 namespace PluginCore
 {
@@ -25,6 +26,14 @@ namespace PluginCore
         public static Boolean IsRunningOnWindows()
         {
             return shouldUseWin32;
+        }
+
+        /// <summary>
+        ///  Checks if we are running on Wine
+        /// </summary>
+        public static Boolean isRunningOnWine()
+        {
+            return Registry.LocalMachine.OpenSubKey(@"Software\Wine\") != null;
         }
 
         /// <summary>
@@ -210,7 +219,7 @@ namespace PluginCore
             Int32 screenLeft = screen.WorkingArea.Left;
             Int32 screenWidth = screen.WorkingArea.Width;
             Int32 screenHeight = screen.WorkingArea.Height;
-            Win32.SetWindowPos(hwnd, IntPtr.Zero, screenLeft, screenTop, screenWidth, screenHeight, Win32.SWP_SHOWWINDOW);
+            SetWindowPos(hwnd, IntPtr.Zero, screenLeft, screenTop, screenWidth, screenHeight, SWP_SHOWWINDOW);
         }
 
         /// <summary>
@@ -218,7 +227,7 @@ namespace PluginCore
         /// </summary>
         public static void RestoreWindow(IntPtr handle)
         {
-            if (Win32.IsIconic(handle)) Win32.ShowWindow(handle, Win32.SW_RESTORE);
+            if (IsIconic(handle)) ShowWindow(handle, SW_RESTORE);
         }
 
         #endregion

@@ -1,36 +1,32 @@
 using System;
-using System.IO;
 using System.Text;
-using System.Collections;
-using System.Diagnostics;
-using WeifenLuo.WinFormsUI;
-using PluginCore.Utilities;
-using PluginCore;
-using ProjectManager.Helpers;
 using System.Windows.Forms;
+using PluginCore;
 using PluginCore.Localization;
+using PluginCore.Utilities;
+using ProjectManager.Helpers;
 
 namespace ProjectManager.Actions
 {
-	public class FlashDevelopActions
-	{
+    public class FlashDevelopActions
+    {
         static private bool nameAsked;
         private IMainForm mainForm;
 
-		public FlashDevelopActions(IMainForm mainForm)
-		{
-			this.mainForm = mainForm;
-		}
-		
-		public Encoding GetDefaultEncoding()
-		{
+        public FlashDevelopActions(IMainForm mainForm)
+        {
+            this.mainForm = mainForm;
+        }
+        
+        public Encoding GetDefaultEncoding()
+        {
             return Encoding.GetEncoding((Int32)mainForm.Settings.DefaultCodePage);
-		}
+        }
 
-		public string GetDefaultEOLMarker()
-		{
+        public string GetDefaultEOLMarker()
+        {
             return LineEndDetector.GetNewLineMarker((Int32)mainForm.Settings.EOLMode);
-		}
+        }
 
         public static void CheckAuthorName()
         {

@@ -1,39 +1,24 @@
-#region imports
-
 using System;
 using System.IO;
-using System.Drawing;
 using System.Windows.Forms;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Collections;
-
 using PluginCore.Localization;
 using PluginCore.Utilities;
 using PluginCore.Managers;
-using PluginCore.Helpers;
 using PluginCore;
-
 using ProjectManager.Projects;
-using ProjectManager.Projects.AS3;
-using ProjectManager.Projects.AS2;
-
 using ASCompletion.Model;
 using ASCompletion.Context;
-
 using ASClassWizard.Resources;
 using ASClassWizard.Wizards;
-
-using System.Text.RegularExpressions;
 using ASCompletion.Completion;
 using System.Collections.Generic;
 
-#endregion
-
 namespace ASClassWizard
 {
-	public class PluginMain : IPlugin
-	{
+    public class PluginMain : IPlugin
+    {
         private String pluginName = "ASClassWizard";
         private String pluginGuid = "a2c159c1-7d21-4483-aeb1-38d9fdc4c7f3";
         private String pluginHelp = "www.flashdevelop.org/community/";
@@ -47,7 +32,7 @@ namespace ASClassWizard
         private String constructorArgs;
         private List<String> constructorArgTypes;
 
-	    #region Required Properties
+        #region Required Properties
         
         /// <summary>
         /// Api level of the plugin
@@ -61,41 +46,41 @@ namespace ASClassWizard
         /// Name of the plugin
         /// </summary> 
         public String Name
-		{
-			get { return this.pluginName; }
-		}
+        {
+            get { return this.pluginName; }
+        }
 
         /// <summary>
         /// GUID of the plugin
         /// </summary>
         public String Guid
-		{
-			get { return this.pluginGuid; }
-		}
+        {
+            get { return this.pluginGuid; }
+        }
 
         /// <summary>
         /// Author of the plugin
         /// </summary> 
         public String Author
-		{
-			get { return this.pluginAuth; }
-		}
+        {
+            get { return this.pluginAuth; }
+        }
 
         /// <summary>
         /// Description of the plugin
         /// </summary> 
         public String Description
-		{
-			get { return this.pluginDesc; }
-		}
+        {
+            get { return this.pluginDesc; }
+        }
 
         /// <summary>
         /// Web address for help
         /// </summary> 
         public String Help
-		{
-			get { return this.pluginHelp; }
-		}
+        {
+            get { return this.pluginHelp; }
+        }
 
         /// <summary>
         /// Object that contains the settings
@@ -105,24 +90,24 @@ namespace ASClassWizard
         {
             get { return null; }
         }
-		
-		#endregion
-		
-		#region Required Methods
+        
+        #endregion
+        
+        #region Required Methods
 
-		public void Initialize()
-		{
+        public void Initialize()
+        {
             this.AddEventHandlers();
             this.InitLocalization();
         }
-		
-		public void Dispose()
-		{
+        
+        public void Dispose()
+        {
             // Nothing here...
-		}
-		
-		public void HandleEvent(Object sender, NotifyEvent e, HandlingPriority prority)
-		{
+        }
+        
+        public void HandleEvent(Object sender, NotifyEvent e, HandlingPriority priority)
+        {
             Project project;
             switch (e.Type)
             {
@@ -136,7 +121,7 @@ namespace ASClassWizard
                         {
                             evt.Handled = true;
                             String className = table.ContainsKey("className") ? table["className"] as String : TextHelper.GetString("Wizard.Label.NewClass");
-							DisplayClassWizard(table["inDirectory"] as String, table["templatePath"] as String, className, table["constructorArgs"] as String, table["constructorArgTypes"] as List<String>);
+                            DisplayClassWizard(table["inDirectory"] as String, table["templatePath"] as String, className, table["constructorArgs"] as String, table["constructorArgTypes"] as List<String>);
                         }
                     }
                     break;
@@ -166,14 +151,14 @@ namespace ASClassWizard
                     }
                     break;
             }
-		}
+        }
 
         private bool IsWizardTemplate(string templateFile)
         {
             return templateFile != null && File.Exists(templateFile + ".wizard");
         }
-		
-		#endregion
+        
+        #endregion
 
         #region Custom Methods
 
@@ -227,28 +212,37 @@ namespace ASClassWizard
             {
                 package = "";
             }
-            AS3ClassWizard dialog = new AS3ClassWizard();
-            bool isHaxe = project.Language == "haxe";
-            dialog.Project = project;
-            dialog.Directory = inDirectory;
-			dialog.StartupClassName = className;
-            if (package != null)
+            using (AS3ClassWizard dialog = new AS3ClassWizard())
             {
-                package = package.Replace(Path.DirectorySeparatorChar, '.');
-                dialog.StartupPackage = package;
-            }
-            if (dialog.ShowDialog() == DialogResult.OK)
-            {
-                string cPackage = dialog.getPackage();
-                string path = Path.Combine(classpath, dialog.getPackage().Replace('.', Path.DirectorySeparatorChar));
-                string newFilePath  = Path.ChangeExtension(Path.Combine(path, dialog.getClassName()), isHaxe ? ".hx" : ".as");
-                if (File.Exists(newFilePath))
+                bool isHaxe = project.Language == "haxe";
+                dialog.Project = project;
+                dialog.Directory = inDirectory;
+                dialog.StartupClassName = className;
+                if (package != null)
                 {
-                    string title = " " + TextHelper.GetString("FlashDevelop.Title.ConfirmDialog");
-                    string message = TextHelper.GetString("PluginCore.Info.FolderAlreadyContainsFile");
-                    DialogResult result = MessageBox.Show(PluginBase.MainForm, string.Format(message, newFilePath, "\n"), title, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
-                    if (result == DialogResult.Cancel) return;
+                    package = package.Replace(Path.DirectorySeparatorChar, '.');
+                    dialog.StartupPackage = package;
                 }
+                DialogResult conflictResult = DialogResult.OK;
+                string cPackage, path, newFilePath;
+                do
+                {
+                    if (dialog.ShowDialog() != DialogResult.OK) return;
+                    cPackage = dialog.getPackage();
+                    path = Path.Combine(classpath, cPackage.Replace('.', Path.DirectorySeparatorChar));
+                    newFilePath = Path.ChangeExtension(Path.Combine(path, dialog.getClassName()),
+                                                              isHaxe ? ".hx" : ".as");
+                    if (File.Exists(newFilePath))
+                    {
+                        string title = " " + TextHelper.GetString("FlashDevelop.Title.ConfirmDialog");
+                        string message = TextHelper.GetString("PluginCore.Info.FolderAlreadyContainsFile");
+                        conflictResult = MessageBox.Show(PluginBase.MainForm,
+                            string.Format(message, newFilePath, "\n"), title,
+                            MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
+                        if (conflictResult == DialogResult.No) return;
+                    }
+                } while (conflictResult == DialogResult.Cancel);
+
                 string templatePath = templateFile + ".wizard";
                 this.lastFileFromTemplate = newFilePath;
                 this.constructorArgs = constructorArgs;
@@ -263,7 +257,7 @@ namespace ASClassWizard
                     dialog.isFinal(),
                     dialog.getGenerateInheritedMethods(),
                     dialog.getGenerateConstructor()
-                  );
+                );
 
                 try
                 {
@@ -367,7 +361,8 @@ namespace ASClassWizard
                                 foreach (MemberModel param in member.Parameters)
                                 {
                                     if (param.Name.StartsWith(".")) break;
-                                    superConstructor += (index > 0 ? ", " : "") + param.Name;
+                                    var pname = TemplateUtils.GetParamName(param);
+                                    superConstructor += (index > 0 ? ", " : "") + pname;
                                     index++;
                                 }
                                 superConstructor += ");\n" + (lastFileOptions.Language == "as3" ? "\t\t\t" : "\t\t");
@@ -445,18 +440,15 @@ namespace ASClassWizard
             }
         }
 
-        private String AddImport(List<string> imports, String cname, ClassModel inClass)
+        private void AddImport(List<string> imports, String cname, ClassModel inClass)
         {
             ClassModel aClass = processContext.ResolveType(cname, inClass.InFile);
             if (aClass != null && !aClass.IsVoid() && aClass.InFile.Package != "")
             {
                 imports.Add(aClass.QualifiedName);
             }
-            return "";
         }
 
-		#endregion
-
-	}
-	
+        #endregion
+    }
 }

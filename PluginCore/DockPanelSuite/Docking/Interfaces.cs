@@ -1,22 +1,21 @@
-using System;
 using System.Drawing;
 using System.Windows.Forms;
 
 namespace WeifenLuo.WinFormsUI.Docking
 {
-	public interface IDockContent
-	{
-		DockContentHandler DockHandler	{	get;	}
-	}
+    public interface IDockContent
+    {
+        DockContentHandler DockHandler  {   get;    }
+    }
 
-	public interface INestedPanesContainer
-	{
-		DockState DockState	{	get;	}
-		Rectangle DisplayingRectangle	{	get;	}
-		NestedPaneCollection NestedPanes	{	get;	}
-		VisibleNestedPaneCollection VisibleNestedPanes	{	get;	}
-		bool IsFloat	{	get;	}
-	}
+    public interface INestedPanesContainer
+    {
+        DockState DockState {   get;    }
+        Rectangle DisplayingRectangle   {   get;    }
+        NestedPaneCollection NestedPanes    {   get;    }
+        VisibleNestedPaneCollection VisibleNestedPanes  {   get;    }
+        bool IsFloat    {   get;    }
+    }
 
     internal interface IDragSource
     {

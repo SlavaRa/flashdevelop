@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Text;
 using System.Drawing;
 using System.Collections;
@@ -156,7 +155,7 @@ namespace FlashDevelop.Dialogs
             this.viewCustom.CheckAlign = ContentAlignment.MiddleRight;
             this.viewCustom.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right));
             this.viewCustom.Location = new System.Drawing.Point(471, 9);
-            this.viewCustom.Click += new System.EventHandler(this.ViewCustomClick);
+            this.viewCustom.CheckedChanged += new System.EventHandler(this.ViewCustomCheckedChanged);
             // 
             // ShortcutDialog
             // 
@@ -213,7 +212,7 @@ namespace FlashDevelop.Dialogs
         {
             ContextMenuStrip cms = new ContextMenuStrip();
             cms.Font = Globals.Settings.DefaultFont;
-            cms.Renderer = new DockPanelStripRenderer(false);
+            cms.Renderer = new DockPanelStripRenderer(false, false);
             this.removeShortcut = new ToolStripMenuItem(TextHelper.GetString("Label.RemoveShortcut"), null, this.RemoveShortcutClick);
             this.removeShortcut.ShortcutKeys = Keys.Delete;
             this.revertToDefault = new ToolStripMenuItem(TextHelper.GetString("Label.RevertToDefault"), null, this.RevertToDefaultClick);
@@ -222,7 +221,7 @@ namespace FlashDevelop.Dialogs
             cms.Items.Add(this.revertToDefault);
             cms.Items.Add(this.revertAllToDefault);
             this.listView.ContextMenuStrip = cms;
-            this.listView.ContextMenuStrip.Opening += this.ContextMenuOpening;
+            cms.Opening += this.ContextMenuOpening;
         }
 
         /// <summary>
@@ -369,7 +368,7 @@ namespace FlashDevelop.Dialogs
         /// <summary>
         /// Filter the list view for custom items
         /// </summary>
-        private void ViewCustomClick(Object sender, EventArgs e)
+        private void ViewCustomCheckedChanged(Object sender, EventArgs e)
         {
             this.FilterTextChanged(null, null);
         }

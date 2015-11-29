@@ -1,9 +1,6 @@
 using System;
-using System.Text;
-using System.Collections;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using FlashDevelop.Docking;
 using PluginCore;
 
 namespace FlashDevelop.Managers
@@ -17,7 +14,7 @@ namespace FlashDevelop.Managers
         static TabbingManager()
         {
             TabTimer = new Timer();
-			TabTimer.Interval = 100;
+            TabTimer.Interval = 100;
             TabTimer.Tick += new EventHandler(OnTabTimer);
             TabHistory = new List<ITabbedDocument>();
             SequentialIndex = 0;
@@ -26,7 +23,7 @@ namespace FlashDevelop.Managers
         /// <summary>
         /// Checks to see if the Control key has been released
         /// </summary>
-        private static void OnTabTimer(Object sender, System.EventArgs e)
+        private static void OnTabTimer(Object sender, EventArgs e)
         {
             if ((Control.ModifierKeys & Keys.Control) == 0)
             {
@@ -41,10 +38,11 @@ namespace FlashDevelop.Managers
         /// </summary>
         public static void UpdateSequentialIndex(ITabbedDocument document)
         {
-            Int32 count = Globals.MainForm.Documents.Length;
+            ITabbedDocument[] documents = Globals.MainForm.Documents;
+            Int32 count = documents.Length;
             for (Int32 i = 0; i < count; i++)
             {
-                if (document == Globals.MainForm.Documents[i])
+                if (document == documents[i])
                 {
                     SequentialIndex = i;
                     return;

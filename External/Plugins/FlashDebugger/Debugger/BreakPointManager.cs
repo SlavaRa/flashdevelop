@@ -1,15 +1,15 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
-using System.Windows.Forms;
+using System.IO;
 using System.Xml.Serialization;
 using flash.tools.debugger;
 using flash.tools.debugger.expression;
-using PluginCore.Helpers;
-using PluginCore.Utilities;
-using PluginCore.Managers;
-using ScintillaNet;
 using PluginCore;
+using PluginCore.Helpers;
+using PluginCore.Managers;
+using PluginCore.Utilities;
+using ScintillaNet;
+using StringReader = java.io.StringReader;
 
 namespace FlashDebugger
 {
@@ -58,7 +58,7 @@ namespace FlashDebugger
 
         public void InitBreakPoints()
         {
-            foreach (PluginCore.ITabbedDocument doc in PluginBase.MainForm.Documents)
+            foreach (ITabbedDocument doc in PluginBase.MainForm.Documents)
             {
                 if (Path.GetExtension(doc.SciControl.FileName) == ".as" || Path.GetExtension(doc.SciControl.FileName) == ".mxml")
                 {
@@ -188,12 +188,12 @@ namespace FlashDebugger
             return true;
         }
 
-        public void SetBreakPointsToEditor(PluginCore.ITabbedDocument[] documents)
+        public void SetBreakPointsToEditor(ITabbedDocument[] documents)
         {
             m_bAccessable = false;
-            for (int i = 0; i < documents.Length; i++)
+            foreach (ITabbedDocument document in documents)
             {
-                ScintillaControl sci = documents[i].SciControl;
+                ScintillaControl sci = document.SciControl;
                 if (sci == null) continue;
                 if (Path.GetExtension(sci.FileName) == ".as" || Path.GetExtension(sci.FileName) == ".mxml")
                 {
@@ -213,10 +213,9 @@ namespace FlashDebugger
         public void SetBreakPointsToEditor(string filefullpath)
         {
             m_bAccessable = false;
-            ITabbedDocument[] documents = PluginBase.MainForm.Documents;
-            for (int i = 0; i < documents.Length; i++)
+            foreach (ITabbedDocument document in PluginBase.MainForm.Documents)
             {
-                ScintillaControl sci = documents[i].SciControl;
+                ScintillaControl sci = document.SciControl;
                 if (sci == null) continue;
                 if (sci.FileName.Equals(filefullpath, StringComparison.OrdinalIgnoreCase))
                 {
@@ -299,7 +298,7 @@ namespace FlashDebugger
                 {
                     int oldline = info.Line; 
                     info.Line += linesAdded;
-                    if (ChangeBreakPointEvent != null)
+                    if (UpdateBreakPointEvent != null)
                     {
                         UpdateBreakPointEvent(this, new UpdateBreakPointArgs(info.FileFullPath, oldline+1, info.Line+1));
                     }
@@ -483,7 +482,7 @@ namespace FlashDebugger
                     {
                         // todo, we need to optimize in case of bad expession (to not clog the logs)
                         IASTBuilder builder = new ASTBuilder(false);
-                        m_ParsedExpression = builder.parse(new java.io.StringReader(m_ConditionalExpression));
+                        m_ParsedExpression = builder.parse(new StringReader(m_ConditionalExpression));
                     }
                     catch (Exception e)
                     {

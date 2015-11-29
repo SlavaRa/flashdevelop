@@ -326,7 +326,7 @@ namespace ASCompletion
                         int line = theClass.LineFrom;
                         ScintillaNet.ScintillaControl sci = PluginBase.MainForm.CurrentDocument.SciControl;
                         if (sci != null && !theClass.IsVoid() && line > 0 && line < sci.LineCount)
-                            sci.GotoLine(line);
+                            sci.GotoLineIndent(line);
                     }
                 }
             }
@@ -345,7 +345,7 @@ namespace ASCompletion
                     int line = member.LineFrom;
                     ScintillaNet.ScintillaControl sci = PluginBase.MainForm.CurrentDocument.SciControl;
                     if (sci != null && line > 0 && line < sci.LineCount)
-                        sci.GotoLine(line);
+                        sci.GotoLineIndent(line);
                 }
             }
         }
@@ -432,7 +432,7 @@ namespace ASCompletion
 
         private void FindPrevMatch(string search)
         {
-            if (search != null && allTypes != null && search.Length > 0)
+            if (!string.IsNullOrEmpty(search) && allTypes != null)
             {
                 typeIndex--;
                 if (typeIndex <= 0) typeIndex = allTypes.Count;
@@ -452,7 +452,7 @@ namespace ASCompletion
 
         private void FindNextMatch(string search)
         {
-            if (search != null && allTypes != null && search.Length > 0)
+            if (!string.IsNullOrEmpty(search) && allTypes != null)
             {
                 while (typeIndex < allTypes.Count)
                 {
@@ -471,14 +471,15 @@ namespace ASCompletion
         {
             if (lastMatch != null)
             {
-                lastMatch.BackColor = SystemColors.Window;
-                lastMatch.ForeColor = SystemColors.WindowText;
+                lastMatch.BackColor = PluginBase.MainForm.GetThemeColor("TreeView.BackColor", SystemColors.Window);
+                lastMatch.ForeColor = PluginBase.MainForm.GetThemeColor("TreeView.ForeColor", SystemColors.WindowText);
+
             }
             lastMatch = node;
             if (lastMatch != null)
             {
-                lastMatch.BackColor = SystemColors.Highlight;
-                lastMatch.ForeColor = SystemColors.HighlightText;
+                lastMatch.BackColor = PluginBase.MainForm.GetThemeColor("TreeView.Highlight", SystemColors.Highlight);
+                lastMatch.ForeColor = PluginBase.MainForm.GetThemeColor("TreeView.HighlightText", SystemColors.HighlightText);
                 outlineTreeView.SelectedNode = node;
             }
         }
@@ -509,6 +510,17 @@ namespace ASCompletion
             return false;
         }
 
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == Keys.Escape)
+            {
+                OnShortcut(keyData);
+                return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
         private void ModelsExplorer_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
@@ -522,17 +534,17 @@ namespace ASCompletion
             else OnShortcut(e.KeyData);
         }
 
-        private void searchButton_Click(object sender, EventArgs e)
+        private void SearchButton_Click(object sender, EventArgs e)
         {
             FindNextMatch(filterTextBox.Text);
         }
 
-        private void refreshButton_Click(object sender, EventArgs e)
+        private void RefreshButton_Click(object sender, EventArgs e)
         {
             UpdateTree();
         }
 
-        private void rebuildButton_Click(object sender, EventArgs e)
+        private void RebuildButton_Click(object sender, EventArgs e)
         {
             outlineTreeView.Nodes.Clear();
             ASContext.RebuildClasspath();
@@ -541,7 +553,7 @@ namespace ASCompletion
 
         #region Context menu
 
-        private void exploreToolStripMenuItem_Click(object sender, EventArgs e)
+        private void ExploreToolStripMenuItem_Click(object sender, EventArgs e)
         {
             TreeNode node = outlineTreeView.SelectedNode;
             if (node == null) return;
@@ -551,14 +563,14 @@ namespace ASCompletion
                 PluginBase.MainForm.CallCommand("RunProcess", String.Format("explorer.exe;/e,\"{0}\"", path));
         }
 
-        private void editToolStripMenuItem_Click(object sender, EventArgs e)
+        private void EditToolStripMenuItem_Click(object sender, EventArgs e)
         {
             TreeNode node = outlineTreeView.SelectedNode;
             if (node == null) return;
             outlineTreeView_Click(null, null);
         }
 
-        private void convertToolStripMenuItem_Click(object sender, EventArgs e)
+        private void ConvertToolStripMenuItem_Click(object sender, EventArgs e)
         {
             TreeNode node = outlineTreeView.SelectedNode;
             if (node == null || current == null || current.Classpath == null) return;
@@ -595,6 +607,8 @@ namespace ASCompletion
             }
             else
             {
+                folderBrowserDialog.ShowNewFolderButton = true;
+                folderBrowserDialog.UseDescriptionForTitle = true;
                 folderBrowserDialog.Description = TextHelper.GetString("Title.SelectIntrinsicTargetFolder");
                 if (PluginBase.CurrentProject != null)
                     folderBrowserDialog.SelectedPath = Path.GetDirectoryName(PluginBase.CurrentProject.ProjectPath);

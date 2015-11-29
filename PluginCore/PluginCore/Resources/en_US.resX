@@ -917,6 +917,10 @@ Alternatively, Adobe Flash Professional can also be used for syntax checking - p
   <data name="FlashDevelop.Label.ClearBreakpoints" xml:space="preserve">
     <value>Clear Breakpoints</value>
   </data>
+  <data name="FlashDevelop.Label.CleanReopenList" xml:space="preserve">
+    <value>&amp;Remove Invalid Files</value>
+    <comment>Added after 5.0.0</comment>
+  </data>
   <data name="FlashDevelop.Label.ClearReopenList" xml:space="preserve">
     <value>&amp;Clear Recent Files List</value>
   </data>
@@ -1564,6 +1568,10 @@ Alternatively, Adobe Flash Professional can also be used for syntax checking - p
   <data name="ProjectManager.Description.Locale" xml:space="preserve">
     <value>Specifies the locale (ie. en_US) that should be packaged in the SWF file.</value>
   </data>
+  <data name="ProjectManager.Description.Namespaces" xml:space="preserve">
+    <value>Specifies a set of namespace URIs associated with manifest files defining components to use as MXML elements.</value>
+    <comment>Added after 4.7.0</comment>
+  </data>
   <data name="ProjectManager.Description.MainClass" xml:space="preserve">
     <value>Specifies the class with a static main entry point.</value>
   </data>
@@ -1878,6 +1886,10 @@ Alternatively, Adobe Flash Professional can also be used for syntax checking - p
   </data>
   <data name="ProjectManager.Label.Cancel" xml:space="preserve">
     <value>&amp;Cancel</value>
+  </data>
+  <data name="ProjectManager.Label.CleanRecentProjects" xml:space="preserve">
+    <value>&amp;Remove Invalid Projects</value>
+    <comment>Added after 5.0.0</comment>
   </data>
   <data name="ProjectManager.Label.ClearRecentProjects" xml:space="preserve">
     <value>&amp;Clear Recent Projects List</value>
@@ -2332,6 +2344,14 @@ Never - the start page will not show based on startup.</value>
   <data name="FlashDevelop.Title.SaveFileDialog" xml:space="preserve">
     <value>Save File</value>
   </data>
+  <data name="FlashDevelop.Title.RememberExtensionDialog" xml:space="preserve">
+    <value>Remember extension</value>
+    <comment>Added after 4.7.2</comment>
+  </data>
+  <data name="FlashDevelop.Info.RememberExtensionDialog" xml:space="preserve">
+    <value>Always use this syntax for files with this extension?</value>
+    <comment>Added after 4.7.2</comment>
+  </data>
   <data name="ProjectManager.Title.OpenProjectDialog" xml:space="preserve">
     <value>Open Project</value>
   </data>
@@ -2449,7 +2469,7 @@ Please note that with injection enabled, you will not be able to use many projec
     <value>Select Project To Import</value>
   </data>
   <data name="ProjectManager.Info.ImportProjectFilter" xml:space="preserve">
-    <value>Adobe Flash Builder Project (.actionScriptProperties)|.actionScriptProperties|Packaged Adobe Flash Builder Project (*.zip;*.fxp)|*.zip;*.fxp</value>
+    <value>Adobe Flash Builder Project (.actionScriptProperties)|.actionScriptProperties|Packaged Adobe Flash Builder Project (*.zip;*.fxp;*.fxpl)|*.zip;*.fxp;*.fxpl</value>
   </data>
   <data name="FlashDevelop.Info.RedirectFilesResults" xml:space="preserve">
     <value>Send results to Results Panel</value>
@@ -2725,7 +2745,7 @@ Please note that with injection enabled, you will not be able to use many projec
     <value>Export Syntax Files</value>
   </data>
   <data name="FlashDevelop.Info.ZipExtractDone" xml:space="preserve">
-    <value>The zip file was extracted succesfully.</value>
+    <value>The zip file was extracted successfully.</value>
   </data>
   <data name="FlashDevelop.Info.CaretFore" xml:space="preserve">
     <value>Caret fore:</value>
@@ -3497,23 +3517,23 @@ Please note that with injection enabled, you will not be able to use many projec
     <value>Stack</value>
   </data>
   <data name="FlashDebugger.BreakPoints.RemoveSelected" xml:space="preserve">
-    <value>Remove selected breakpoints</value>
+    <value>Remove Selected Breakpoints</value>
     <comment>Added after 4.7.0</comment>
   </data>
   <data name="FlashDebugger.BreakPoints.RemoveAll" xml:space="preserve">
-    <value>Remove all listed breakpoints</value>
+    <value>Remove All Listed Breakpoints</value>
     <comment>Added after 4.7.0</comment>
   </data>
   <data name="FlashDebugger.BreakPoints.ToggleAll" xml:space="preserve">
-    <value>Toggle all listed breakpoints</value>
+    <value>Toggle All Listed Breakpoints</value>
     <comment>Added after 4.7.0</comment>
   </data>
   <data name="FlashDebugger.BreakPoints.ExportAll" xml:space="preserve">
-    <value>Export all listed breakpoints</value>
+    <value>Export All Listed Breakpoints</value>
     <comment>Added after 4.7.0</comment>
   </data>
   <data name="FlashDebugger.BreakPoints.ImportAll" xml:space="preserve">
-    <value>Import breakpoints from a file</value>
+    <value>Import Breakpoints From File</value>
     <comment>Added after 4.7.0</comment>
   </data>
   <data name="FlashDebugger.BreakPoints.FilterAll" xml:space="preserve">
@@ -3544,6 +3564,10 @@ Please note that with injection enabled, you will not be able to use many projec
     <value>Variable could not be reevaluated</value>
     <comment>Added after 4.7.0</comment>
   </data>
+  <data name="FlashDebugger.Error.NoSuchVariable" xml:space="preserve">
+    <value>{0} could not be resolved</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
   <data name="FlashDebugger.Error.NoScalar" xml:space="preserve">
     <value>Only scalar variables can be modified</value>
     <comment>Added after 4.7.0</comment>
@@ -3551,7 +3575,7 @@ Please note that with injection enabled, you will not be able to use many projec
   <data name="CodeAnalyzer.Description.PMDRuleset" xml:space="preserve">
     <value>Default custom ruleset file for the Flex PMD.</value>
   </data>
-  <data name="CodeAnalyzer.Info.Decription" xml:space="preserve">
+  <data name="CodeAnalyzer.Info.Description" xml:space="preserve">
     <value>Integrates Flex PMD code analyzer into FlashDevelop.</value>
   </data>
   <data name="CodeAnalyzer.Label.AnalyzeProject" xml:space="preserve">
@@ -3726,8 +3750,8 @@ Please note that with injection enabled, you will not be able to use many projec
     <value>Error line:</value>
   </data>
   <data name="ProjectManager.ToolTip.Synchronize" xml:space="preserve">
-    <value>Locate Active Document</value>
-    <comment>Modified after 4.7.0</comment>
+    <value>Track Active Document</value>
+    <comment>Modified after 4.7.2</comment>
   </data>
   <data name="ProjectManager.ToolTip.SynchronizeMain" xml:space="preserve">
     <value>Locate Document Class</value>
@@ -3795,13 +3819,16 @@ Please note that with injection enabled, you will not be able to use many projec
     <value>Enable SVN integration with projects.</value>
   </data>
   <data name="SourceControl.Description.GITPath" xml:space="preserve">
-    <value>Path to GIT command line tool. Example: 'git' if the tool is already installed in the environment path.</value>
+    <value>Path to GIT command line tool. Example: 'git.exe' if the tool is already installed in the environment path.</value>
+    <comment>Modified after 4.7.1</comment>
   </data>
   <data name="SourceControl.Description.SVNPath" xml:space="preserve">
     <value>PathPath to SVN command line tool. Example: 'svn.exe' if the tool is already installed in the environment path.</value>
+    <comment>Modified after 4.7.1</comment>
   </data>
   <data name="SourceControl.Description.TortoiseGITProcPath" xml:space="preserve">
-    <value>Path to TortoiseGit's TortoiseProc tool. Example: 'TortoiseProc.exe'.</value>
+    <value>Path to TortoiseGit's TortoiseProc tool. Example: 'TortoiseGitProc.exe'.</value>
+    <comment>Modified after 4.7.1</comment>
   </data>
   <data name="SourceControl.Description.TortoiseSVNProcPath" xml:space="preserve">
     <value>Path to TortoiseSVN's TortoiseProc tool. Example: 'TortoiseProc.exe'.</value>
@@ -4404,13 +4431,16 @@ Custom locales must be an extension of a default locale, e.g. en-US.</value>
     <comment>Added after 3.3.1</comment>
   </data>
   <data name="SourceControl.Description.EnableHG" xml:space="preserve">
-    <value>Enable Mercurial (Hg) integration in FlashDevelop</value>
+    <value>Enable Mercurial (HG) integration in FlashDevelop</value>
+    <comment>Modified after 4.7.1</comment>
   </data>
   <data name="SourceControl.Description.HGPath" xml:space="preserve">
-    <value>Path to Mercurial command line tool. Example: 'hg' if the tool is already installed in the environment path.</value>
+    <value>Path to Mercurial command line tool. Example: 'hg.exe' if the tool is already installed in the environment path.</value>
+    <comment>Modified after 4.7.1</comment>
   </data>
   <data name="SourceControl.Description.TortoiseHGProcPath" xml:space="preserve">
-    <value>Path to TortoiseHG's TortoiseProc tool. Example 'hgtk'.</value>
+    <value>Path to TortoiseHG's TortoiseProc tool. Example 'thgw.exe'.</value>
+    <comment>Modified after 4.7.1</comment>
   </data>
   <data name="FlashDevelop.Description.CustomShortcuts" xml:space="preserve">
     <value>List of user defined override shortcuts.</value>
@@ -4704,7 +4734,7 @@ Custom locales must be an extension of a default locale, e.g. en-US.</value>
     <comment>Added after 3.3.2</comment>
   </data>
   <data name="CodeFormatter.Description.AS.UseTabs" xml:space="preserve">
-    <value>Use tabs instead of braces with indenting.</value>
+    <value>Use tabs instead of spaces with indenting.</value>
     <comment>Added after 3.3.2</comment>
   </data>
   <data name="CodeFormatter.Description.AS.WrapArrayDeclarationMode" xml:space="preserve">
@@ -5157,6 +5187,10 @@ Custom locales must be an extension of a default locale, e.g. en-US.</value>
     <value>You are renaming a file. Do you also want to update the references?</value>
     <comment>Added after 4.4.3</comment>
   </data>
+  <data name="ProjectManager.Label.InClasspathsOnly" xml:space="preserve">
+    <value>In Classpaths only</value>
+    <comment>Added after 5.0.1</comment>
+  </data>
   <data name="ProjectManager.Label.CodeFilesOnly" xml:space="preserve">
     <value>Code files only</value>
     <comment>Added after 4.4.3</comment>
@@ -5174,7 +5208,7 @@ Custom locales must be an extension of a default locale, e.g. en-US.</value>
     <comment>Added after 4.5.1</comment>
   </data>
   <data name="FlashDevelop.Info.ZipRemoveDone" xml:space="preserve">
-    <value>The zip file was removed succesfully.</value>
+    <value>The zip file was removed successfully.</value>
     <comment>Added after 4.5.1</comment>
   </data>
   <data name="CodeRefactor.Info.MovingFile" xml:space="preserve">
@@ -5434,5 +5468,516 @@ Custom locales must be an extension of a default locale, e.g. en-US.</value>
   <data name="CodeRefactor.Info.MovingOutsideClasspath" xml:space="preserve">
     <value>You are moving files outside your defined classpaths. Refactoring is not available and your project may stop working. Continue?</value>
     <comment>Added after 4.6.4</comment>
+  </data>
+  <data name="FlashDebugger.Label.Filter" xml:space="preserve">
+    <value>Filter:</value>
+    <comment>Added after 4.7.0</comment>
+  </data>
+  <data name="FlashDebugger.Label.SetCurrentFrame" xml:space="preserve">
+    <value>Set As Current Frame</value>
+    <comment>Added after 4.7.0</comment>
+  </data>
+  <data name="FlashDebugger.Label.GotoSource" xml:space="preserve">
+    <value>Go To Source</value>
+    <comment>Added after 4.7.0</comment>
+  </data>
+  <data name="FlashDebugger.Label.JustMyCode" xml:space="preserve">
+    <value>Show Just My Code</value>
+    <comment>Added after 4.7.0</comment>
+  </data>
+  <data name="FlashDebugger.Label.AddExpression" xml:space="preserve">
+    <value>Add new expression</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="FlashDebugger.Label.MatchCase" xml:space="preserve">
+    <value>Match Case</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="FlashDebugger.Label.MatchOpposite" xml:space="preserve">
+    <value>Match Opposite</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="FlashDebugger.Label.Options" xml:space="preserve">
+    <value>Options</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="FlashDebugger.Label.RegularExpression" xml:space="preserve">
+    <value>Regular Expression</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.AddBracesToCases" xml:space="preserve">
+    <value>Add missing braces to cases.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.AddBracesToConditionals" xml:space="preserve">
+    <value>Add missing braces to conditionals.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.AddBracesToLoops" xml:space="preserve">
+    <value>Add missing braces to loops.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.AdvancedWrappingAlignArrayItems" xml:space="preserve">
+    <value>Align array items with advanced wrapping.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.AdvancedWrappingAlignObjectItems" xml:space="preserve">
+    <value>Align object items with advanced wrapping.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.AdvancedWrappingAllArgs" xml:space="preserve">
+    <value>Use advanced all argument wrapping.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.AdvancedWrappingAllArrayItems" xml:space="preserve">
+    <value>Use advanced all array items wrapping.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.AdvancedWrappingAllObjectItems" xml:space="preserve">
+    <value>Use advanced all object items wrapping.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.AdvancedWrappingAllParms" xml:space="preserve">
+    <value>Use advanced all parameter wrapping.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.AdvancedWrappingEnforceMax" xml:space="preserve">
+    <value>Enforce advanced maximum wrapping.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.AdvancedWrappingFirstArg" xml:space="preserve">
+    <value>Use advanced first argument wrapping.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.AdvancedWrappingFirstArrayItem" xml:space="preserve">
+    <value>Use advanced first array item wrapping.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.AdvancedWrappingFirstObjectItem" xml:space="preserve">
+    <value>Use advanced first object item wrapping.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.AdvancedWrappingFirstParm" xml:space="preserve">
+    <value>Use advanced first parameter wrapping.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.AdvancedWrappingGraceColumns" xml:space="preserve">
+    <value>Amount of grace columns with advanced wrapping.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.AdvancedWrappingPreservePhrases" xml:space="preserve">
+    <value>Preserve phrases with advanced wrapping.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.AlignDeclEquals" xml:space="preserve">
+    <value>Align declaration equal symbols.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.AlignDeclMode" xml:space="preserve">
+    <value>Mode of declaration alignment.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.AlignLineCommentsAtColumn" xml:space="preserve">
+    <value>Align line comments at column.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.BlankLinesAtFunctionEnd" xml:space="preserve">
+    <value>Amount of blank lines at function end.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.BlankLinesAtFunctionStart" xml:space="preserve">
+    <value>Amount of blank lines at function start.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.BlankLinesBeforeImportBlock" xml:space="preserve">
+    <value>Amount of blank lines before import block.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.BreakLinesBeforeArithmetic" xml:space="preserve">
+    <value>Break lines before arithmetic operations.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.BreakLinesBeforeAssignment" xml:space="preserve">
+    <value>Break lines before assignment operation.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.BreakLinesBeforeLogical" xml:space="preserve">
+    <value>Break lines before logical operations.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.CRBeforeBraceSettings" xml:space="preserve">
+    <value>Add newline before brace settings.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.DocCommentHangingIndentTabs" xml:space="preserve">
+    <value>Amount of doc comment hanging indent tabs.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.DocCommentKeepBlankLines" xml:space="preserve">
+    <value>Keep the doc comment blank lines.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.DocCommentReflow" xml:space="preserve">
+    <value>Use doc comment reflow.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.DontIndentSwitchCases" xml:space="preserve">
+    <value>Do not indent switch cases.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.EnsureConditionalsHaveBraces" xml:space="preserve">
+    <value>Ensure that conditionals have braces.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.EnsureLoopsHaveBraces" xml:space="preserve">
+    <value>Ensure that loops have braces.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.EnsureSwitchCasesHaveBraces" xml:space="preserve">
+    <value>Ensure that switch cases have braces.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.KeepRelativeIndentInDocComments" xml:space="preserve">
+    <value>Keep relative indent in doc comments.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.KeepSpacesBeforeLineComments" xml:space="preserve">
+    <value>Keep spaces before line comments.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.LeaveSingleLineFunctions" xml:space="preserve">
+    <value>Keep the single line functions intact.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.MetaTagsOnSameLineAsTargetFunction" xml:space="preserve">
+    <value>Metatags to keep on same line as target function.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.MetaTagsOnSameLineAsTargetProperty" xml:space="preserve">
+    <value>Metatags to keep on same line as target property.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.MLCommentAsteriskMode" xml:space="preserve">
+    <value>Multiline comment asterisk render mode.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.MLCommentHeaderOnSeparateLine" xml:space="preserve">
+    <value>Keep multiline comment header on separate line.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.MLCommentKeepBlankLines" xml:space="preserve">
+    <value>Keep the multiline comment blank lines.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.MLCommentReflow" xml:space="preserve">
+    <value>Use multiline comment reflow.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.NewlineBeforeBindableFunction" xml:space="preserve">
+    <value>Add newline before bindable function.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.NewlineBeforeBindableProperty" xml:space="preserve">
+    <value>Add newline before bindable property.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.NoNewCRsBeforeBreak" xml:space="preserve">
+    <value>Do not add new newlines before break.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.NoNewCRsBeforeContinue" xml:space="preserve">
+    <value>Do not add new newlines before continue.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.NoNewCRsBeforeExpression" xml:space="preserve">
+    <value>Do not add new newlines before expression.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.NoNewCRsBeforeReturn" xml:space="preserve">
+    <value>Do not add new newlines before return.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.NoNewCRsBeforeThrow" xml:space="preserve">
+    <value>Do not add new newlines before throw.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.SpacesAfterColonsInDeclarations" xml:space="preserve">
+    <value>Amount of spaces after colons in declarations.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.SpacesAfterColonsInFunctionTypes" xml:space="preserve">
+    <value>Amount of spaces after colons in function types.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.SpacesAroundEqualsInMetatags" xml:space="preserve">
+    <value>Amount of spaces around equals in metatags.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.SpacesBeforeArguments" xml:space="preserve">
+    <value>Amount of spaces before arguments.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.SpacesBeforeColonsInDeclarations" xml:space="preserve">
+    <value>Amount of spaces before colons in declarations.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.SpacesBeforeColonsInFunctionTypes" xml:space="preserve">
+    <value>Amount of spaces before colons in function types.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.SpacesBeforeFormalParameters" xml:space="preserve">
+    <value>Amount of spaces before formal parameters.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.SpacesInsideParensInArgumentLists" xml:space="preserve">
+    <value>Amount of spaces inside parens in argument lists.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.SpacesInsideParensInOtherPlaces" xml:space="preserve">
+    <value>Amount of spaces inside parens in other places.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.SpacesInsideParensInParameterLists" xml:space="preserve">
+    <value>Amount of spaces inside parens in parameter lists.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.TabsInHangingIndent" xml:space="preserve">
+    <value>Amount of tabs in hanging indent.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.UnindentExpressionTerminators" xml:space="preserve">
+    <value>Unindent the expression terminators.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.UseAdvancedWrapping" xml:space="preserve">
+    <value>Use advanced wrapping settings.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.UseDocCommentWrapping" xml:space="preserve">
+    <value>Use doc comment wrapping settings.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.UseGlobalCRBeforeBrace" xml:space="preserve">
+    <value>Use global newline before brace.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.UseGnuBraceIndent" xml:space="preserve">
+    <value>Use GNU style brace indent.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.UseLineCommentWrapping" xml:space="preserve">
+    <value>Use line comment wrapping settings.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.UseMLCommentWrapping" xml:space="preserve">
+    <value>Use multiline comment wrapping settings.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.UseSpacesAroundEqualsInMetatags" xml:space="preserve">
+    <value>Use spaces around equals in metatags setting.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.AS.WhileOnNewLine" xml:space="preserve">
+    <value>Keep while on new line.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.AlwaysUseMaxLineLength" xml:space="preserve">
+    <value>Always use the maximum line length setting.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.AttrGroups" xml:space="preserve">
+    <value>Manual attribute group data.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.BlankLinesAfterParentTags" xml:space="preserve">
+    <value>Amount of blank lines after parent tags.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.BlankLinesAfterSpecificParentTags" xml:space="preserve">
+    <value>Amount of blank lines after specific parent tags.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.BlankLinesAtCDataStart" xml:space="preserve">
+    <value>Amount of blank lines at CData start.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.BlankLinesBeforeClosingTags" xml:space="preserve">
+    <value>Amount of blank lines before closing tags.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.BlankLinesBeforeComments" xml:space="preserve">
+    <value>Amount of blank lines before comments.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.BlankLinesBetweenSiblingTags" xml:space="preserve">
+    <value>Amount of blank lines between sibling tags.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.IndentSize" xml:space="preserve">
+    <value>Size of the indent.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.IndentTagClose" xml:space="preserve">
+    <value>Indent close tags.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.KeepRelativeIndentInMultilineComments" xml:space="preserve">
+    <value>Keep relative indent in multiline comments.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.KeepScriptCDataOnSameLine" xml:space="preserve">
+    <value>Keep script CData on the same line.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.ParentTagsWithBlankLinesAfter" xml:space="preserve">
+    <value>Parent tags that should have blank lines after them.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.ScriptCDataIndentTabs" xml:space="preserve">
+    <value>Amount of script CData indent tabs.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.ScriptIndentTabs" xml:space="preserve">
+    <value>Amount of script indent tabs.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.SortAttrData" xml:space="preserve">
+    <value>Manual attribute sort data.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.SpacesInsideAttributeBraces" xml:space="preserve">
+    <value>Amount of spaces inside attribute braces.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.TabsInHangingIndent" xml:space="preserve">
+    <value>Amount of tabs in hanging indent.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.TabSize" xml:space="preserve">
+    <value>Size of tabs in spaces.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.TagsDoNotFormatInside" xml:space="preserve">
+    <value>Tags that should not format inside them.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.TagsWithASContent" xml:space="preserve">
+    <value>Tags that contain ActionScript content in them.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.UseFormattingOfBoundAttributes" xml:space="preserve">
+    <value>Use formatting of bound attributes settings.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.UseSpacesInsideAttributeBraces" xml:space="preserve">
+    <value>Use spaces inside attribute braces settings.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeFormatter.Description.MXML.UseTagsDoNotFormatInside" xml:space="preserve">
+    <value>Use tags which do not format inside setting.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="FlashDevelop.Description.CheckForUpdates" xml:space="preserve">
+    <value>Sets how often FlashDevelop checks for updates.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeRefactor.Info.ConsistentEOLs" xml:space="preserve">
+    <value>Consistent EOLs</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeRefactor.Info.FormatCode" xml:space="preserve">
+    <value>Format Code</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeRefactor.Info.OpenFiles" xml:space="preserve">
+    <value>Open Files</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeRefactor.Info.ProjectSources" xml:space="preserve">
+    <value>Project Sources</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeRefactor.Label.BatchProcess" xml:space="preserve">
+    <value>Batch Process...</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeRefactor.Title.BatchProcessDialog" xml:space="preserve">
+    <value>Batch Process</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="OutputPanel.Description.HighlightMarkers" xml:space="preserve">
+    <value>List of markers that highlight the message with the specified log level color.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="OutputPanel.Description.Level" xml:space="preserve">
+    <value>The log level that the line should be colored to.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="OutputPanel.Description.Marker" xml:space="preserve">
+    <value>Highlight marker that marks the line to be colored.</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="OutputPanel.Description.UseLegacyColoring" xml:space="preserve">
+    <value>Use legacy coloring state format parsed from the message ('2:message').</value>
+    <comment>Added after 4.7.1</comment>
+  </data>
+  <data name="CodeRefactor.Description.DisableMoveRefactoring" xml:space="preserve">
+    <value>Disables the move refactoring of files and folders.</value>
+    <comment>Added after 4.7.2</comment>
+  </data>
+  <data name="FlashDevelop.Description.HighlightMatchingWordsDelay" xml:space="preserve">
+    <value>The delay in milliseconds after the word match highlight should be shown.</value>
+    <comment>Added after 4.7.2</comment>
+  </data>
+  <data name="FlashDebugger.Category.DataTree" xml:space="preserve">
+    <value>Data Tree</value>
+    <comment>Added after 4.7.2</comment>
+  </data>
+  <data name="FlashDebugger.Description.CombineInherited" xml:space="preserve">
+    <value>Display inherited members as direct descendants of the displayed object.</value>
+    <comment>Added after 4.7.2</comment>
+  </data>
+  <data name="FlashDebugger.Description.HideStaticMembers" xml:space="preserve">
+    <value>Hide static members of the displayed object.</value>
+    <comment>Added after 4.7.2</comment>
+  </data>
+  <data name="FlashDebugger.Description.HideFullClasspaths" xml:space="preserve">
+    <value>Show only the class name of the displayed objects.</value>
+    <comment>Added after 4.7.2</comment>
+  </data>
+  <data name="FlashDebugger.Description.HideClassIds" xml:space="preserve">
+    <value>Hide the ID of the displayed objects.</value>
+    <comment>Added after 4.7.2</comment>
+  </data>
+  <data name="FlashDebugger.Description.CopyTreeMaxRecursion" xml:space="preserve">
+    <value>The maximum node depth to reach when copying an object tree to the clipboard.</value>
+    <comment>Added after 4.7.2</comment>
+  </data>
+  <data name="FlashDebugger.Description.CopyTreeMaxSize" xml:space="preserve">
+    <value>The approximate maximum size, in characters, the object tree may take when copied to the clipboard.</value>
+    <comment>Added after 4.7.2</comment>
+  </data>
+  <data name="FlashDebugger.Label.CopyID" xml:space="preserve">
+    <value>Copy ID</value>
+    <comment>Added after 4.7.2</comment>
+  </data>
+  <data name="FlashDebugger.Label.CopyTree" xml:space="preserve">
+    <value>Copy Tree</value>
+    <comment>Added after 4.7.2</comment>
+  </data>
+  <data name="FlashDebugger.TreeExporter.MaxDepthReached" xml:space="preserve">
+    <value>[Recursion too deep, increase Copy Tree Max Level in FlashDebugger settings]</value>
+    <comment>Added after 4.7.2</comment>
+  </data>
+  <data name="FlashDebugger.TreeExporter.DuplicatedObject" xml:space="preserve">
+    <value>[Object {0} already listed before]</value>
+    <comment>Added after 4.7.2</comment>
+  </data>
+  <data name="ASClassWizard.Wizard.Label.ChosePackage" xml:space="preserve">
+    <value>Choose a package folder:</value>
+  </data>
+  <data name="FlashDevelop.Info.HighlightWordBack" xml:space="preserve">
+    <value>Highlight word:</value>
+    <comment>Added after 5.0.2</comment>
   </data>
 </root>

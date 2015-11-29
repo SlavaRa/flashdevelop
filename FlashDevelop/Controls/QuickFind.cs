@@ -14,15 +14,16 @@ using PluginCore.FRService;
 using PluginCore.Managers;
 using PluginCore.Utilities;
 using PluginCore.Controls;
+using PluginCore.Helpers;
 using ScintillaNet.Configuration;
 using ScintillaNet;
 using PluginCore;
-using PluginCore.Helpers;
 
 namespace FlashDevelop.Controls
 {
     public class QuickFind : ToolStripEx, IEventHandler
     {
+        private Color backColor;
         private Timer highlightTimer;
         private CheckBox wholeWordCheckBox;
         private CheckBox highlightCheckBox;
@@ -223,10 +224,18 @@ namespace FlashDevelop.Controls
         /// </summary>
         private void InitializeGraphics()
         {
-            if (ScaleHelper.GetScale() < 1.5) return;
-            this.nextButton.Image = Globals.MainForm.FindImage("67");
-            this.previousButton.Image = Globals.MainForm.FindImage("63");
-            this.closeButton.Image = Globals.MainForm.FindImage("111");
+            Color text = Globals.MainForm.GetThemeColor("QuickFind.ForeColor");
+            Color fore = Globals.MainForm.GetThemeColor("ToolStripTextBoxControl.ForeColor");
+            Color back = Globals.MainForm.GetThemeColor("ToolStripTextBoxControl.BackColor");
+            if (back != Color.Empty) this.backColor = this.findTextBox.BackColor = back;
+            if (text != Color.Empty) this.infoLabel.ForeColor = text;
+            if (fore != Color.Empty) this.findTextBox.ForeColor = fore;
+            if (ScaleHelper.GetScale() >= 1.5)
+            {
+                this.nextButton.Image = Globals.MainForm.FindImage("67");
+                this.previousButton.Image = Globals.MainForm.FindImage("63");
+                this.closeButton.Image = Globals.MainForm.FindImage("111");
+            }
         }
 
         /// <summary>
@@ -361,6 +370,14 @@ namespace FlashDevelop.Controls
             {
                 this.FindCorrect(this.findTextBox.Text, this.highlightCheckBox.Checked);
             }
+            else
+            {
+                this.infoLabel.Text = "";
+                this.findTextBox.BackColor = this.backColor;
+                ScintillaControl sci = Globals.SciControl;
+                sci.SetSel(sci.CurrentPos, sci.CurrentPos);
+                sci.RemoveHighlights();
+            }
             Globals.MainForm.SetFindText(this, this.findTextBox.Text);
         }
 
@@ -382,10 +399,8 @@ namespace FlashDevelop.Controls
             if (e.KeyChar == (Char)Keys.Return && this.findTextBox.Text.Trim() != "")
             {
                 e.Handled = true;
-                if ((ModifierKeys & Keys.Shift) == Keys.Shift)
-                    FindPrev(findTextBox.Text, false);
-                else
-                    FindNext(findTextBox.Text, false);
+                if ((ModifierKeys & Keys.Shift) == Keys.Shift) FindPrev(findTextBox.Text, false);
+                else FindNext(findTextBox.Text, false);
             }
         }
 
@@ -422,12 +437,12 @@ namespace FlashDevelop.Controls
                 List<SearchMatch> matches = this.GetResults(sci, this.findTextBox.Text);
                 if (matches != null && matches.Count != 0)
                 {
-                    this.RemoveHighlights(sci);
+                    sci.RemoveHighlights();
                     if (this.highlightTimer.Enabled) this.highlightTimer.Stop();
                     if (this.highlightCheckBox.Checked) this.AddHighlights(sci, matches);
                 }
             }
-            else this.RemoveHighlights(sci);
+            else sci.RemoveHighlights();
         }
 
         /// <summary>
@@ -437,7 +452,7 @@ namespace FlashDevelop.Controls
         {
             if (text == "") return;
             ScintillaControl sci = Globals.SciControl;
-            this.findTextBox.BackColor = SystemColors.Window;
+            this.findTextBox.BackColor = this.backColor;
             List<SearchMatch> matches = this.GetResults(sci, text);
             if (matches != null && matches.Count != 0)
             {
@@ -451,7 +466,7 @@ namespace FlashDevelop.Controls
             }
             else
             {
-                this.findTextBox.BackColor = Color.Salmon;
+                this.findTextBox.BackColor = Globals.MainForm.GetThemeColor("QuickFind.ErrorBack", Color.Salmon);
                 sci.SetSel(sci.SelectionStart, sci.SelectionStart);
                 String message = TextHelper.GetString("Info.NoMatchesFound");
                 this.infoLabel.Text = message;
@@ -465,7 +480,7 @@ namespace FlashDevelop.Controls
         {
             if (text == "") return;
             ScintillaControl sci = Globals.SciControl;
-            this.findTextBox.BackColor = SystemColors.Window;
+            this.findTextBox.BackColor = this.backColor;
             List<SearchMatch> matches = this.GetResults(sci, text);
             if (matches != null && matches.Count != 0)
             {
@@ -479,7 +494,7 @@ namespace FlashDevelop.Controls
             }
             else
             {
-                this.findTextBox.BackColor = Color.Salmon;
+                this.findTextBox.BackColor = Globals.MainForm.GetThemeColor("QuickFind.ErrorBack", Color.Salmon);
                 sci.SetSel(sci.SelectionStart, sci.SelectionStart);
                 String message = TextHelper.GetString("Info.NoMatchesFound");
                 this.infoLabel.Text = message;
@@ -493,7 +508,7 @@ namespace FlashDevelop.Controls
         {
             if (text == "") return;
             ScintillaControl sci = Globals.SciControl;
-            this.findTextBox.BackColor = SystemColors.Window;
+            this.findTextBox.BackColor = this.backColor;
             List<SearchMatch> matches = this.GetResults(sci, text);
             if (matches != null && matches.Count != 0)
             {
@@ -507,7 +522,7 @@ namespace FlashDevelop.Controls
             }
             else
             {
-                this.findTextBox.BackColor = Color.Salmon;
+                this.findTextBox.BackColor = Globals.MainForm.GetThemeColor("QuickFind.ErrorBack", Color.Salmon);
                 sci.SetSel(sci.SelectionStart, sci.SelectionStart);
                 String message = TextHelper.GetString("Info.NoMatchesFound");
                 this.infoLabel.Text = message;
@@ -526,7 +541,7 @@ namespace FlashDevelop.Controls
                 {
                     Rectangle find = this.RectangleToScreen(this.ClientRectangle);
                     Rectangle doc = document.RectangleToScreen(document.ClientRectangle);
-                    if (this.Visible && doc.IntersectsWith(find)) document.Padding = new Padding(0, 0, 0, this.Height);
+                    if (this.Visible && doc.IntersectsWith(find)) document.Padding = new Padding(0, 0, 0, this.Height - 1);
                     else document.Padding = new Padding(0);
                 }
             }
@@ -547,7 +562,7 @@ namespace FlashDevelop.Controls
         private void MoreButtonClick(Object sender, EventArgs e)
         {
             this.CloseButtonClick(null, null);
-            PluginBase.MainForm.CallCommand("FindAndReplaceFrom", this.findTextBox.Text);
+            PluginBase.MainForm.CallCommand("FindAndReplace", null);
         }
 
         /// <summary>
@@ -555,25 +570,8 @@ namespace FlashDevelop.Controls
         /// </summary>
         private void AddHighlights(ScintillaControl sci, List<SearchMatch> matches)
         {
-            ITabbedDocument doc = DocumentManager.FindDocument(sci);
             Language language = MainForm.Instance.SciConfig.GetLanguage(sci.ConfigurationLanguage);
-            foreach (SearchMatch match in matches)
-            {
-                Int32 start = sci.MBSafePosition(match.Index);
-                Int32 end = start + sci.MBSafeTextLength(match.Value);
-                Int32 line = sci.LineFromPosition(start);
-                Int32 position = start;
-                Int32 es = sci.EndStyled;
-                Int32 mask = 1 << sci.StyleBits;
-                // Define indics in both controls...
-                doc.SplitSci1.SetIndicStyle(0, (Int32)ScintillaNet.Enums.IndicatorStyle.RoundBox);
-                doc.SplitSci1.SetIndicFore(0, language.editorstyle.HighlightBackColor);
-                doc.SplitSci2.SetIndicStyle(0, (Int32)ScintillaNet.Enums.IndicatorStyle.RoundBox);
-                doc.SplitSci2.SetIndicFore(0, language.editorstyle.HighlightBackColor);
-                sci.StartStyling(position, mask);
-                sci.SetStyling(end - start, mask);
-                sci.StartStyling(es, mask - 1);
-            }
+            sci.AddHighlights(matches, language.editorstyle.HighlightBackColor);
         }
 
         /// <summary>
@@ -581,7 +579,7 @@ namespace FlashDevelop.Controls
         /// </summary>
         private void RefreshHighlights(ScintillaControl sci, List<SearchMatch> matches)
         {
-            this.RemoveHighlights(sci);
+            sci.RemoveHighlights();
             if (this.highlightTimer.Enabled) this.highlightTimer.Stop();
             Hashtable table = new Hashtable();
             table["sci"] = sci;
@@ -590,19 +588,6 @@ namespace FlashDevelop.Controls
             this.highlightTimer.Start();
         }
 
-        /// <summary>
-        /// Removes the highlights from the correct sci control
-        /// </summary>
-        private void RemoveHighlights(ScintillaControl sci)
-        {
-            Int32 es = sci.EndStyled;
-            Int32 mask = (1 << sci.StyleBits);
-            sci.StartStyling(0, mask);
-            sci.SetStyling(sci.TextLength, 0);
-            sci.StartStyling(es, mask - 1);
-        }
-
-        /// <summary>
         /// Gets search results for a sci control
         /// </summary>
         private List<SearchMatch> GetResults(ScintillaControl sci, String text)
@@ -612,6 +597,7 @@ namespace FlashDevelop.Controls
             search.Filter = SearchFilter.None;
             search.NoCase = !this.matchCaseCheckBox.Checked;
             search.WholeWord = this.wholeWordCheckBox.Checked;
+            search.SourceFile = sci.FileName;
             return search.Matches(sci.Text);
         }
 
@@ -621,23 +607,81 @@ namespace FlashDevelop.Controls
 
         public class QuickFindRenderer : ToolStripRenderer
         {
+            private ToolStrip toolStrip;
             private ToolStripRenderer renderer;
 
             public QuickFindRenderer()
             {
                 UiRenderMode renderMode = Globals.Settings.RenderMode;
                 if (renderMode == UiRenderMode.System) this.renderer = new ToolStripSystemRenderer();
-                else this.renderer = new ToolStripProfessionalRenderer();
+                else this.renderer = new DockPanelStripRenderer();
+            }
+
+            protected override void Initialize(ToolStrip toolStrip)
+            {
+                this.toolStrip = toolStrip;
+                this.toolStrip.ImageScalingSize = ScaleHelper.Scale(new Size(16, 16));
+                this.toolStrip.Paint += this.OnToolStripPaint;
+                base.Initialize(toolStrip);
+            }
+
+            protected override void InitializeItem(ToolStripItem item)
+            {
+                base.InitializeItem(item);
+                if (item is ToolStripButton)
+                {
+                    Double scale = ScaleHelper.GetScale();
+                    if (scale >= 1.5)
+                    {
+                        item.Padding = new Padding(4, 2, 4, 2);
+                    }
+                    else if (scale >= 1.2)
+                    {
+                        item.Padding = new Padding(2, 1, 2, 1);
+                    }
+                    else if (renderer is ToolStripSystemRenderer && Win32.IsRunningOnWindows())
+                    {
+                        item.Padding = new Padding(2, 2, 2, 2);
+                    }
+                }
+                else if (item is ToolStripTextBox)
+                {
+                    var textBox = item as ToolStripTextBox;
+                    Color border = Globals.MainForm.GetThemeColor("ToolStripTextBoxControl.BorderColor");
+                    if (border != Color.Empty) // Are we theming?
+                    {
+                        textBox.Margin = new Padding(2, 1, 2, 1);
+                        textBox.BorderStyle = BorderStyle.None;
+                    }
+                }
+            }
+
+            private void OnToolStripPaint(Object sender, PaintEventArgs e)
+            {
+                Color tborder = Globals.MainForm.GetThemeColor("ToolStripTextBoxControl.BorderColor");
+                foreach (ToolStripItem item in this.toolStrip.Items)
+                {
+                    if (item is ToolStripTextBox && tborder != Color.Empty)
+                    {
+                        var textBox = item as ToolStripTextBox;
+                        var size = textBox.TextBox.Size;
+                        var location = textBox.TextBox.Location;
+                        e.Graphics.FillRectangle(new SolidBrush(item.BackColor), location.X - 2, location.Y - 3, size.Width + 2, size.Height + 6);
+                        e.Graphics.DrawRectangle(new Pen(tborder), location.X - 2, location.Y - 3, size.Width + 2, size.Height + 6);
+                    }
+                }
             }
 
             protected override void OnRenderToolStripBorder(ToolStripRenderEventArgs e)
             {
                 Rectangle r = e.AffectedBounds;
-                e.Graphics.DrawLine(SystemPens.ControlLightLight, r.Left, r.Top + 1, r.Right, r.Top + 1);
-                e.Graphics.DrawLine(SystemPens.ControlDark, r.Left, r.Bottom - 1, r.Right, r.Bottom - 1);
-                e.Graphics.DrawLine(SystemPens.ControlDark, r.Right - 1, r.Top, r.Right - 1, r.Bottom);
-                e.Graphics.DrawLine(SystemPens.ControlDark, r.Left, r.Top, r.Left, r.Bottom);
-                e.Graphics.DrawLine(SystemPens.ControlDark, r.Left, r.Top, r.Right, r.Top);
+                Color back = Globals.MainForm.GetThemeColor("ToolStrip.3dDarkColor");
+                Color fore = Globals.MainForm.GetThemeColor("ToolStrip.3dLightColor");
+                e.Graphics.DrawLine(fore == Color.Empty ? SystemPens.ControlLightLight : new Pen(fore), r.Left, r.Top + 1, r.Right, r.Top + 1);
+                e.Graphics.DrawLine(back == Color.Empty ? SystemPens.ControlDark : new Pen(back), r.Left, r.Bottom - 1, r.Right, r.Bottom - 1);
+                e.Graphics.DrawLine(back == Color.Empty ? SystemPens.ControlDark : new Pen(back), r.Right - 1, r.Top, r.Right - 1, r.Bottom);
+                e.Graphics.DrawLine(back == Color.Empty ? SystemPens.ControlDark : new Pen(back), r.Left, r.Top, r.Left, r.Bottom);
+                e.Graphics.DrawLine(back == Color.Empty ? SystemPens.ControlDark : new Pen(back), r.Left, r.Top, r.Right, r.Top);
             }
 
             protected override void OnRenderButtonBackground(ToolStripItemRenderEventArgs e)
@@ -645,15 +689,16 @@ namespace FlashDevelop.Controls
                 if (renderer is ToolStripProfessionalRenderer)
                 {
                     Boolean isOver = false;
-                    Color back = PluginBase.MainForm.GetThemeColor("ToolStripItem.BackColor");
-                    Color border = PluginBase.MainForm.GetThemeColor("ToolStripItem.BorderColor");
+                    Color back = Globals.MainForm.GetThemeColor("ToolStripItem.BackColor");
+                    Color border = Globals.MainForm.GetThemeColor("ToolStripItem.BorderColor");
+                    Color active = Globals.MainForm.GetThemeColor("ToolStripMenu.DropDownBorderColor");
                     if (e.Item is ToolStripButton)
                     {
                         ToolStripButton button = e.Item as ToolStripButton;
                         Rectangle bBounds = button.Owner.RectangleToScreen(button.Bounds);
                         isOver = bBounds.Contains(Control.MousePosition);
                     }
-                    if (e.Item.Selected || ((ToolStripButton)e.Item).Checked || isOver)
+                    if (e.Item.Selected || ((ToolStripButton)e.Item).Checked || (isOver && e.Item.Enabled))
                     {
                         Rectangle rect = new Rectangle(0, 0, e.Item.Width, e.Item.Height);
                         Rectangle rect2 = new Rectangle(1, 1, e.Item.Width - 2, e.Item.Height - 2);
@@ -670,7 +715,7 @@ namespace FlashDevelop.Controls
                         LinearGradientBrush b = new LinearGradientBrush(rect, back == Color.Empty ? DockDrawHelper.ColorSelectedBG_White : back, back == Color.Empty ? DockDrawHelper.ColorSelectedBG_Blue : back, LinearGradientMode.Vertical);
                         e.Graphics.FillRectangle(b, rect);
                         Rectangle rect2 = new Rectangle(rect.Left - 1, rect.Top - 1, rect.Width + 1, rect.Height + 1);
-                        e.Graphics.DrawRectangle(new Pen(border == Color.Empty ? DockDrawHelper.ColorSelectedBG_Border : border), rect2);
+                        e.Graphics.DrawRectangle(new Pen(active == Color.Empty ? DockDrawHelper.ColorSelectedBG_Border : active), rect2);
                     }
                 }
                 else renderer.DrawButtonBackground(e);

@@ -1,22 +1,22 @@
 using System;
+using System.ComponentModel;
+using System.Drawing;
 using System.IO;
 using System.Web;
-using System.Drawing;
 using System.Windows.Forms;
-using System.ComponentModel;
-using WeifenLuo.WinFormsUI.Docking;
-using ProjectManager.Projects;
-using PluginCore.Localization;
-using PluginCore.Utilities;
-using PluginCore.Managers;
-using PluginCore.Helpers;
-using StartPage.Controls;
 using PluginCore;
+using PluginCore.Helpers;
+using PluginCore.Localization;
+using PluginCore.Managers;
+using PluginCore.Utilities;
+using ProjectManager;
+using StartPage.Controls;
+using WeifenLuo.WinFormsUI.Docking;
 
 namespace StartPage
 {
-	public class PluginMain : IPlugin
-	{
+    public class PluginMain : IPlugin
+    {
         private String pluginName = "StartPage";
         private String pluginGuid = "e4246322-bc55-4f4a-99c8-aaeeed0a7b9a";
         private String pluginHelp = "www.flashdevelop.org/community/";
@@ -31,7 +31,7 @@ namespace StartPage
         private DockContent startPage;
         private Image pluginImage;
 
-	    #region Required Properties
+        #region Required Properties
 
         /// <summary>
         /// Api level of the plugin
@@ -45,41 +45,41 @@ namespace StartPage
         /// Name of the plugin
         /// </summary> 
         public String Name
-		{
-			get { return this.pluginName; }
-		}
+        {
+            get { return this.pluginName; }
+        }
 
         /// <summary>
         /// GUID of the plugin
         /// </summary>
         public String Guid
-		{
-			get { return this.pluginGuid; }
-		}
+        {
+            get { return this.pluginGuid; }
+        }
 
         /// <summary>
         /// Author of the plugin
         /// </summary> 
         public String Author
-		{
-			get { return this.pluginAuth; }
-		}
+        {
+            get { return this.pluginAuth; }
+        }
 
         /// <summary>
         /// Description of the plugin
         /// </summary> 
         public String Description
-		{
-			get { return this.pluginDesc; }
-		}
+        {
+            get { return this.pluginDesc; }
+        }
 
         /// <summary>
         /// Web address for help
         /// </summary> 
         public String Help
-		{
-			get { return this.pluginHelp; }
-		}
+        {
+            get { return this.pluginHelp; }
+        }
 
         /// <summary>
         /// Object that contains the settings
@@ -88,42 +88,42 @@ namespace StartPage
         {
             get { return this.settingObject; }
         }
-		
-		#endregion
-		
-		#region Required Methods
-		
-		/// <summary>
-		/// Initializes the plugin
-		/// </summary>
-		public void Initialize()
-		{
+        
+        #endregion
+        
+        #region Required Methods
+        
+        /// <summary>
+        /// Initializes the plugin
+        /// </summary>
+        public void Initialize()
+        {
             this.InitBasics();
             this.LoadSettings();
             this.AddEventHandlers();
             this.CreateMenuItem();
         }
-		
-		/// <summary>
-		/// Disposes the plugin
-		/// </summary>
-		public void Dispose()
-		{
+        
+        /// <summary>
+        /// Disposes the plugin
+        /// </summary>
+        public void Dispose()
+        {
             this.SaveSettings();
-		}
-		
-		/// <summary>
-		/// Handles the incoming events
-		/// </summary>
-		public void HandleEvent(Object sender, NotifyEvent e, HandlingPriority prority)
-		{
+        }
+        
+        /// <summary>
+        /// Handles the incoming events
+        /// </summary>
+        public void HandleEvent(Object sender, NotifyEvent e, HandlingPriority priority)
+        {
             switch (e.Type)
             {
                 case EventType.Command :
                     DataEvent de = (DataEvent)e;
                     switch (de.Action)
                     {
-                        case ProjectManager.ProjectManagerEvents.Project :
+                        case ProjectManagerEvents.Project :
                             // Close pluginPanel if the user has the setting checked and a project is opened
                             if (de.Data != null & this.startPage != null)
                             {
@@ -159,9 +159,9 @@ namespace StartPage
                     break;
             }
 
-		}
-		
-		#endregion
+        }
+        
+        #endregion
 
         #region Custom Methods
 
@@ -249,17 +249,17 @@ namespace StartPage
         public void ShowStartPage()
         {
             if (this.startPage == null) this.CreateStartPage();
-            else this.startPage.Show();
+            else this.startPage.Show(PluginBase.MainForm.DockPanel);
         }
 
-		#endregion
+        #endregion
 
         #region Event Handlers
 
         /// <summary>
         /// Shows the start page.
         /// </summary>
-        private void ViewMenuClick(Object sender, System.EventArgs e)
+        private void ViewMenuClick(Object sender, EventArgs e)
         {
             this.ShowStartPage();
         }
@@ -286,5 +286,5 @@ namespace StartPage
         #endregion
 
     }
-	
+    
 }

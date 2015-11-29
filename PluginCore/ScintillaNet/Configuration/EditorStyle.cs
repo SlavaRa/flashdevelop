@@ -1,148 +1,152 @@
 using System;
-using System.Runtime;
+using System.Drawing;
+using System.Globalization;
 using System.Xml.Serialization;
 
 namespace ScintillaNet.Configuration
 {
-	[SerializableAttribute()]
-	public class EditorStyle : ConfigItem
-	{
-		[XmlAttributeAttribute("caret-fore")]
-		public string caretfore;
-		
-		[XmlAttributeAttribute("caretline-back")]
-		public string caretlineback;
+    [Serializable()]
+    public class EditorStyle : ConfigItem
+    {
+        [XmlAttribute("caret-fore")]
+        public string caretfore;
+        
+        [XmlAttribute("caretline-back")]
+        public string caretlineback;
 
-		[XmlAttributeAttribute("selection-fore")]
-		public string selectionfore;
+        [XmlAttribute("selection-fore")]
+        public string selectionfore;
 
-		[XmlAttributeAttribute("selection-back")]
-		public string selectionback;
+        [XmlAttribute("selection-back")]
+        public string selectionback;
 
-        [XmlAttributeAttribute("marker-fore")]
+        [XmlAttribute("marker-fore")]
         public string markerfore;
 
-        [XmlAttributeAttribute("marker-back")]
+        [XmlAttribute("marker-back")]
         public string markerback;
 
-        [XmlAttributeAttribute("margin-fore")]
+        [XmlAttribute("margin-fore")]
         public string marginfore;
 
-        [XmlAttributeAttribute("margin-back")]
+        [XmlAttribute("margin-back")]
         public string marginback;
 
-        [XmlAttributeAttribute("print-margin")]
+        [XmlAttribute("print-margin")]
         public string printmargin;
 
-        [XmlAttributeAttribute("bookmarkline-back")]
+        [XmlAttribute("bookmarkline-back")]
         public string bookmarkline;
 
-        [XmlAttributeAttribute("modifiedline-back")]
+        [XmlAttribute("modifiedline-back")]
         public string modifiedline;
         
-        [XmlAttributeAttribute("highlight-back")]
+        [XmlAttribute("highlight-back")]
         public string highlightback;
-        
-        [XmlAttributeAttribute("errorline-back")]
+
+        [XmlAttribute("highlightword-back")]
+        public string highlightwordback;
+
+        [XmlAttribute("errorline-back")]
         public string errorlineback;
 
-        [XmlAttributeAttribute("debugline-back")]
+        [XmlAttribute("debugline-back")]
         public string debuglineback;
 
-        [XmlAttributeAttribute("disabledline-back")]
+        [XmlAttribute("disabledline-back")]
         public string disabledlineback;
 
-        [XmlAttributeAttribute("colorize-marker-back")]
+        [XmlAttribute("colorize-marker-back")]
         public string colorizemarkerback;
 
-		public int ResolveColor(string aColor)
-		{
-			if (aColor != null)
-			{
-				Value v = _parent.MasterScintilla.GetValue(aColor);
-				while (v != null)
-				{
-					aColor = v.val;
-					v = _parent.MasterScintilla.GetValue(aColor);
-				}
-				System.Drawing.Color c = System.Drawing.Color.FromName(aColor);
-				if (c.ToArgb() == 0)
-				{
-					if (aColor.IndexOf("0x") == 0)
-					{
-						return TO_COLORREF(Int32.Parse(aColor.Substring(2), System.Globalization.NumberStyles.HexNumber));
-					} 
-					else 
-					{
-						try
-						{
-							return TO_COLORREF(Int32.Parse(aColor));
-						}
-						catch (Exception){}
-					}
-				}
-				return TO_COLORREF(c.ToArgb() & 0x00ffffff);
-			}
-			return 0;
-		}
-		private int TO_COLORREF(int c)
-		{
-			return (((c & 0xff0000) >> 16)+((c & 0x0000ff) << 16)+(c & 0x00ff00));
-		}
-		
-		public int CaretForegroundColor
-		{
-			get
-			{
-				if (caretfore != null && caretfore.Length > 0)
-				{
-					return ResolveColor(caretfore);
-				}
-				return ResolveColor("0x000000");
-			}
-		}
-		
-		public int CaretLineBackgroundColor
-		{
-			get
-			{
-				if (caretlineback != null && caretlineback.Length > 0)
-				{
-					return ResolveColor(caretlineback);
-				}
-				return ResolveColor("0xececec");
-			}
-		}
-		
-		public int SelectionForegroundColor
-		{
-			get
-			{
-				if (selectionfore != null && selectionfore.Length > 0)
-				{
-					return ResolveColor(selectionfore);
-				}
-				return ResolveColor("0xffffff");
-			}
-		}
-		
-		public int SelectionBackgroundColor
-		{
-			get
-			{
-				if (selectionback != null && selectionback.Length > 0)
-				{
-					return ResolveColor(selectionback);
-				}
-				return ResolveColor("0x000000");
-			}
-		}
+        public int ResolveColor(string aColor)
+        {
+            if (aColor != null)
+            {
+                Value v = _parent.MasterScintilla.GetValue(aColor);
+                while (v != null)
+                {
+                    aColor = v.val;
+                    v = _parent.MasterScintilla.GetValue(aColor);
+                }
+                Color c = Color.FromName(aColor);
+                if (c.ToArgb() == 0)
+                {
+                    if (aColor.IndexOf("0x") == 0)
+                    {
+                        return TO_COLORREF(Int32.Parse(aColor.Substring(2), NumberStyles.HexNumber));
+                    } 
+                    else 
+                    {
+                        try
+                        {
+                            return TO_COLORREF(Int32.Parse(aColor));
+                        }
+                        catch (Exception){}
+                    }
+                }
+                return TO_COLORREF(c.ToArgb() & 0x00ffffff);
+            }
+            return 0;
+        }
+        private int TO_COLORREF(int c)
+        {
+            return (((c & 0xff0000) >> 16)+((c & 0x0000ff) << 16)+(c & 0x00ff00));
+        }
+        
+        public int CaretForegroundColor
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(caretfore))
+                {
+                    return ResolveColor(caretfore);
+                }
+                return ResolveColor("0x000000");
+            }
+        }
+        
+        public int CaretLineBackgroundColor
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(caretlineback))
+                {
+                    return ResolveColor(caretlineback);
+                }
+                return ResolveColor("0xececec");
+            }
+        }
+        
+        public int SelectionForegroundColor
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(selectionfore))
+                {
+                    return ResolveColor(selectionfore);
+                }
+                return ResolveColor("0xffffff");
+            }
+        }
+        
+        public int SelectionBackgroundColor
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(selectionback))
+                {
+                    return ResolveColor(selectionback);
+                }
+                return ResolveColor("0x000000");
+            }
+        }
 
         public int MarkerBackgroundColor
         {
             get
             {
-                if (markerback != null && markerback.Length > 0)
+                if (!string.IsNullOrEmpty(markerback))
                 {
                     return ResolveColor(markerback);
                 }
@@ -154,7 +158,7 @@ namespace ScintillaNet.Configuration
         {
             get
             {
-                if (markerfore != null && markerfore.Length > 0)
+                if (!string.IsNullOrEmpty(markerfore))
                 {
                     return ResolveColor(markerfore);
                 }
@@ -166,7 +170,7 @@ namespace ScintillaNet.Configuration
         {
             get
             {
-                if (marginfore != null && marginfore.Length > 0)
+                if (!string.IsNullOrEmpty(marginfore))
                 {
                     return ResolveColor(marginfore);
                 }
@@ -178,7 +182,7 @@ namespace ScintillaNet.Configuration
         {
             get
             {
-                if (marginback != null && marginback.Length > 0)
+                if (!string.IsNullOrEmpty(marginback))
                 {
                     return ResolveColor(marginback);
                 }
@@ -190,7 +194,7 @@ namespace ScintillaNet.Configuration
         {
             get
             {
-                if (printmargin != null && printmargin.Length > 0)
+                if (!string.IsNullOrEmpty(printmargin))
                 {
                     return ResolveColor(printmargin);
                 }
@@ -202,7 +206,7 @@ namespace ScintillaNet.Configuration
         {
             get
             {
-                if (bookmarkline != null && bookmarkline.Length > 0)
+                if (!string.IsNullOrEmpty(bookmarkline))
                 {
                     return ResolveColor(bookmarkline);
                 }
@@ -214,7 +218,7 @@ namespace ScintillaNet.Configuration
         {
             get
             {
-                if (modifiedline != null && modifiedline.Length > 0)
+                if (!string.IsNullOrEmpty(modifiedline))
                 {
                     return ResolveColor(modifiedline);
                 }
@@ -226,11 +230,23 @@ namespace ScintillaNet.Configuration
         {
             get
             {
-                if (highlightback != null && highlightback.Length > 0)
+                if (!string.IsNullOrEmpty(highlightback))
                 {
                     return ResolveColor(highlightback);
                 }
-                return ResolveColor("0x0000ff");
+                return ResolveColor("0x808000");
+            }
+        }
+
+        public int HighlightWordBackColor
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(highlightwordback))
+                {
+                    return ResolveColor(highlightwordback);
+                }
+                return ResolveColor("0x0088ff");
             }
         }
 
@@ -238,7 +254,7 @@ namespace ScintillaNet.Configuration
         {
             get
             {
-                if (errorlineback != null && errorlineback.Length > 0)
+                if (!string.IsNullOrEmpty(errorlineback))
                 {
                     return ResolveColor(errorlineback);
                 }
@@ -250,7 +266,7 @@ namespace ScintillaNet.Configuration
         {
             get
             {
-                if (debuglineback != null && debuglineback.Length > 0)
+                if (!string.IsNullOrEmpty(debuglineback))
                 {
                     return ResolveColor(debuglineback);
                 }
@@ -262,7 +278,7 @@ namespace ScintillaNet.Configuration
         {
             get
             {
-                if (disabledlineback != null && disabledlineback.Length > 0)
+                if (!string.IsNullOrEmpty(disabledlineback))
                 {
                     return ResolveColor(disabledlineback);
                 }
@@ -274,7 +290,7 @@ namespace ScintillaNet.Configuration
         {
             get
             {
-                if (colorizemarkerback != null && colorizemarkerback.Length > 0)
+                if (!string.IsNullOrEmpty(colorizemarkerback))
                 {
                     return colorizemarkerback.ToLower() == "true";
                 }
@@ -282,6 +298,6 @@ namespace ScintillaNet.Configuration
             }
         }
 
-	}
-	
+    }
+    
 }

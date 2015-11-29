@@ -18,16 +18,16 @@ Download
 Platform
 --------
 
-* Microsoft Windows .NET 3.5 application for XP, Vista, 7 and 8
+* Microsoft Windows .NET 3.5 application for XP, Vista, 7, 8 and 10
 * Mac OSX/Linux compatible using virtualization software or Wine/CrossOver
-* Includes native (Qt) Mac OSX/Linux helper to improve virtualization
+* Native (Qt) Mac OSX/Linux helper is available to improve OS integration
 
 Building
 --------
 
-* Open in Visual Studio 2013 or C# Express 2013 (free),
+* Open in Visual Studio 2015 (Community version is free),
 * Click the solution and select "Release|x86" from "Active config" in Properties panel,
-* Build PluginCore project first, then FlashDevelop and then the entire solution.
+* Build the entire solution, the built binary will run in standalone mode
 
 Contribute
 --------

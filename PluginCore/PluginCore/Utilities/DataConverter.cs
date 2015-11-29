@@ -1,10 +1,9 @@
 using System;
-using System.Text;
 using System.Drawing;
-using System.Drawing.Imaging;
-using System.Collections.Generic;
-using PluginCore.Managers;
+using System.Globalization;
+using System.Text;
 using System.Windows.Forms;
+using PluginCore.Managers;
 
 namespace PluginCore.Utilities
 {
@@ -85,7 +84,7 @@ namespace PluginCore.Utilities
                 if (c.ToArgb() == 0 && aColor.Length >= 6)
                 {
                     Int32 col = 0;
-                    if (aColor.StartsWith("0x")) Int32.TryParse(aColor.Substring(2), System.Globalization.NumberStyles.HexNumber, null, out col);
+                    if (aColor.StartsWith("0x")) Int32.TryParse(aColor.Substring(2), NumberStyles.HexNumber, null, out col);
                     else Int32.TryParse(aColor, out col);
                     return TO_COLORREF(col);
                 }
@@ -120,6 +119,14 @@ namespace PluginCore.Utilities
         public static Int32 ColorToBGR(Color color)
         {
             return TO_COLORREF(color.ToArgb() & 0x00ffffff);
+        }
+
+        /// <summary>
+        /// Alias for ColorToBGR to not break the API.
+        /// </summary>
+        public static Int32 ColorToInt32(Color color)
+        {
+            return ColorToBGR(color);
         }
 
     }

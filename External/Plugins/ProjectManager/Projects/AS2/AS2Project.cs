@@ -1,8 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.IO;
 using System.Windows.Forms;
+using System.Xml;
+using PluginCore.Helpers;
+using ProjectManager.Controls;
+using ProjectManager.Controls.AS2;
 
 namespace ProjectManager.Projects.AS2
 {
@@ -15,6 +17,7 @@ namespace ProjectManager.Projects.AS2
         }
 
         public override string Language { get { return "as2"; } }
+        public override string LanguageDisplayName { get { return "AS2"; } }
         public override bool IsCompilable { get { return true; } }
         public override bool UsesInjection { get { return InputPath != ""; } }
         public override bool HasLibraries { get { return OutputType == OutputType.Application && !UsesInjection; } }
@@ -23,9 +26,9 @@ namespace ProjectManager.Projects.AS2
 
         public new MtascOptions CompilerOptions { get { return (MtascOptions)base.CompilerOptions; } }
 
-        public override ProjectManager.Controls.PropertiesDialog CreatePropertiesDialog()
+        public override PropertiesDialog CreatePropertiesDialog()
         {
-            return new ProjectManager.Controls.AS2.AS2PropertiesDialog();
+            return new AS2PropertiesDialog();
         }
 
         public override void ValidateBuild(out string error)
@@ -63,7 +66,7 @@ namespace ProjectManager.Projects.AS2
         {
             try
             {
-                if (OutputPath != null && OutputPath.Length > 0 && File.Exists(GetAbsolutePath(OutputPath)))
+                if (!string.IsNullOrEmpty(OutputPath) && File.Exists(GetAbsolutePath(OutputPath)))
                     File.Delete(GetAbsolutePath(OutputPath));
                 return true;
             }
@@ -81,24 +84,24 @@ namespace ProjectManager.Projects.AS2
 
         #region Load/Save
 
-		public static AS2Project Load(string path)
-		{
-			AS2ProjectReader reader = new AS2ProjectReader(path);
+        public static AS2Project Load(string path)
+        {
+            AS2ProjectReader reader = new AS2ProjectReader(path);
 
-			try
-			{
-				return reader.ReadProject();
-			}
-			catch (System.Xml.XmlException exception)
-			{
-				string format = string.Format("Error in XML Document line {0}, position {1}.",
-					exception.LineNumber,exception.LinePosition);
-				throw new Exception(format,exception);
-			}
-			finally { reader.Close(); }
-		}
+            try
+            {
+                return reader.ReadProject();
+            }
+            catch (XmlException exception)
+            {
+                string format = string.Format("Error in XML Document line {0}, position {1}.",
+                    exception.LineNumber,exception.LinePosition);
+                throw new Exception(format,exception);
+            }
+            finally { reader.Close(); }
+        }
 
-		public override void Save()
+        public override void Save()
         {
             SaveAs(ProjectPath);
         }
@@ -109,7 +112,7 @@ namespace ProjectManager.Projects.AS2
             try
             {
                 AS2ProjectWriter writer = new AS2ProjectWriter(this, fileName);
-				writer.WriteProject();
+                writer.WriteProject();
                 writer.Flush();
                 writer.Close();
             }
@@ -117,8 +120,8 @@ namespace ProjectManager.Projects.AS2
             {
                 MessageBox.Show(ex.Message, "IO Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-		}
+        }
 
-		#endregion
+        #endregion
     }
 }

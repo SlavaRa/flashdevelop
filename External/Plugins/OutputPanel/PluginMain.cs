@@ -1,19 +1,19 @@
 using System;
-using System.IO;
-using System.Drawing;
-using System.Windows.Forms;
 using System.ComponentModel;
-using WeifenLuo.WinFormsUI.Docking;
-using PluginCore.Localization;
-using PluginCore.Utilities;
-using PluginCore.Managers;
-using PluginCore.Helpers;
+using System.Drawing;
+using System.IO;
+using System.Windows.Forms;
 using PluginCore;
+using PluginCore.Helpers;
+using PluginCore.Localization;
+using PluginCore.Managers;
+using PluginCore.Utilities;
+using WeifenLuo.WinFormsUI.Docking;
 
 namespace OutputPanel
 {
-	public class PluginMain : IPlugin
-	{
+    public class PluginMain : IPlugin
+    {
         private String pluginName = "OutputPanel";
         private String pluginGuid = "54749f71-694b-47e0-9b05-e9417f39f20d";
         private String pluginHelp = "www.flashdevelop.org/community/";
@@ -39,41 +39,41 @@ namespace OutputPanel
         /// Name of the plugin
         /// </summary> 
         public String Name
-		{
-			get { return this.pluginName; }
-		}
+        {
+            get { return this.pluginName; }
+        }
 
         /// <summary>
         /// GUID of the plugin
         /// </summary>
         public String Guid
-		{
-			get { return this.pluginGuid; }
-		}
+        {
+            get { return this.pluginGuid; }
+        }
 
         /// <summary>
         /// Author of the plugin
         /// </summary> 
         public String Author
-		{
-			get { return this.pluginAuth; }
-		}
+        {
+            get { return this.pluginAuth; }
+        }
 
         /// <summary>
         /// Description of the plugin
         /// </summary> 
         public String Description
-		{
-			get { return this.pluginDesc; }
-		}
+        {
+            get { return this.pluginDesc; }
+        }
 
         /// <summary>
         /// Web address for help
         /// </summary> 
         public String Help
-		{
-			get { return this.pluginHelp; }
-		}
+        {
+            get { return this.pluginHelp; }
+        }
 
         /// <summary>
         /// Object that contains the settings
@@ -84,35 +84,35 @@ namespace OutputPanel
             get { return this.settingObject; }
         }
 
-		#endregion
-		
-		#region Required Methods
-		
-		/// <summary>
-		/// Initializes the plugin
-		/// </summary>
-		public void Initialize()
-		{
+        #endregion
+        
+        #region Required Methods
+        
+        /// <summary>
+        /// Initializes the plugin
+        /// </summary>
+        public void Initialize()
+        {
             this.InitBasics();
             this.LoadSettings();
             this.AddEventHandlers();
             this.CreatePluginPanel();
             this.CreateMenuItem();
         }
-		
-		/// <summary>
-		/// Disposes the plugin
-		/// </summary>
-		public void Dispose()
-		{
+        
+        /// <summary>
+        /// Disposes the plugin
+        /// </summary>
+        public void Dispose()
+        {
             this.SaveSettings();
-		}
-		
-		/// <summary>
-		/// Handles the incoming events
-		/// </summary>
-		public void HandleEvent(Object sender, NotifyEvent e, HandlingPriority prority)
-		{
+        }
+        
+        /// <summary>
+        /// Handles the incoming events
+        /// </summary>
+        public void HandleEvent(Object sender, NotifyEvent e, HandlingPriority priority)
+        {
             switch (e.Type)
             {
                 case EventType.ProcessStart:
@@ -142,10 +142,14 @@ namespace OutputPanel
                 case EventType.ApplySettings:
                     this.pluginUI.ApplyWrapText();
                     break;
+
+                case EventType.UIStarted:
+                    this.pluginUI.UpdateAfterTheme();
+                    break;
             }
-		}
-		
-		#endregion
+        }
+        
+        #endregion
 
         #region Custom Properties
 
@@ -188,7 +192,7 @@ namespace OutputPanel
         /// </summary>
         public void AddEventHandlers()
         {
-            EventType eventMask = EventType.ProcessStart | EventType.ProcessEnd | EventType.Trace | EventType.ApplySettings | EventType.Keys;
+            EventType eventMask = EventType.ProcessStart | EventType.ProcessEnd | EventType.Trace | EventType.ApplySettings | EventType.Keys | EventType.UIStarted;
             EventManager.AddEventHandler(this, eventMask);
         }
 
@@ -239,13 +243,13 @@ namespace OutputPanel
         /// <summary>
         /// Opens the plugin panel if closed
         /// </summary>
-        public void OpenPanel(Object sender, System.EventArgs e)
+        public void OpenPanel(Object sender, EventArgs e)
         {
             this.pluginPanel.Show();
         }
 
-		#endregion
-		
-	}
-	
+        #endregion
+        
+    }
+    
 }

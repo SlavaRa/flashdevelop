@@ -1,14 +1,8 @@
 using System;
 using System.IO;
-using System.Text;
-using System.Data;
 using System.Drawing;
-using System.Collections;
-using System.Diagnostics;
 using System.Windows.Forms;
-using System.ComponentModel;
 using ProjectManager.Actions;
-using ProjectManager.Helpers;
 using ProjectManager.Controls;
 using ProjectManager.Controls.TreeView;
 using ProjectManager.Projects;
@@ -39,6 +33,7 @@ namespace ProjectManager
         {
             this.menus = menus;
             this.plugin = plugin;
+            this.AutoKeyHandling = true;
             this.Text = TextHelper.GetString("Title.PluginPanel");
             
             #region Build TreeView and Toolbar
@@ -223,7 +218,7 @@ namespace ProjectManager
         /// </summary>
         private void tree_AfterLabelEdit(Object sender, NodeLabelEditEventArgs e)
         {
-            if (e.Label != null && Rename != null && e.Label.Length > 0)
+            if (!string.IsNullOrEmpty(e.Label) && Rename != null)
             {
                 if (!Rename((e.Node as GenericNode).BackingPath, e.Label))
                     e.CancelEdit = true;

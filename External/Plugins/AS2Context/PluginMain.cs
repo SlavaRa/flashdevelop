@@ -1,14 +1,15 @@
 using System;
-using System.IO;
+using System.Collections.Generic;
 using System.ComponentModel;
-using WeifenLuo.WinFormsUI;
+using System.Globalization;
+using System.IO;
+using System.Text.RegularExpressions;
+using ASCompletion.Context;
+using PluginCore;
+using PluginCore.Helpers;
 using PluginCore.Localization;
 using PluginCore.Managers;
 using PluginCore.Utilities;
-using PluginCore.Helpers;
-using PluginCore;
-using System.Text.RegularExpressions;
-using System.Collections.Generic;
 
 namespace AS2Context
 {
@@ -87,8 +88,8 @@ namespace AS2Context
         #region Required Methods
 
         /// <summary>
-		/// Initializes the plugin
-		/// </summary>
+        /// Initializes the plugin
+        /// </summary>
         public void Initialize()
         {
             this.InitBasics();
@@ -107,7 +108,7 @@ namespace AS2Context
         /// <summary>
         /// Handles the incoming events
         /// </summary>
-        public void HandleEvent(Object sender, NotifyEvent e, HandlingPriority prority)
+        public void HandleEvent(Object sender, NotifyEvent e, HandlingPriority priority)
         {
             switch (e.Type)
             {
@@ -115,7 +116,7 @@ namespace AS2Context
                     contextInstance = new Context(settingObject);
                     ValidateSettings();
                     // Associate this context with AS2 language
-                    ASCompletion.Context.ASContext.RegisterLanguage(contextInstance, "as2");
+                    ASContext.RegisterLanguage(contextInstance, "as2");
                     break;
             }
         }
@@ -278,10 +279,10 @@ namespace AS2Context
         static readonly private string[] MACROMEDIA_VERSIONS = {
             "\\Adobe\\Flash CS5\\",
             "\\Adobe\\Flash CS4\\",
-			"\\Adobe\\Flash CS3\\",
-			"\\Macromedia\\Flash 8\\", 
-			"\\Macromedia\\Flash MX 2004\\"
-		};
+            "\\Adobe\\Flash CS3\\",
+            "\\Macromedia\\Flash 8\\", 
+            "\\Macromedia\\Flash MX 2004\\"
+        };
 
         /// <summary>
         /// Explore the possible locations for the Macromedia Flash IDE classpath
@@ -289,7 +290,7 @@ namespace AS2Context
         static private string FindMMClassPath()
         {
             bool found = false;
-            string deflang = System.Globalization.CultureInfo.CurrentUICulture.Name;
+            string deflang = CultureInfo.CurrentUICulture.Name;
             deflang = deflang.Substring(0, 2);
             string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string cp = "";
@@ -297,18 +298,18 @@ namespace AS2Context
             {
                 cp = localAppData + path;
                 // default language
-                if (System.IO.Directory.Exists(cp + deflang + "\\Configuration\\Classes\\"))
+                if (Directory.Exists(cp + deflang + "\\Configuration\\Classes\\"))
                 {
                     cp += deflang + "\\Configuration\\Classes\\";
                     found = true;
                 }
                 // look for other languages
-                else if (System.IO.Directory.Exists(cp))
+                else if (Directory.Exists(cp))
                 {
-                    string[] dirs = System.IO.Directory.GetDirectories(cp);
+                    string[] dirs = Directory.GetDirectories(cp);
                     foreach (string dir in dirs)
                     {
-                        if (System.IO.Directory.Exists(dir + "\\Configuration\\Classes\\"))
+                        if (Directory.Exists(dir + "\\Configuration\\Classes\\"))
                         {
                             cp = dir + "\\Configuration\\Classes\\";
                             found = true;

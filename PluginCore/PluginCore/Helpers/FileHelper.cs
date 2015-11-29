@@ -1,13 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using System.Collections.Generic;
-using PluginCore.Utilities;
-using PluginCore.Managers;
 using PluginCore.Localization;
-using PluginCore;
+using PluginCore.Managers;
+using PluginCore.Utilities;
 
 namespace PluginCore.Helpers
 {
@@ -170,6 +169,109 @@ namespace PluginCore.Helpers
         }
 
         /// <summary>
+        /// Moves a file, overwrites the file at the new location if there is one already.
+        /// </summary>
+        public static void ForceMove(String oldPath, String newPath)
+        {
+            if (File.Exists(newPath)) File.Delete(newPath);
+            File.Move(oldPath, newPath);
+        }
+
+        /// <summary>
+        /// Moves a folder, overwriting the files at the new location if there are matches.
+        /// </summary>
+        public static void CopyDirectory(String oldPath, String newPath, Boolean overwrite)
+        {
+            Stack<String> stack = new Stack<String>();
+            stack.Push(String.Empty);
+            String sep = Path.DirectorySeparatorChar.ToString();
+            String alt = Path.AltDirectorySeparatorChar.ToString();
+            Int32 length = oldPath.EndsWith(sep) || oldPath.EndsWith(alt) ? oldPath.Length : oldPath.Length + 1;
+            while (stack.Count > 0)
+            {
+                String subPath = stack.Pop();
+                String sourcePath = Path.Combine(oldPath, subPath);
+                String targetPath = Path.Combine(newPath, subPath);
+                if (!Directory.Exists(targetPath)) Directory.CreateDirectory(targetPath);
+                foreach (String file in Directory.GetFiles(sourcePath, "*.*"))
+                {
+                    File.Copy(file, Path.Combine(targetPath, Path.GetFileName(file)), overwrite);
+                }
+                foreach (String folder in Directory.GetDirectories(sourcePath))
+                {
+                    stack.Push(folder.Substring(length));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Moves a folder, overwriting the files at the new location if there are matches.
+        /// </summary>
+        public static void ForceMoveDirectory(String oldPath, String newPath)
+        {
+            Stack<String> stack = new Stack<String>();
+            stack.Push(String.Empty);
+            String sep = Path.DirectorySeparatorChar.ToString();
+            String alt = Path.AltDirectorySeparatorChar.ToString();
+            Int32 length = oldPath.EndsWith(sep) || oldPath.EndsWith(alt) ? oldPath.Length : oldPath.Length + 1;
+            while (stack.Count > 0)
+            {
+                String subPath = stack.Pop();
+                String sourcePath = Path.Combine(oldPath, subPath);
+                String targetPath = Path.Combine(newPath, subPath);
+                if (!Directory.Exists(targetPath)) Directory.CreateDirectory(targetPath);
+                foreach (String file in Directory.GetFiles(sourcePath, "*.*"))
+                {
+                    ForceMove(file, Path.Combine(targetPath, Path.GetFileName(file)));
+                }
+                foreach (String folder in Directory.GetDirectories(sourcePath))
+                {
+                    stack.Push(folder.Substring(length));
+                }
+            }
+            Directory.Delete(oldPath, true);
+        }
+
+        /// <summary>
+        /// If the path already exists, the user is asked to confirm
+        /// </summary>
+        public static Boolean ConfirmOverwrite(String path)
+        {
+            String name = Path.GetFileName(path);
+            if (Directory.Exists(path))
+            {
+                String title = " " + TextHelper.GetString("FlashDevelop.Title.ConfirmDialog");
+                String message = TextHelper.GetString("Info.FolderAlreadyContainsFolder");
+                DialogResult result = MessageBox.Show(PluginBase.MainForm, String.Format(message, name, "\n"), title, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
+                return result == DialogResult.Yes;
+            }
+            else if (File.Exists(path))
+            {
+                String title = " " + TextHelper.GetString("FlashDevelop.Title.ConfirmDialog");
+                String message = TextHelper.GetString("Info.FolderAlreadyContainsFile");
+                DialogResult result = MessageBox.Show(PluginBase.MainForm, String.Format(message, name, "\n"), title, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
+                return result == DialogResult.Yes;
+            }
+            else return true;
+        }
+
+        /// <summary>
+        /// Checks if a file name matches a search filter mask, eg: filename.jpg matches f*.jpg
+        /// </summary>
+        /// <param name="fileName">The name of the file to check</param>
+        /// <param name="filterMask">The search filter to apply. You can use multiple masks by using ;</param>
+        public static Boolean FileMatchesSearchFilter(String fileName, String filterMask)
+        {
+            foreach (String mask in filterMask.Split(';'))
+            {
+                String convertedMask = "^" + Regex.Escape(mask).Replace("\\*", ".*").Replace("\\?", ".") + "$";
+                Regex regexMask = new Regex(convertedMask, RegexOptions.IgnoreCase);
+                if (regexMask.IsMatch(fileName)) return true;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Checks if the bytes contains invalid UTF-8 bytes
         /// </summary>
         public static Boolean ContainsInvalidUTF8Bytes(Byte[] bytes)
@@ -237,6 +339,7 @@ namespace PluginCore.Helpers
                         startIndex = 3;
                         info.BomLength = 3;
                         info.ContainsBOM = true;
+                        info.Charset = Encoding.UTF8.WebName;
                         info.CodePage = Encoding.UTF8.CodePage;
                     }
                     else if (bytes.Length > 3 && (bytes[0] == 0xff && bytes[1] == 0xfe && bytes[2] == 0x00 && bytes[3] == 0x00))
@@ -244,6 +347,7 @@ namespace PluginCore.Helpers
                         startIndex = 4;
                         info.BomLength = 4;
                         info.ContainsBOM = true;
+                        info.Charset = Encoding.UTF32.WebName;
                         info.CodePage = Encoding.UTF32.CodePage;
                     }
                     else if (bytes.Length > 4 && ((bytes[0] == 0x2b && bytes[1] == 0x2f && bytes[2] == 0x76) && (bytes[3] == 0x38 || bytes[3] == 0x39 || bytes[3] == 0x2b || bytes[3] == 0x2f) && bytes[4] == 0x2D))
@@ -251,6 +355,7 @@ namespace PluginCore.Helpers
                         startIndex = 5;
                         info.BomLength = 5;
                         info.ContainsBOM = true;
+                        info.Charset = Encoding.UTF7.WebName;
                         info.CodePage = Encoding.UTF7.CodePage;
                     }
                     else if (bytes.Length > 3 && ((bytes[0] == 0x2b && bytes[1] == 0x2f && bytes[2] == 0x76) && (bytes[3] == 0x38 || bytes[3] == 0x39 || bytes[3] == 0x2b || bytes[3] == 0x2f)))
@@ -258,6 +363,7 @@ namespace PluginCore.Helpers
                         startIndex = 4;
                         info.BomLength = 4;
                         info.ContainsBOM = true;
+                        info.Charset = Encoding.UTF7.WebName;
                         info.CodePage = Encoding.UTF7.CodePage;
                     }
                     else if (bytes.Length > 1 && (bytes[0] == 0xff && bytes[1] == 0xfe))
@@ -265,6 +371,7 @@ namespace PluginCore.Helpers
                         startIndex = 2;
                         info.BomLength = 2;
                         info.ContainsBOM = true;
+                        info.Charset = Encoding.Unicode.WebName;
                         info.CodePage = Encoding.Unicode.CodePage;
                     }
                     else if (bytes.Length > 1 && (bytes[0] == 0xfe && bytes[1] == 0xff))
@@ -272,12 +379,32 @@ namespace PluginCore.Helpers
                         startIndex = 2;
                         info.BomLength = 2;
                         info.ContainsBOM = true;
+                        info.Charset = Encoding.BigEndianUnicode.WebName;
                         info.CodePage = Encoding.BigEndianUnicode.CodePage;
                     }
                     else
                     {
-                        if (!ContainsInvalidUTF8Bytes(bytes)) info.CodePage = Encoding.UTF8.CodePage;
-                        else info.CodePage = Encoding.Default.CodePage;
+                        if (!ContainsInvalidUTF8Bytes(bytes))
+                        {
+                            info.Charset = Encoding.UTF8.WebName;
+                            info.CodePage = Encoding.UTF8.CodePage;
+                        }
+                        else // Try detecting using Ude...
+                        {
+                            Ude.CharsetDetector detector = new Ude.CharsetDetector();
+                            detector.Feed(bytes, 0, bytes.Length); detector.DataEnd();
+                            if (detector.Charset != null)
+                            {
+                                Encoding encoding = Encoding.GetEncoding(detector.Charset);
+                                info.Charset = encoding.WebName;
+                                info.CodePage = encoding.CodePage;
+                            }
+                            else
+                            {
+                                info.Charset = Encoding.Default.WebName;
+                                info.CodePage = Encoding.Default.CodePage;
+                            }
+                        }
                     }
                     Int32 contentLength = bytes.Length - startIndex;
                     if (bytes.Length > 0 && bytes.Length > startIndex)
@@ -295,123 +422,28 @@ namespace PluginCore.Helpers
         }
 
         /// <summary>
-        /// Moves a file, overwrites the file at the new location if there is one already.
+        /// Filters a list of paths so that only those meeting the File.Exists() condition remain.
         /// </summary>
-        public static void ForceMove(String oldPath, String newPath)
+        public static List<String> FilterByExisting(List<String> paths, Boolean logicalDrivesOnly)
         {
-            if (File.Exists(newPath))
+            List<String> toCheck = new List<String>(paths);
+            if (logicalDrivesOnly)
             {
-                File.Delete(newPath);
+                DriveInfo[] driveInfo = DriveInfo.GetDrives();
+                toCheck = new List<String>(paths);
+                toCheck.RemoveAll(delegate(String path)
+                {
+                    foreach (DriveInfo drive in driveInfo)
+                    {
+                        if (path.StartsWith(drive.RootDirectory.ToString())) return false;
+                    }
+                    return true;
+                });
             }
-            File.Move(oldPath, newPath);
-        }
-
-        /// <summary>
-        /// Moves a folder, overwriting the files at the new location if there are matches.
-        /// </summary>
-        public static void CopyDirectory(String oldPath, String newPath, Boolean overwrite)
-        {
-            var stack = new Stack<String>();
-            stack.Push(string.Empty);
-
-            int length = oldPath.EndsWith(Path.DirectorySeparatorChar.ToString()) ||
-                         oldPath.EndsWith(Path.AltDirectorySeparatorChar.ToString())
-                             ? oldPath.Length : oldPath.Length + 1;
-            while (stack.Count > 0)
-            {
-                var subPath = stack.Pop();
-                var sourcePath = Path.Combine(oldPath, subPath);
-                var targetPath = Path.Combine(newPath, subPath);
-                if (!Directory.Exists(targetPath))
-                    Directory.CreateDirectory(targetPath);
-
-                foreach (var file in Directory.GetFiles(sourcePath, "*.*"))
-                    File.Copy(file, Path.Combine(targetPath, Path.GetFileName(file)), overwrite);
-
-                foreach (var folder in Directory.GetDirectories(sourcePath))
-                    stack.Push(folder.Substring(length));
-            }
-        }
-
-        /// <summary>
-        /// Moves a folder, overwriting the files at the new location if there are matches.
-        /// </summary>
-        public static void ForceMoveDirectory(String oldPath, String newPath)
-        {
-            var stack = new Stack<String>();
-            stack.Push(string.Empty);
-
-            int length = oldPath.EndsWith(Path.DirectorySeparatorChar.ToString()) ||
-                         oldPath.EndsWith(Path.AltDirectorySeparatorChar.ToString())
-                             ? oldPath.Length : oldPath.Length + 1;
-            while (stack.Count > 0)
-            {
-                var subPath = stack.Pop();
-                var sourcePath = Path.Combine(oldPath, subPath);
-                var targetPath = Path.Combine(newPath, subPath);
-                if (!Directory.Exists(targetPath))
-                    Directory.CreateDirectory(targetPath);
-
-                foreach (var file in Directory.GetFiles(sourcePath, "*.*"))
-                    ForceMove(file, Path.Combine(targetPath, Path.GetFileName(file)));
-
-                foreach (var folder in Directory.GetDirectories(sourcePath))
-                    stack.Push(folder.Substring(length));
-            }
-
-            Directory.Delete(oldPath, true);
-        }
-
-        /// <summary>
-        /// If the path already exists, the user is asked to confirm
-        /// </summary>
-        public static bool ConfirmOverwrite(string path)
-        {
-            string name = Path.GetFileName(path);
-
-            if (Directory.Exists(path))
-            {
-                string title = " " + TextHelper.GetString("FlashDevelop.Title.ConfirmDialog");
-                string message = TextHelper.GetString("Info.FolderAlreadyContainsFolder");
-
-                DialogResult result = MessageBox.Show(PluginBase.MainForm, string.Format(message, name, "\n"),
-                    title, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
-
-                return result == DialogResult.Yes;
-            }
-            else if (File.Exists(path))
-            {
-                string title = " " + TextHelper.GetString("FlashDevelop.Title.ConfirmDialog");
-                string message = TextHelper.GetString("Info.FolderAlreadyContainsFile");
-
-                DialogResult result = MessageBox.Show(PluginBase.MainForm, string.Format(message, name, "\n"),
-                    title, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
-
-                return result == DialogResult.Yes;
-            }
-            else return true;
-        }
-
-        /// <summary>
-        /// Checks if a file name matches a search filter mask, eg: filename.jpg matches f*.jpg
-        /// </summary>
-        /// <param name="fileName">The name of the file to check</param>
-        /// <param name="filterMask">The search filter to apply. You can use multiple masks by using ;</param>
-        public static bool FileMatchesSearchFilter(string fileName, string filterMask)
-        {
-            foreach (string mask in filterMask.Split(';'))
-            {
-                String convertedMask = "^" + Regex.Escape(mask).Replace("\\*", ".*").Replace("\\?", ".") + "$";
-                Regex regexMask = new Regex(convertedMask, RegexOptions.IgnoreCase);
-                if (regexMask.IsMatch(fileName)) return true;
-            }
-
-            return false;
-        }
-
-        public static bool IsHaxeExtension(string extension)
-        {
-            return extension == ".hx" || extension == ".hxp";
+            toCheck.RemoveAll(path => !File.Exists(path));
+            paths.Clear();
+            paths.AddRange(toCheck);
+            return paths;
         }
     }
 
@@ -432,6 +464,7 @@ namespace PluginCore.Helpers
     public class EncodingFileInfo
     {
         public Int32 CodePage = -1;
+        public String Charset = String.Empty;
         public String Contents = String.Empty;
         public Boolean ContainsBOM = false;
         public Int32 BomLength = 0;

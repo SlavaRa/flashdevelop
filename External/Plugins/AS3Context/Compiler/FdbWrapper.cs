@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Diagnostics;
-using System.Threading;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using PluginCore.Helpers;
-using System.Collections;
 
 namespace AS3Context.Compiler
 {
@@ -81,8 +80,7 @@ namespace AS3Context.Compiler
             process.StartInfo.RedirectStandardError = true;
             process.StartInfo.CreateNoWindow = true;
             process.StartInfo.FileName = JvmConfigHelper.GetJavaEXE(jvmConfig);
-            process.StartInfo.Arguments = jvmConfig["java.args"] 
-                + "  -Dfile.encoding=UTF-8 -Dapplication.home=\"" + flexSDKPath + "\" -jar \"" + fdbPath + "\"";
+            process.StartInfo.Arguments = jvmConfig["java.args"] + " -Dfile.encoding=UTF-8 -Dapplication.home=\"" + flexSDKPath + "\" -jar \"" + fdbPath + "\"";
             process.StartInfo.WorkingDirectory = workingDir;
             process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
             process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
