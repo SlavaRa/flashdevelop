@@ -16,6 +16,7 @@ using ICSharpCode.SharpZipLib.Zip;
 using PluginCore.Localization;
 using ProjectManager.Projects;
 using System.Collections;
+using PluginCore;
 using ProjectManager.Projects.AS3;
 using PluginCore.Managers;
 
@@ -432,7 +433,7 @@ namespace AirProperties
 
         private Boolean GetSelectedLocaleIsDefault()
         {
-            return (Boolean)(LocalesField.SelectedIndex == 0);
+            return LocalesField.SelectedIndex == 0;
         }
 
         public void SetTitle(string projectName, string airVersion)
@@ -833,7 +834,7 @@ namespace AirProperties
             try
             {
                 String src = File.ReadAllText(file);
-                if (src.IndexOf("xmlns=\"http://ns.adobe.com/air/") > 0) return true;
+                if (src.IndexOfOrdinal("xmlns=\"http://ns.adobe.com/air/") > 0) return true;
             }
             catch { }
             return false;
@@ -1065,11 +1066,11 @@ namespace AirProperties
                 {
                     if (_pluginMain.Settings.UseUniformFilenames)
                     {
-                        destinationFileName = filePrefix + dimensions.X.ToString() + Path.GetExtension(fileName);
+                        destinationFileName = filePrefix + dimensions.X + Path.GetExtension(fileName);
                     }
                     else if (_pluginMain.Settings.RenameIconsWithSize)
                     {
-                        destinationFileName = Path.GetFileNameWithoutExtension(fileName) + dimensions.X.ToString() + Path.GetExtension(fileName);
+                        destinationFileName = Path.GetFileNameWithoutExtension(fileName) + dimensions.X + Path.GetExtension(fileName);
                     }
                     else destinationFileName = Path.GetFileName(fileName);
                     if (!Directory.Exists(destinationPath))
@@ -1089,7 +1090,7 @@ namespace AirProperties
             }
             else
             {
-                MessageBox.Show(String.Format(TextHelper.GetString("Alert.Message.InvalidIconDimensions"), dimensions.X.ToString(), dimensions.Y.ToString()), TextHelper.GetString("Alert.Title.InvalidIconDimensions"), MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                MessageBox.Show(String.Format(TextHelper.GetString("Alert.Message.InvalidIconDimensions"), dimensions.X, dimensions.Y), TextHelper.GetString("Alert.Title.InvalidIconDimensions"), MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
         }
 
@@ -1473,8 +1474,8 @@ namespace AirProperties
                     {
                         //create the affected properties now, even though value is empty, so the locale 
                         //will be preserved if the user closes the form without specifying a value
-                        PropertyManager.CreateLocalizedProperty("name", locale, (Boolean)_locales[0].Equals(locale));
-                        PropertyManager.CreateLocalizedProperty("description", locale, (Boolean)_locales[0].Equals(locale));
+                        PropertyManager.CreateLocalizedProperty("name", locale, _locales[0].Equals(locale));
+                        PropertyManager.CreateLocalizedProperty("description", locale, _locales[0].Equals(locale));
                     }
                 }
                 //Re-initialize locales and refresh affected property fields
@@ -1677,7 +1678,7 @@ namespace AirProperties
                 if (externalsFileDialog.ShowDialog(this) == DialogResult.OK)
                 {
                     var externalsFile = ProjectPaths.GetRelativePath(_propertiesFilePath, externalsFileDialog.FileName);
-                    if (externalsFile.StartsWith("..") || Path.IsPathRooted(externalsFile))
+                    if (externalsFile.StartsWithOrdinal("..") || Path.IsPathRooted(externalsFile))
                     {
                         String msg = TextHelper.GetString("Info.CheckFileLocation");
                         ErrorManager.ShowWarning(msg, null);
@@ -1869,7 +1870,7 @@ namespace AirProperties
         // validates that the supplied image URI is a PNG file
         private Boolean ValidateImageExtension(String imageURI)
         {
-            if (imageURI.ToLower().EndsWith(".png")) return true;
+            if (imageURI.ToLower().EndsWithOrdinal(".png")) return true;
             else return false;
         }
 
@@ -2308,7 +2309,7 @@ namespace AirProperties
         {
             var externalsFile = IPhoneExternalSWFsField.Text;
             if (externalsFile == string.Empty) this.ValidationErrorProvider.SetError(IPhoneExternalSWFsField, string.Empty);
-            else if (externalsFile.StartsWith("..") || Path.IsPathRooted(externalsFile))
+            else if (externalsFile.StartsWithOrdinal("..") || Path.IsPathRooted(externalsFile))
             {
                 this.ValidationErrorProvider.SetError(IPhoneExternalSWFsField, TextHelper.GetString("Info.CheckFileLocation"));
 

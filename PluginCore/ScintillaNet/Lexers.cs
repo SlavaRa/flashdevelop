@@ -80,6 +80,7 @@ namespace ScintillaNet.Lexers
         TRIPLEVERBATIM = 21,
         HASHQUOTEDSTRING = 22,
         PREPROCESSORCOMMENT = 23,
+        PREPROCESSORCOMMENTDOC = 24,
         WORD3 = 24,
         WORD4 = 25,
         WORD5 = 26,

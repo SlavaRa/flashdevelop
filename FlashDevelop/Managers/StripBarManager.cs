@@ -254,8 +254,7 @@ namespace FlashDevelop.Managers
         /// </summary>
         private static String GetStrippedString(String text, Boolean removeWhite)
         {
-            text = text.Replace("&", "");
-            text = text.Replace("...", "");
+            text = TextHelper.RemoveMnemonicsAndEllipsis(text);
             if (removeWhite)
             {
                 text = text.Replace(" ", "");
@@ -271,7 +270,7 @@ namespace FlashDevelop.Managers
         {
             try
             {
-                if (!key.StartsWith("Label.")) return key;
+                if (!key.StartsWithOrdinal("Label.")) return key;
                 else return TextHelper.GetString(key);
             }
             catch (Exception ex)
@@ -288,7 +287,7 @@ namespace FlashDevelop.Managers
         {
             if (menu.OwnerItem != null)
             {
-                ToolStripItem parent = menu.OwnerItem as ToolStripItem;
+                ToolStripItem parent = menu.OwnerItem;
                 return GetMenuItemId(parent) + "." + GetStrippedString(menu.Name, true);
             }
             else return GetStrippedString(menu.Name, true);
@@ -314,7 +313,7 @@ namespace FlashDevelop.Managers
                 Keys shortcut = Keys.None;
                 String[] keys = data.Split('|');
                 for (Int32 i = 0; i < keys.Length; i++) shortcut = shortcut | (Keys)Enum.Parse(typeof(Keys), keys[i]);
-                return (Keys)shortcut;
+                return shortcut;
             }
             catch (Exception ex)
             {

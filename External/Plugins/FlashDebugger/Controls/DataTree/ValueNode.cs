@@ -2,6 +2,7 @@
 using flash.tools.debugger;
 using Double = java.lang.Double;
 using System.Text;
+using PluginCore;
 
 namespace FlashDebugger.Controls.DataTree
 {
@@ -53,7 +54,7 @@ namespace FlashDebugger.Controls.DataTree
                     typeStr = HideClassId ? typeStr.Before("@") : typeStr.Replace("@", " @");
 
                     // rename array
-                    if (typeStr.StartsWith("[]"))
+                    if (typeStr.StartsWithOrdinal("[]"))
                     {
                         typeStr = typeStr.Replace("[]", "Array");
                     }
@@ -69,11 +70,11 @@ namespace FlashDebugger.Controls.DataTree
                         {
                             if (number < 0 && number >= Int32.MinValue)
                             {
-                                return number.ToString() + " [0x" + ((Int32)number).ToString("x") + "]";
+                                return number + " [0x" + ((Int32)number).ToString("x") + "]";
                             }
                             else if (number < 0 || number > 9)
                             {
-                                return number.ToString() + " [0x" + ((Int64)number).ToString("x") + "]";
+                                return number + " [0x" + ((Int64)number).ToString("x") + "]";
                             }
                         }
                         else return number.ToString();

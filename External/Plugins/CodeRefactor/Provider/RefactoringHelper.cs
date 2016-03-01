@@ -85,7 +85,7 @@ namespace CodeRefactor.Provider
         public static Boolean IsUnderSDKPath(String file)
         {
             InstalledSDK sdk = PluginBase.CurrentSDK;
-            if (sdk != null && !String.IsNullOrEmpty(sdk.Path) && file.StartsWith(sdk.Path)) return true;
+            if (sdk != null && !String.IsNullOrEmpty(sdk.Path) && file.StartsWithOrdinal(sdk.Path)) return true;
             return false;
         }
 
@@ -100,6 +100,15 @@ namespace CodeRefactor.Provider
             if (!ASContext.Context.IsFileValid || (sci == null)) return null;
             int position = sci.WordEndPosition(sci.CurrentPos, true);
             return DeclarationLookupResult(sci, position);
+        }
+
+        public static string GetRefactorTargetName(ASResult target)
+        {
+            ClassModel type = target.Type;
+            MemberModel member = target.Member;
+            if (type.IsEnum() || !type.IsVoid() && target.IsStatic && (member == null || (member.Flags & FlagType.Constructor) > 0))
+                return type.Name;
+            return member.Name;
         }
 
         /// <summary>
@@ -408,13 +417,13 @@ namespace CodeRefactor.Provider
             foreach (PathModel pathModel in context.Classpath)
             {
                 string absolute = project.GetAbsolutePath(pathModel.Path);
-                if (file.StartsWith(absolute)) return true;
+                if (file.StartsWithOrdinal(absolute)) return true;
             }
             // If no source paths are defined, is it under the project?
             if (project.SourcePaths.Length == 0)
             {
                 String projRoot = Path.GetDirectoryName(project.ProjectPath);
-                if (file.StartsWith(projRoot)) return true;
+                if (file.StartsWithOrdinal(projRoot)) return true;
             }
             return false;
         }

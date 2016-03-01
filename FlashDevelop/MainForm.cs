@@ -2,37 +2,34 @@
 #region Imports
 
 using System;
-using System.IO;
-using System.Text;
-using System.Drawing;
-using System.Threading;
-using System.Reflection;
 using System.Collections;
-using System.Diagnostics;
-using System.Windows.Forms;
-using System.ComponentModel;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
-using System.Runtime.InteropServices;
-using ScintillaNet.Configuration;
-using PluginCore.Localization;
-using FlashDevelop.Controls;
-using FlashDevelop.Docking;
-using FlashDevelop.Utilities;
-using FlashDevelop.Managers;
-using FlashDevelop.Helpers;
-using FlashDevelop.Dialogs;
-using FlashDevelop.Settings;
-using WeifenLuo.WinFormsUI;
-using WeifenLuo.WinFormsUI.Docking;
-using ICSharpCode.SharpZipLib.Zip;
-using PluginCore.Utilities;
-using PluginCore.Managers;
-using PluginCore.Helpers;
-using PluginCore.Controls;
+using System.Windows.Forms;
 using CSScriptLibrary;
-using ScintillaNet;
+using FlashDevelop.Controls;
+using FlashDevelop.Dialogs;
+using FlashDevelop.Docking;
+using FlashDevelop.Helpers;
+using FlashDevelop.Managers;
+using FlashDevelop.Settings;
+using FlashDevelop.Utilities;
+using ICSharpCode.SharpZipLib.Zip;
 using PluginCore;
+using PluginCore.Controls;
+using PluginCore.Helpers;
+using PluginCore.Localization;
+using PluginCore.Managers;
+using PluginCore.Utilities;
+using ScintillaNet;
+using ScintillaNet.Configuration;
+using WeifenLuo.WinFormsUI.Docking;
 
 #endregion
 
@@ -44,7 +41,7 @@ namespace FlashDevelop
 
         public MainForm()
         {
-            MainForm.Instance = this;
+            Globals.MainForm = this;
             PluginBase.Initialize(this);
             this.DoubleBuffered = true;
             this.InitializeErrorLog();
@@ -96,7 +93,7 @@ namespace FlashDevelop
         #region Private Properties
 
         /* AppMan */
-        FileSystemWatcher amWatcher;
+        private FileSystemWatcher amWatcher;
 
         /* Components */
         private QuickFind quickFind;
@@ -150,7 +147,6 @@ namespace FlashDevelop
         /* Singleton */
         public static Boolean Silent;
         public static Boolean IsFirst;
-        public static MainForm Instance;
         public static String[] Arguments;
 
         #endregion
@@ -258,7 +254,7 @@ namespace FlashDevelop
         /// </summary>
         public ISettings Settings
         {
-            get { return (ISettings)this.appSettings; }
+            get { return this.appSettings; }
         }
 
         /// <summary>
@@ -291,7 +287,7 @@ namespace FlashDevelop
         /// </summary>
         public Boolean IsFirstInstance
         {
-            get { return MainForm.IsFirst; }
+            get { return IsFirst; }
         }
 
         /// <summary>
@@ -322,7 +318,7 @@ namespace FlashDevelop
             get
             {
                 List<ITabbedDocument> documents = new List<ITabbedDocument>();
-                foreach (DockPane pane in Globals.MainForm.DockPanel.Panes)
+                foreach (DockPane pane in DockPanel.Panes)
                 {
                     if (pane.DockState == DockState.Document)
                     {
@@ -462,7 +458,7 @@ namespace FlashDevelop
         /// </summary>
         public String[] StartArguments
         {
-            get { return MainForm.Arguments; }
+            get { return Arguments; }
         }
 
         /// <summary>
@@ -557,7 +553,7 @@ namespace FlashDevelop
             try
             {
                 DockablePanel dockablePanel = new DockablePanel(ctrl, guid);
-                if (image != null) dockablePanel.Icon = ImageKonverter.ImageToIcon(image);
+                dockablePanel.Image = image;
                 dockablePanel.DockState = defaultDockState;
                 LayoutManager.PluginPanels.Add(dockablePanel);
                 return dockablePanel;
@@ -588,15 +584,15 @@ namespace FlashDevelop
                 }
                 else return null;
             }
-            else if (file.EndsWith(".delete.fdz"))
+            else if (file.EndsWithOrdinal(".delete.fdz"))
             {
                 this.CallCommand("RemoveZip", file);
                 return null;
             }
-            else if (file.EndsWith(".fdz"))
+            else if (file.EndsWithOrdinal(".fdz"))
             {
                 this.CallCommand("ExtractZip", file);
-                if (file.ToLower().IndexOf("theme") != -1)
+                if (file.IndexOf("theme", StringComparison.OrdinalIgnoreCase) != -1)
                 {
                     String currentTheme = Path.Combine(PathHelper.ThemesDir, "CURRENT");
                     if (File.Exists(currentTheme))
@@ -711,6 +707,8 @@ namespace FlashDevelop
                     File.Delete(appman);
                     this.refreshConfig = true;
                 }
+                // Load platform data from user files
+                PlatformData.Load(Path.Combine(PathHelper.SettingDir, "Platforms"));
                 // Load current theme for applying later
                 String currentTheme = Path.Combine(PathHelper.ThemesDir, "CURRENT");
                 if (File.Exists(currentTheme)) ThemeManager.LoadTheme(currentTheme);
@@ -758,7 +756,7 @@ namespace FlashDevelop
         /// </summary>
         private DialogResult InitializeFirstRun()
         {
-            if (!this.StandaloneMode && MainForm.IsFirst && FirstRunDialog.ShouldProcessCommands())
+            if (!this.StandaloneMode && IsFirst && FirstRunDialog.ShouldProcessCommands())
             {
                 return FirstRunDialog.Show();
             }
@@ -794,7 +792,6 @@ namespace FlashDevelop
                 this.appSettings = (SettingObject)obj;
             }
             SettingObject.EnsureValidity(this.appSettings);
-            PlatformData.Load(Path.Combine(PathHelper.SettingDir, "Platforms"));
             FileStateManager.RemoveOldStateFiles();
         }
 
@@ -1035,6 +1032,8 @@ namespace FlashDevelop
             this.LocationChanged += new EventHandler(this.OnMainFormLocationChange);
             this.GotFocus += new EventHandler(this.OnMainFormGotFocus);
             this.Resize += new EventHandler(this.OnMainFormResize);
+
+            ScintillaManager.ConfigurationLoaded += ApplyAllSettings;
         }
 
         #endregion
@@ -1180,7 +1179,7 @@ namespace FlashDevelop
             {
                 String title = TextHelper.GetString("Title.ConfirmDialog");
                 String message = TextHelper.GetString("Info.AreYouSureToExit");
-                DialogResult result = MessageBox.Show(Globals.MainForm, message, " " + title, MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                DialogResult result = MessageBox.Show(this, message, " " + title, MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (result == DialogResult.No) e.Cancel = true;
             }
             if (!e.Cancel) this.CloseAllDocuments(false);
@@ -1335,7 +1334,7 @@ namespace FlashDevelop
             {
                 String saveChanges = TextHelper.GetString("Info.SaveChanges");
                 String saveChangesTitle = TextHelper.GetString("Title.SaveChanges");
-                DialogResult result = MessageBox.Show(Globals.MainForm, saveChanges, saveChangesTitle + " " + document.Text, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+                DialogResult result = MessageBox.Show(this, saveChanges, saveChangesTitle + " " + document.Text, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
                 if (result == DialogResult.Yes)
                 {
                     if (document.IsUntitled)
@@ -1414,8 +1413,8 @@ namespace FlashDevelop
             if (sci != null && document != null && document.IsEditable)
             {
                 String statusText = " " + TextHelper.GetString("Info.StatusText");
-                String line = sci.CurrentLine + 1 + " / " + sci.LineCount.ToString();
-                String column = sci.Column(sci.CurrentPos) + 1 + " / " + (sci.Column(sci.LineEndPosition(sci.CurrentLine)) + 1).ToString();
+                String line = sci.CurrentLine + 1 + " / " + sci.LineCount;
+                String column = sci.Column(sci.CurrentPos) + 1 + " / " + (sci.Column(sci.LineEndPosition(sci.CurrentLine)) + 1);
                 var oldOS = this.OSVersion.Major < 6; // Vista is 6.0 and ok...
                 String file = oldOS ? PathHelper.GetCompactPath(sci.FileName) : sci.FileName;
                 String eol = (sci.EOLMode == 0) ? "CR+LF" : ((sci.EOLMode == 1) ? "CR" : "LF");
@@ -1467,7 +1466,7 @@ namespace FlashDevelop
             if (te.Handled) return; // Let plugin handle this...
             String dlgTitle = TextHelper.GetString("Title.ConfirmDialog");
             String message = TextHelper.GetString("Info.MakeReadOnlyWritable");
-            if (MessageBox.Show(Globals.MainForm, message, dlgTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            if (MessageBox.Show(this, message, dlgTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
                 ScintillaManager.MakeFileWritable(sci);
             }
@@ -1609,7 +1608,7 @@ namespace FlashDevelop
         }
 
         /// <summary>
-        /// Updates the MainForms title automaticly
+        /// Updates the MainForm's title automatically
         /// </summary>
         public void OnUpdateMainFormDialogTitle()
         {
@@ -1684,13 +1683,104 @@ namespace FlashDevelop
         }
 
         /// <summary>
-        /// Adjusts the image for different themes
+        /// Finds the specified composed/ready image that is automatically adjusted according to the theme.
+        /// <para/>
+        /// If you make a copy of the image returned by this method, the copy will not be automatically adjusted.
+        /// </summary>
+        public Image FindImage(String data)
+        {
+            return FindImage(data, true);
+        }
+
+        /// <summary>
+        /// Finds the specified composed/ready image.
+        /// <para/>
+        /// If you make a copy of the image returned by this method, the copy will not be automatically adjusted, even if <code>autoAdjusted</code> is <code>true</code>.
+        /// </summary>
+        public Image FindImage(String data, Boolean autoAdjusted)
+        {
+            try
+            {
+                lock (this) return ImageManager.GetComposedBitmap(data, autoAdjusted);
+            }
+            catch (Exception ex)
+            {
+                ErrorManager.ShowError(ex);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Finds the specified composed/ready image that is automatically adjusted according to the theme.
+        /// The image size is always 16x16.
+        /// <para/>
+        /// If you make a copy of the image returned by this method, the copy will not be automatically adjusted.
+        /// </summary>
+        public Image FindImage16(String data)
+        {
+            return FindImage16(data, true);
+        }
+
+        /// <summary>
+        /// Finds the specified composed/ready image. The image size is always 16x16.
+        /// <para/>
+        /// If you make a copy of the image returned by this method, the copy will not be automatically adjusted, even if <code>autoAdjusted</code> is <code>true</code>.
+        /// </summary>
+        public Image FindImage16(String data, Boolean autoAdjusted)
+        {
+            try
+            {
+                lock (this) return ImageManager.GetComposedBitmapSize16(data, autoAdjusted);
+            }
+            catch (Exception ex)
+            {
+                ErrorManager.ShowError(ex);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Finds the specified composed/ready image and returns a copy of the image that has its color adjusted.
+        /// This method is typically used for populating a <see cref="ImageList"/> object.
+        /// <para/>
+        /// Equivalent to calling <code>ImageSetAdjust(FindImage(data, false))</code>.
+        /// </summary>
+        public Image FindImageAndSetAdjust(String data)
+        {
+            return ImageSetAdjust(FindImage(data, false));
+        }
+
+        /// <summary>
+        /// Returns a copy of the specified image that has its color adjusted.
         /// </summary>
         public Image ImageSetAdjust(Image image)
         {
-            return ImageManager.AdjustImage(image);
+            return ImageManager.SetImageAdjustment(image);
         }
 
+        /// <summary>
+        /// Gets a copy of the image that gets automatically adjusted according to the theme.
+        /// </summary>
+        public Image GetAutoAdjustedImage(Image image)
+        {
+            return ImageManager.GetAutoAdjustedImage(image);
+        }
+
+        /// <summary>
+        /// Adjusts all images for different themes.
+        /// </summary>
+        public void AdjustAllImages()
+        {
+            ImageManager.AdjustAllImages();
+            ImageListManager.RefreshAll();
+
+            for (int i = 0, length = LayoutManager.PluginPanels.Count; i < length; i++)
+            {
+                DockablePanel panel = LayoutManager.PluginPanels[i] as DockablePanel;
+                if (panel != null) panel.RefreshIcon();
+            }
+        }
+        
         /// <summary>
         /// Themes the controls from the parent
         /// </summary>
@@ -1736,6 +1826,29 @@ namespace FlashDevelop
         }
 
         /// <summary>
+        /// Gets a theme flag value.
+        /// </summary>
+        public Boolean GetThemeFlag(String id)
+        {
+            return GetThemeFlag(id, false);
+        }
+
+        /// <summary>
+        /// Gets a theme flag value with a fallback.
+        /// </summary>
+        public Boolean GetThemeFlag(String id, Boolean fallback)
+        {
+            String value = ThemeManager.GetThemeValue(id);
+            if (String.IsNullOrEmpty(value)) return fallback;
+            switch (value.ToLower())
+            {
+                case "true": return true;
+                case "false": return false;
+                default: return fallback;
+            }
+        }
+
+        /// <summary>
         /// Finds the specified menu item by name
         /// </summary>
         public ToolStripItem FindMenuItem(String name)
@@ -1761,13 +1874,21 @@ namespace FlashDevelop
         }
 
         /// <summary>
-        /// Gets the specified item's shortcut keys
+        /// Gets the specified item's shortcut keys.
         /// </summary>
         public Keys GetShortcutItemKeys(String id)
         {
             ShortcutItem item = ShortcutManager.GetRegisteredItem(id);
-            if (item != null) return item.Custom;
-            else return Keys.None;
+            return item == null ? Keys.None : item.Custom;
+        }
+
+        /// <summary>
+        /// Gets the specified item's id.
+        /// </summary>
+        public String GetShortcutItemId(Keys keys)
+        {
+            ShortcutItem item = ShortcutManager.GetRegisteredItem(keys);
+            return item == null ? string.Empty : item.Id;
         }
 
         /// <summary>
@@ -1801,25 +1922,6 @@ namespace FlashDevelop
         public void ApplySecondaryShortcut(ToolStripItem item)
         {
             ShortcutManager.ApplySecondaryShortcut(item);
-        }
-
-        /// <summary>
-        /// Finds the specified composed/ready image
-        /// </summary>
-        public Image FindImage(String data)
-        {
-            try
-            {
-                lock (this)
-                {
-                    return ImageManager.GetComposedBitmap(data);
-                }
-            }
-            catch (Exception ex)
-            {
-                ErrorManager.ShowError(ex);
-                return null;
-            }
         }
 
         /// <summary>
@@ -1988,7 +2090,7 @@ namespace FlashDevelop
         {
             if (this.InvokeRequired)
             {
-                this.BeginInvoke((MethodInvoker)delegate { this.ApplyAllSettings(); });
+                this.BeginInvoke((MethodInvoker) this.ApplyAllSettings);
                 return;
             }
             ShortcutManager.ApplyAllShortcuts();
@@ -2320,7 +2422,7 @@ namespace FlashDevelop
             if (sci.CanPaste)
             {
                 // if clip is not line-based, then just do simple paste
-                if ((sci.SelTextSize > 0 && !sci.SelText.EndsWith("\n")) || !Clipboard.GetText().EndsWith("\n") || Clipboard.ContainsData("MSDEVColumnSelect")) sci.Paste();
+                if ((sci.SelTextSize > 0 && !sci.SelText.EndsWith('\n')) || !Clipboard.GetText().EndsWith('\n') || Clipboard.ContainsData("MSDEVColumnSelect")) sci.Paste();
                 else
                 {
                     sci.BeginUndoAction();
@@ -2554,7 +2656,7 @@ namespace FlashDevelop
                 for (Int32 i = 0; i < documents.Length; i++)
                 {
                     ITabbedDocument current = documents[i];
-                    if (current.IsEditable && current.IsModified && !current.IsUntitled && current.Text.EndsWith(filter))
+                    if (current.IsEditable && current.IsModified && !current.IsUntitled && current.Text.EndsWithOrdinal(filter))
                     {
                         current.Save();
                         current.IsModified = false;
@@ -2683,7 +2785,8 @@ namespace FlashDevelop
         /// </summary>
         public void GoTo(Object sender, System.EventArgs e)
         {
-            this.gotoDialog.Show();
+            if (!this.gotoDialog.Visible) this.gotoDialog.Show();
+            else this.gotoDialog.Activate();
         }
 
         /// <summary>
@@ -2711,7 +2814,8 @@ namespace FlashDevelop
         /// </summary>
         public void FindAndReplace(Object sender, System.EventArgs e)
         {
-            this.frInDocDialog.Show();
+            if (!this.frInDocDialog.Visible) this.frInDocDialog.Show();
+            else this.frInDocDialog.Activate();
         }
 
         /// <summary>
@@ -2721,11 +2825,12 @@ namespace FlashDevelop
         {
             ToolStripItem button = (ToolStripItem)sender;
             String file = ((ItemData)button.Tag).Tag;
-            ((Form)PluginBase.MainForm).BeginInvoke((MethodInvoker)delegate
+            this.BeginInvoke((MethodInvoker)delegate
             {
                 OpenEditableDocument(file);
             });
-            this.frInDocDialog.Show();
+            if (!this.frInDocDialog.Visible) this.frInDocDialog.Show();
+            else this.frInDocDialog.Activate();
         }
 
         /// <summary>
@@ -2733,7 +2838,8 @@ namespace FlashDevelop
         /// </summary>
         public void FindAndReplaceInFiles(Object sender, System.EventArgs e)
         {
-            this.frInFilesDialog.Show();
+            if (!this.frInFilesDialog.Visible) this.frInFilesDialog.Show();
+            else this.frInFilesDialog.Activate();
         }
 
         /// <summary>
@@ -2743,7 +2849,8 @@ namespace FlashDevelop
         {
             ToolStripItem button = (ToolStripItem)sender;
             String path = ((ItemData)button.Tag).Tag;
-            this.frInFilesDialog.Show(); // Show first..
+            if (!this.frInFilesDialog.Visible) this.frInFilesDialog.Show(); // Show first..
+            else this.frInFilesDialog.Activate();
             this.frInFilesDialog.SetFindPath(path);
         }
 
@@ -2792,7 +2899,7 @@ namespace FlashDevelop
         /// </summary>
         public void ShowSettings(Object sender, System.EventArgs e)
         {
-            SettingDialog.Show("FlashDevelop", "");
+            SettingDialog.Show(DistroConfig.DISTRIBUTION_NAME, "");
         }
 
         /// <summary>
@@ -2852,7 +2959,7 @@ namespace FlashDevelop
                 String zipLog = String.Empty;
                 String zipFile = String.Empty;
                 Boolean requiresRestart = false;
-                Boolean silentInstall = MainForm.Silent;
+                Boolean silentInstall = Silent;
                 ToolStripItem button = (ToolStripItem)sender;
                 String[] chunks = (((ItemData)button.Tag).Tag).Split(';');
                 if (chunks.Length > 1)
@@ -2934,7 +3041,7 @@ namespace FlashDevelop
                 String zipLog = String.Empty;
                 String zipFile = String.Empty;
                 Boolean requiresRestart = false;
-                Boolean silentRemove = MainForm.Silent;
+                Boolean silentRemove = Silent;
                 List<String> removeDirs = new List<String>();
                 ToolStripItem button = (ToolStripItem)sender;
                 String[] chunks = (((ItemData)button.Tag).Tag).Split(';');
@@ -3032,7 +3139,23 @@ namespace FlashDevelop
             }
             else browser.WebBrowser.GoHome();
         }
-        
+
+        /// <summary>
+        /// Opens the home page in browser
+        /// </summary>
+        public void ShowHome(Object sender, System.EventArgs e)
+        {
+            this.CallCommand("Browse", DistroConfig.DISTRIBUTION_HOME);
+        }
+
+        /// <summary>
+        /// Opens the help page in browser
+        /// </summary>
+        public void ShowHelp(Object sender, System.EventArgs e)
+        {
+            this.CallCommand("Browse", DistroConfig.DISTRIBUTION_HELP);
+        }
+
         /// <summary>
         /// Opens the arguments dialog
         /// </summary>
@@ -3273,13 +3396,13 @@ namespace FlashDevelop
                 ScintillaControl sci = Globals.SciControl;
                 if (sci.SelText.Length > 0)
                 {
-                    isAsterisk = sci.SelText.StartsWith("#");
-                    if (sci.SelText.StartsWith("0x") && sci.SelText.Length == 8)
+                    isAsterisk = sci.SelText.StartsWith('#');
+                    if (sci.SelText.StartsWithOrdinal("0x") && sci.SelText.Length == 8)
                     {
                         Int32 convertedColor = DataConverter.StringToColor(sci.SelText);
                         this.colorDialog.Color = ColorTranslator.FromWin32(convertedColor);
                     }
-                    else if (sci.SelText.StartsWith("#") && sci.SelText.Length == 7)
+                    else if (sci.SelText.StartsWith('#') && sci.SelText.Length == 7)
                     {
                         String foundColor = sci.SelText.Replace("#", "0x");
                         Int32 convertedColor = DataConverter.StringToColor(foundColor);
@@ -3386,11 +3509,8 @@ namespace FlashDevelop
                 ScintillaControl sci = Globals.SciControl;
                 ToolStripItem button = (ToolStripItem)sender;
                 string language = ((ItemData) button.Tag).Tag;
-                if (sci.ConfigurationLanguage.Equals(language))
-                    return; // already using this syntax
-
+                if (sci.ConfigurationLanguage.Equals(language)) return; // already using this syntax
                 ScintillaManager.ChangeSyntax(language, sci);
-
                 string extension = sci.GetFileExtension();
                 if (!string.IsNullOrEmpty(extension))
                 {
@@ -3557,7 +3677,7 @@ namespace FlashDevelop
                 {
                     if (sci.LineLength(line) == 0) text = "";
                     else text = sci.GetLine(line).TrimStart();
-                    if (text.StartsWith(lineComment))
+                    if (text.StartsWithOrdinal(lineComment))
                     {
                         position = sci.LineIndentPosition(line);
                         sci.SetSel(position, position + lineComment.Length);
@@ -3589,7 +3709,6 @@ namespace FlashDevelop
         {
             CommentSelection();
         }
-
         private bool? CommentSelection()
         {
             ScintillaControl sci = Globals.SciControl;
@@ -3597,7 +3716,7 @@ namespace FlashDevelop
             Int32 selStart = sci.SelectionStart;
             String commentEnd = ScintillaManager.GetCommentEnd(sci.ConfigurationLanguage);
             String commentStart = ScintillaManager.GetCommentStart(sci.ConfigurationLanguage);
-            if (sci.SelText.StartsWith(commentStart) && sci.SelText.EndsWith(commentEnd))
+            if (sci.SelText.StartsWithOrdinal(commentStart) && sci.SelText.EndsWithOrdinal(commentEnd))
             {
                 sci.BeginUndoAction();
                 try
@@ -3658,7 +3777,7 @@ namespace FlashDevelop
                     sci.SetSel(start + 1, end);
                     // remove comment
                     String selText = sci.SelText;
-                    if (selText.StartsWith(commentStart) && selText.EndsWith(commentEnd))
+                    if (selText.StartsWithOrdinal(commentStart) && selText.EndsWithOrdinal(commentEnd))
                     {
                         sci.SetSel(end - commentEnd.Length, end);
                         sci.ReplaceSel("");
@@ -3690,14 +3809,12 @@ namespace FlashDevelop
             ScintillaControl sci = Globals.SciControl;
             String lineComment = ScintillaManager.GetLineComment(sci.ConfigurationLanguage);
             Int32 position = sci.CurrentPos;
-            
             // try doing a block comment on the current line instead (xml, html...)
             if (lineComment == "")
             {
                 ToggleBlockOnCurrentLine(sci);
                 return;
             }
-
             Int32 curLine = sci.LineFromPosition(position);
             Int32 startPosInLine = position - sci.PositionFromLine(curLine);
             Int32 startLine = sci.LineFromPosition(sci.SelectionStart);
@@ -3714,38 +3831,30 @@ namespace FlashDevelop
             {
                 if (sci.LineLength(line) == 0) text = "";
                 else text = sci.GetLine(line).TrimStart();
-                if (!text.StartsWith(lineComment))
+                if (!text.StartsWithOrdinal(lineComment))
                 {
                     containsCodeLine = true;
                     break;
                 }
                 line++;
             }
-
             if (containsCodeLine) this.CommentLine(null, null);
             else this.UncommentLine(null, null);
         }
-
         private void ToggleBlockOnCurrentLine(ScintillaControl sci)
         {
             Int32 selStart = sci.SelectionStart;
-
             Int32 indentPos = sci.LineIndentPosition(sci.CurrentLine);
             Int32 lineEndPos = sci.LineEndPosition(sci.CurrentLine);
             bool afterBlockStart = sci.CurrentPos > indentPos;
             bool afterBlockEnd = sci.CurrentPos >= lineEndPos;
-
             sci.SelectionStart = indentPos;
             sci.SelectionEnd = lineEndPos;
-
-            bool? added = CommentSelection();
+            bool ? added = CommentSelection();
             if (added == null) return;
-
             int factor = (bool)added ? 1 : -1;
-
             String commentEnd = ScintillaManager.GetCommentEnd(sci.ConfigurationLanguage);
             String commentStart = ScintillaManager.GetCommentStart(sci.ConfigurationLanguage);
-
             // preserve cursor pos
             if (afterBlockStart) selStart += commentStart.Length * factor;
             if (afterBlockEnd) selStart += commentEnd.Length * factor;
@@ -3907,7 +4016,7 @@ namespace FlashDevelop
                 {
                     String message = TextHelper.GetString("Info.RunningProcess");
                     TraceManager.Add(message + " " + args, (Int32)TraceType.ProcessStart);
-                    if (args.ToLower().EndsWith(".bat"))
+                    if (args.ToLower().EndsWithOrdinal(".bat"))
                     {
                         Process bp = new Process();
                         bp.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
@@ -4016,10 +4125,10 @@ namespace FlashDevelop
         {
             try
             {
-                String dirMarker = "\\FlashDevelop\\";
                 SaveFileDialog sfd = new SaveFileDialog();
                 sfd.AddExtension = true; sfd.DefaultExt = "fdz";
                 sfd.Filter = TextHelper.GetString("FlashDevelop.Info.ZipFilter");
+                String dirMarker = "\\" + DistroConfig.DISTRIBUTION_NAME + "\\";
                 if (sfd.ShowDialog(this) == DialogResult.OK)
                 {
                     List<String> settingFiles = new List<String>();
@@ -4033,7 +4142,7 @@ namespace FlashDevelop
                     zipFile.BeginUpdate();
                     foreach (String settingFile in settingFiles)
                     {
-                        Int32 index = settingFile.IndexOf(dirMarker) + dirMarker.Length;
+                        Int32 index = settingFile.IndexOfOrdinal(dirMarker) + dirMarker.Length;
                         zipFile.Add(settingFile, "$(BaseDir)\\" + settingFile.Substring(index));
                     }
                     zipFile.CommitUpdate();

@@ -57,13 +57,13 @@ namespace ProjectManager.Controls
 
             BuildProject = new ToolStripButton(Icons.Gear.Img);
             BuildProject.Name = "BuildProject";
-            BuildProject.ToolTipText = TextHelper.GetString("Label.BuildProject").Replace("&", "");
+            BuildProject.ToolTipText = TextHelper.GetStringWithoutMnemonics("Label.BuildProject");
             PluginBase.MainForm.RegisterSecondaryItem("ProjectMenu.BuildProject", BuildProject);
             toolBar.Items.Add(BuildProject);
 
             TestMovie = new ToolStripButton(Icons.GreenCheck.Img);
             TestMovie.Name = "TestMovie";
-            TestMovie.ToolTipText = TextHelper.GetString("Label.TestMovie").Replace("&", "");
+            TestMovie.ToolTipText = TextHelper.GetStringWithoutMnemonics("Label.TestMovie");
             PluginBase.MainForm.RegisterSecondaryItem("ProjectMenu.TestMovie", TestMovie);
             toolBar.Items.Add(TestMovie);
 
@@ -91,7 +91,7 @@ namespace ProjectManager.Controls
             TargetBuildSelector.FlatStyle = PluginBase.MainForm.Settings.ComboBoxFlatStyle;
             TargetBuildSelector.Font = PluginBase.Settings.DefaultFont;
             toolBar.Items.Add(TargetBuildSelector);
-            PluginBase.MainForm.RegisterShortcutItem("ProjectMenu.TargetBuildSelector", Keys.Control | Keys.F6);
+            PluginBase.MainForm.RegisterShortcutItem("ProjectMenu.TargetBuildSelector", Keys.Control | Keys.F7);
             PluginBase.MainForm.RegisterSecondaryItem("ProjectMenu.TargetBuildSelector", TargetBuildSelector);
             EnableTargetBuildSelector(false);
         }

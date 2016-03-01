@@ -89,7 +89,7 @@ namespace LoomContext
 
         static public LoomSettings Settings
         {
-            get { return settingObject as LoomSettings; }
+            get { return settingObject; }
         }
 
         #endregion
@@ -181,7 +181,7 @@ namespace LoomContext
 
         private bool OpenVirtualFileModel(string virtualPath)
         {
-            int p = virtualPath.IndexOf("::");
+            int p = virtualPath.IndexOfOrdinal("::");
             if (p < 0) return false;
 
             string container = virtualPath.Substring(0, p);
