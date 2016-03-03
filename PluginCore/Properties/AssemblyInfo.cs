@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Resources;
+using System.Runtime.InteropServices;
 using PluginCore;
 
 // Information about this assembly is defined by the following attributes. 
