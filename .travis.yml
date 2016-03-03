@@ -1,0 +1,16 @@
+git:
+  depth: 10
+branches:
+  only:
+  - development-linux
+language: csharp
+solution: FlashDevelop.sln
+install:
+  - nuget restore FlashDevelop.sln
+script:
+  - export APPVEYOR_REPO_COMMIT=$(git log --pretty=format:"%H" -1)
+  - export APPVEYOR_REPO_BRANCH="development-linux"
+  - export APPVEYOR_BUILD_NUMBER="5.1.0"
+  - mono External/Tools/SetVersion/SetVersion.exe FlashDevelop/Properties/AssemblyInfo.cs "5.1.0" 
+  - xbuild ./PluginCore/PluginCore.csproj /p:Configuration=Debug /p:Platform="AnyCPU" /t:Rebuild
+  - xbuild ./FlashDevelop.sln /p:Configuration=Debug /p:Platform=x86 /t:Rebuild
