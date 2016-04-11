@@ -148,6 +148,7 @@ namespace FlashDevelop
 
         public string GetThemeValue(string id)
         {
+            if (id == "ScrollBar.UseCustom") return string.Empty;
             throw new NotImplementedException();
         }
 
@@ -396,6 +397,11 @@ namespace FlashDevelop
         }
 
         public List<Keys> IgnoredKeys
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public string CommandPromptExecutable
         {
             get { throw new NotImplementedException(); }
         }
