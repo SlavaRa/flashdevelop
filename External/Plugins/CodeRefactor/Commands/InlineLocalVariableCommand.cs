@@ -17,6 +17,7 @@ namespace CodeRefactor.Commands
         readonly ASResult target;
         string value;
         readonly bool outputResults;
+        readonly int startPos;
         FindAllReferences findAllReferencesCommand;
 
         /// <summary>
@@ -49,6 +50,7 @@ namespace CodeRefactor.Commands
             Debug.Assert((target.Member.Flags & FlagType.LocalVar) > 0, "target.Member should be local variable.");
             this.target = target;
             this.outputResults = outputResults;
+            startPos = PluginBase.MainForm.CurrentDocument.SciControl.CurrentPos;
         }
 
         /// <summary>
@@ -58,12 +60,11 @@ namespace CodeRefactor.Commands
         protected override void ExecutionImplementation()
         {
             var member = target.Member;
-            var memberLineFrom = member.LineFrom;
             value = member.Value;
             if (string.IsNullOrEmpty(value))
             {
                 var sci = PluginBase.MainForm.CurrentDocument.SciControl;
-                value = sci.GetLine(memberLineFrom);
+                value = sci.GetLine(member.LineFrom);
                 var index = value.IndexOf("=", StringComparison.Ordinal);
                 value = value.Substring(index + "=".Length);
                 value = value.Trim(new char[] {'=', ' ', '\t', '\n', '\r', ';', '.'});
@@ -86,30 +87,28 @@ namespace CodeRefactor.Commands
             UserInterfaceManager.ProgressDialog.Show();
             UserInterfaceManager.ProgressDialog.SetTitle(TextHelper.GetString("Info.UpdatingReferences"));
             MessageBar.Locked = true;
-            var member = target.Member;
-            var memberLineFrom = member.LineFrom;
             foreach (var entry in args.Results)
             {
-                UserInterfaceManager.ProgressDialog.UpdateStatusMessage(TextHelper.GetString("Info.Updating") + " \"" + entry.Key + "\"");
-                var doc = AssociatedDocumentHelper.LoadDocument(entry.Key);
+                var fileName = entry.Key;
+                UserInterfaceManager.ProgressDialog.UpdateStatusMessage(TextHelper.GetString("Info.Updating") + " \"" + fileName + "\"");
+                var doc = AssociatedDocumentHelper.LoadDocument(fileName);
                 var sci = doc.SciControl;
                 var matches = entry.Value;
-                matches.RemoveAll(it =>
-                {
-                    var line = it.Line - 1;
-                    return line == memberLineFrom && line == member.LineTo;
-                });
+                var member = target.Member;
+                var lineFrom = member.LineFrom + 1;
+                var match = matches.Find(it => it.Line == lineFrom);
+                matches.Remove(match);
+                var matchUnderCursor = matches.Find(it => it.Index <= startPos && it.Index + it.Length >= startPos);
                 RefactoringHelper.ReplaceMatches(matches, sci, value);
-                var pos = sci.LineIndentPosition(memberLineFrom);
-                sci.SetSel(pos, pos);
+                ASComplete.LocateMember("(var|const)", member.Name, member.LineFrom);
+                var line = sci.CurrentLine;
+                var lineLength = sci.LineLength(line);
                 sci.LineDelete();
                 doc.Save();
-                matches.ForEach(it =>
-                {
-                    it.Line -= 1;
-                    it.LineStart -= 1;
-                    it.LineEnd -= 1;
-                });
+                if (matchUnderCursor.Line > line) matchUnderCursor.Index -= lineLength;
+                var pos = matchUnderCursor.Index;
+                sci.SetSel(pos, pos);
+                break;
             }
             Results = args.Results;
             if (outputResults) ReportResults();
