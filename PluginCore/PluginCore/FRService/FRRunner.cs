@@ -75,7 +75,7 @@ namespace PluginCore.FRService
 
         /// <summary>
         /// Do a synchronous text search/replace
-        /// Use RepleaceAsync to run a background thread
+        /// Use ReplaceAsync to run a background thread
         /// </summary>
         /// <param name="configuration">Replace operation parameters</param>
         /// <returns>Search results before replacement</returns>

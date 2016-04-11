@@ -279,7 +279,7 @@ namespace ASCompletion.Context
         /// Init completion engine context
         /// </summary>
         /// <param name="mainForm">Reference to MainForm</param>
-        static internal void GlobalInit(PluginMain pluginMain)
+        internal static void GlobalInit(PluginMain pluginMain)
         {
             dirSeparatorChar = Path.DirectorySeparatorChar;
             dirSeparator = dirSeparatorChar.ToString();

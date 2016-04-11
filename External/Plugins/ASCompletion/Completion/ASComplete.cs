@@ -32,30 +32,30 @@ namespace ASCompletion.Completion
     {
 
         #region regular_expressions_definitions
-        static private readonly RegexOptions ro_csr = ASFileParserRegexOptions.SinglelineComment | RegexOptions.RightToLeft;
+        private static readonly RegexOptions ro_csr = ASFileParserRegexOptions.SinglelineComment | RegexOptions.RightToLeft;
         // refine last expression
-        static private readonly Regex re_refineExpression = new Regex("[^\\[\\]{}(:,=+*/%!<>-]*$", ro_csr);
+        private static readonly Regex re_refineExpression = new Regex("[^\\[\\]{}(:,=+*/%!<>-]*$", ro_csr);
         // code cleaning
-        static private readonly Regex re_whiteSpace = new Regex("[\\s]+", ASFileParserRegexOptions.SinglelineComment);
+        private static readonly Regex re_whiteSpace = new Regex("[\\s]+", ASFileParserRegexOptions.SinglelineComment);
         // balanced matching, see: http://blogs.msdn.com/bclteam/archive/2005/03/15/396452.aspx
-        static private readonly Regex re_balancedParenthesis = new Regex("\\([^()]*(((?<Open>\\()[^()]*)+((?<Close-Open>\\))[^()]*)+)*(?(Open)(?!))\\)",
+        private static readonly Regex re_balancedParenthesis = new Regex("\\([^()]*(((?<Open>\\()[^()]*)+((?<Close-Open>\\))[^()]*)+)*(?(Open)(?!))\\)",
                                                                          ASFileParserRegexOptions.SinglelineComment);
         // expressions
-        static private readonly Regex re_sub = new Regex("^#(?<index>[0-9]+)~$", ASFileParserRegexOptions.SinglelineComment);
+        private static readonly Regex re_sub = new Regex("^#(?<index>[0-9]+)~$", ASFileParserRegexOptions.SinglelineComment);
         #endregion
 
         #region fields
-        static public Keys HelpKeys = Keys.F1;
+        public static Keys HelpKeys = Keys.F1;
 
         //stores the currently used class namespace and name
-        static private String currentClassHash = null;
+        private static String currentClassHash = null;
         //stores the last completed member for each class
-        static private IDictionary<String, String> completionHistory = new Dictionary<String, String>();
+        private static IDictionary<String, String> completionHistory = new Dictionary<String, String>();
 
-        static public ResolvedContext CurrentResolvedContext;
-        static public event ResolvedContextChangeHandler OnResolvedContextChanged;
+        public static ResolvedContext CurrentResolvedContext;
+        public static event ResolvedContextChangeHandler OnResolvedContextChanged;
 
-        static private Braces[] AddClosingBracesData = new Braces[] { 
+        private static Braces[] AddClosingBracesData = new Braces[] { 
             new Braces('(', ')'), new Braces('[', ']'), new Braces('{', '}'), new Braces('"', '"'), new Braces('\'', '\'') };
         #endregion
 
@@ -64,7 +64,7 @@ namespace ASCompletion.Completion
         /// Character written in editor
         /// </summary>
         /// <param name="Value">Character inserted</param>
-        static public bool OnChar(ScintillaControl Sci, int Value, bool autoHide)
+        public static bool OnChar(ScintillaControl Sci, int Value, bool autoHide)
         {
             IASContext ctx = ASContext.Context;
             ContextFeatures features = ctx.Features;
@@ -234,7 +234,7 @@ namespace ASCompletion.Completion
         /// </summary>
         /// <param name="keys">Test keys</param>
         /// <returns></returns>
-        static public bool OnShortcut(Keys keys, ScintillaControl Sci)
+        public static bool OnShortcut(Keys keys, ScintillaControl Sci)
         {
             if (Sci.IsSelectionRectangle) 
                 return false;
@@ -458,7 +458,7 @@ namespace ASCompletion.Completion
         /// </summary>
         /// <param name="Sci">Control</param>
         /// <returns>Declaration was found</returns>
-        static public bool DeclarationLookup(ScintillaControl Sci)
+        public static bool DeclarationLookup(ScintillaControl Sci)
         {
             if (!ASContext.Context.IsFileValid || (Sci == null)) return false;
 
@@ -474,7 +474,7 @@ namespace ASCompletion.Completion
             return true;
         }
 
-        static private bool InternalDeclarationLookup(ScintillaControl Sci)
+        private static bool InternalDeclarationLookup(ScintillaControl Sci)
         {
             // get type at cursor position
             int position = Sci.WordEndPosition(Sci.CurrentPos, true);
@@ -528,7 +528,7 @@ namespace ASCompletion.Completion
             return false;
         }
 
-        static public void SaveLastLookupPosition(ScintillaControl Sci)
+        public static void SaveLastLookupPosition(ScintillaControl Sci)
         {
             if (Sci != null)
             {
@@ -541,7 +541,7 @@ namespace ASCompletion.Completion
         /// <summary>
         /// Show resolved element declaration
         /// </summary>
-        static public bool OpenDocumentToDeclaration(ScintillaControl Sci, ASResult result)
+        public static bool OpenDocumentToDeclaration(ScintillaControl Sci, ASResult result)
         {
             FileModel model = result.InFile
                 ?? ((result.Member != null && result.Member.InFile != null) ? result.Member.InFile : null)
@@ -613,7 +613,7 @@ namespace ASCompletion.Completion
             return true;
         }
 
-        static public void OpenVirtualFile(FileModel model)
+        public static void OpenVirtualFile(FileModel model)
         {
             string ext = Path.GetExtension(model.FileName);
             if (ext == "") ext = model.Context.GetExplorerMask()[0].Replace("*", "");
@@ -638,7 +638,7 @@ namespace ASCompletion.Completion
             }
         }
 
-        static public void LocateMember(string keyword, string name, int line)
+        public static void LocateMember(string keyword, string name, int line)
         {
             try
             {
@@ -872,7 +872,7 @@ namespace ASCompletion.Completion
         /// </summary>
         /// <param name="Sci">Control</param>
         /// <returns>Resolved element details</returns>
-        static public Hashtable ResolveElement(ScintillaControl Sci, string eventAction)
+        public static Hashtable ResolveElement(ScintillaControl Sci, string eventAction)
         {
             if (CurrentResolvedContext == null) ResolveContext(Sci);
 
@@ -1001,7 +1001,7 @@ namespace ASCompletion.Completion
         #endregion
 
         #region structure_completion
-        static private void HandleStructureCompletion(ScintillaControl Sci)
+        private static void HandleStructureCompletion(ScintillaControl Sci)
         {
             try
             {
@@ -1209,7 +1209,7 @@ namespace ASCompletion.Completion
         #endregion
 
         #region template_completion
-        static private bool HandleDeclarationCompletion(ScintillaControl Sci, string tail, bool autoHide)
+        private static bool HandleDeclarationCompletion(ScintillaControl Sci, string tail, bool autoHide)
         {
             int position = Sci.CurrentPos;
             int line = Sci.LineFromPosition(position);
@@ -1264,16 +1264,16 @@ namespace ASCompletion.Completion
         #endregion
 
         #region function_completion
-        static private string calltipDef;
-        static private MemberModel calltipMember;
-        static private bool calltipDetails;
-        static private int calltipPos = -1;
-        static private int calltipOffset;
-        static private ClassModel calltipRelClass;
-        static private string prevParam = "";
-        static private string paramInfo = "";
+        private static string calltipDef;
+        private static MemberModel calltipMember;
+        private static bool calltipDetails;
+        private static int calltipPos = -1;
+        private static int calltipOffset;
+        private static ClassModel calltipRelClass;
+        private static string prevParam = "";
+        private static string paramInfo = "";
 
-        static public bool HasCalltip()
+        public static bool HasCalltip()
         {
             return UITools.CallTip.CallTipActive && (calltipDef != null);
         }
@@ -1283,12 +1283,12 @@ namespace ASCompletion.Completion
         /// </summary>
         /// <param name="Sci">Scintilla control</param>
         /// <param name="paramNumber">Highlight param number</param>
-        static private void ShowCalltip(ScintillaControl Sci, int paramNumber)
+        private static void ShowCalltip(ScintillaControl Sci, int paramNumber)
         {
             ShowCalltip(Sci, paramNumber, false);
         }
 
-        static private void ShowCalltip(ScintillaControl Sci, int paramIndex, bool forceRedraw)
+        private static void ShowCalltip(ScintillaControl Sci, int paramIndex, bool forceRedraw)
         {
             // measure highlighting
             int start = calltipDef.IndexOf('(');
@@ -1340,7 +1340,7 @@ namespace ASCompletion.Completion
             else UITools.CallTip.CallTipSetHlt(start + 1, end, true);
         }
 
-        static private int FindNearSymbolInFunctDef(string defBody, char symbol, int startAt)
+        private static int FindNearSymbolInFunctDef(string defBody, char symbol, int startAt)
         {
             string featEnd = null;
 
@@ -1425,12 +1425,12 @@ namespace ASCompletion.Completion
         /// </summary>
         /// <param name="Sci">Scintilla control</param>
         /// <returns>Auto-completion has been handled</returns>
-        static public bool HandleFunctionCompletion(ScintillaControl Sci, bool autoHide)
+        public static bool HandleFunctionCompletion(ScintillaControl Sci, bool autoHide)
         {
             return HandleFunctionCompletion(Sci, autoHide, false);
         }
 
-        static public bool HandleFunctionCompletion(ScintillaControl Sci, bool autoHide, bool forceRedraw)
+        public static bool HandleFunctionCompletion(ScintillaControl Sci, bool autoHide, bool forceRedraw)
         {
             // only auto-complete where it makes sense
             if (DeclarationSectionOnly()) 
@@ -1780,7 +1780,7 @@ namespace ASCompletion.Completion
         /// <param name="Sci">Scintilla control</param>
         /// <param name="autoHide">Don't keep the list open if the word does not match</param>
         /// <returns>Auto-completion has been handled</returns>
-        static private bool HandleDotCompletion(ScintillaControl Sci, bool autoHide)
+        private static bool HandleDotCompletion(ScintillaControl Sci, bool autoHide)
         {
             //this method can exit at multiple points, so reset the current class now rather than later
             currentClassHash = null;
@@ -2049,7 +2049,7 @@ namespace ASCompletion.Completion
             }
         }
 
-        static public void DotContextResolved(ScintillaControl Sci, ASExpr expr, MemberList items, bool autoHide)
+        public static void DotContextResolved(ScintillaControl Sci, ASExpr expr, MemberList items, bool autoHide)
         {
             // still valid context and position?
             if (Sci != ASContext.CurSciControl) return;
@@ -2083,7 +2083,7 @@ namespace ASCompletion.Completion
 
         #region types_completion
 
-        static private void SelectTypedNewMember(ScintillaControl sci)
+        private static void SelectTypedNewMember(ScintillaControl sci)
         {
             try
             {
@@ -2125,7 +2125,7 @@ namespace ASCompletion.Completion
             catch {} // Do not throw exception with incorrect types
         }
 
-        static private bool HandleNewCompletion(ScintillaControl Sci, string tail, bool autoHide, string keyword)
+        private static bool HandleNewCompletion(ScintillaControl Sci, string tail, bool autoHide, string keyword)
         {
             if (!ASContext.Context.Settings.LazyClasspathExploration
                 && ASContext.Context.Settings.CompletionListAllTypes)
@@ -2148,7 +2148,7 @@ namespace ASCompletion.Completion
             return true;
         }
 
-        static private bool HandleImportCompletion(ScintillaControl Sci, string tail, bool autoHide)
+        private static bool HandleImportCompletion(ScintillaControl Sci, string tail, bool autoHide)
         {
             if (!ASContext.Context.Features.hasImports) return false;
 
@@ -2172,7 +2172,7 @@ namespace ASCompletion.Completion
             return true;
         }
 
-        static private bool HandleColonCompletion(ScintillaControl Sci, string tail, bool autoHide)
+        private static bool HandleColonCompletion(ScintillaControl Sci, string tail, bool autoHide)
         {
             ComaExpression coma;
             if (DeclarationSectionOnly()) coma = ComaExpression.FunctionDeclaration;
@@ -2291,7 +2291,7 @@ namespace ASCompletion.Completion
         /// Display the full project classes list
         /// </summary>
         /// <param name="Sci"></param>
-        static public void HandleAllClassesCompletion(ScintillaControl Sci, string tail, bool classesOnly, bool showClassVars)
+        public static void HandleAllClassesCompletion(ScintillaControl Sci, string tail, bool classesOnly, bool showClassVars)
         {
             MemberList known = ASContext.Context.GetAllProjectClasses();
             if (known.Count == 0) return;
@@ -2365,7 +2365,7 @@ namespace ASCompletion.Completion
             CompletionList.Show(list, false, tail);
         }
 
-        static private bool HandleInterpolationCompletion(ScintillaControl sci, bool autoHide, bool expressions)
+        private static bool HandleInterpolationCompletion(ScintillaControl sci, bool autoHide, bool expressions)
         {
             IASContext ctx = ASContext.Context;
             MemberList members = new MemberList();
@@ -2395,7 +2395,7 @@ namespace ASCompletion.Completion
         }
         #endregion
 
-        static private bool HandleMetadataCompletion(ScintillaControl sci, bool autoHide)
+        private static bool HandleMetadataCompletion(ScintillaControl sci, bool autoHide)
         {
             List<ICompletionListItem> list = new List<ICompletionListItem>();
             foreach (KeyValuePair<string, string> meta in ASContext.Context.Features.metadata)
@@ -2422,7 +2422,7 @@ namespace ASCompletion.Completion
         /// <param name="complete">Complete (sub-expression) or partial (dot-completion) evaluation</param>
         /// <param name="asFunction"></param>
         /// <returns>Class/member struct</returns>
-        static private ASResult EvalExpression(string expression, ASExpr context, FileModel inFile, ClassModel inClass, bool complete, bool asFunction)
+        private static ASResult EvalExpression(string expression, ASExpr context, FileModel inFile, ClassModel inClass, bool complete, bool asFunction)
         {
             return EvalExpression(expression, context, inFile, inClass, complete, asFunction, true);
         }
@@ -2438,7 +2438,7 @@ namespace ASCompletion.Completion
         /// <param name="asFunction"></param>
         /// <param name="filterVisibility"></param>
         /// <returns>Class/member struct</returns>
-        static private ASResult EvalExpression(string expression, ASExpr context, FileModel inFile, ClassModel inClass, bool complete, bool asFunction, bool filterVisibility)
+        private static ASResult EvalExpression(string expression, ASExpr context, FileModel inFile, ClassModel inClass, bool complete, bool asFunction, bool filterVisibility)
         {
             ASResult notFound = new ASResult();
             notFound.Context = context;
@@ -2676,7 +2676,7 @@ namespace ASCompletion.Completion
         /// <param name="inFile">File context</param>
         /// <param name="inClass">Class context</param>
         /// <returns>Class/member struct</returns>
-        static private ASResult EvalVariable(string token, ASExpr local, FileModel inFile, ClassModel inClass)
+        private static ASResult EvalVariable(string token, ASExpr local, FileModel inFile, ClassModel inClass)
         {
             ASResult result = new ASResult();
             IASContext context = ASContext.Context;
@@ -2910,7 +2910,7 @@ namespace ASCompletion.Completion
         /// <param name="result">Class/Member struct</param>
         /// <param name="mask">Flags mask</param>
         /// <param name="acc">Visibility mask</param>
-        static public void FindMember(string token, FileModel inFile, ASResult result, FlagType mask, Visibility acc)
+        public static void FindMember(string token, FileModel inFile, ASResult result, FlagType mask, Visibility acc)
         {
             if (string.IsNullOrEmpty(token))
                 return;
@@ -3009,7 +3009,7 @@ namespace ASCompletion.Completion
         /// <param name="result">Class/Member struct</param>
         /// <param name="mask">Flags mask</param>
         /// <param name="acc">Visibility mask</param>
-        static public void FindMember(string token, ClassModel inClass, ASResult result, FlagType mask, Visibility acc)
+        public static void FindMember(string token, ClassModel inClass, ASResult result, FlagType mask, Visibility acc)
         {
             if (string.IsNullOrEmpty(token))
                 return;
@@ -3175,7 +3175,7 @@ namespace ASCompletion.Completion
         #endregion
 
         #region main_code_parser
-        static private List<string> ExtractedSubex;
+        private static List<string> ExtractedSubex;
 
         /// <summary>
         /// Find Actionscript expression at cursor position
@@ -3183,7 +3183,7 @@ namespace ASCompletion.Completion
         /// <param name="sci">Scintilla Control</param>
         /// <param name="position">Cursor position</param>
         /// <returns></returns>
-        static private ASExpr GetExpression(ScintillaControl Sci, int position)
+        private static ASExpr GetExpression(ScintillaControl Sci, int position)
         {
             return GetExpression(Sci, position, false);
         }
@@ -3195,7 +3195,7 @@ namespace ASCompletion.Completion
         /// <param name="position">Cursor position</param>
         /// <param name="ignoreWhiteSpace">Skip whitespace at position</param>
         /// <returns></returns>
-        static private ASExpr GetExpression(ScintillaControl Sci, int position, bool ignoreWhiteSpace)
+        private static ASExpr GetExpression(ScintillaControl Sci, int position, bool ignoreWhiteSpace)
         {
             bool haXe = ASContext.Context.CurrentModel.haXe;
             ASExpr expression = new ASExpr();
@@ -3627,7 +3627,7 @@ namespace ASCompletion.Completion
         /// </summary>
         /// <param name="expression">Expression source</param>
         /// <returns>Local vars dictionnary (name, type)</returns>
-        static public MemberList ParseLocalVars(ASExpr expression)
+        public static MemberList ParseLocalVars(ASExpr expression)
         {
             FileModel model;
             if (!string.IsNullOrEmpty(expression.FunctionBody))
@@ -3687,7 +3687,7 @@ namespace ASCompletion.Completion
         /// <summary>
         /// Extract sub-expressions
         /// </summary>
-        static private string ExtractSubex(Match m)
+        private static string ExtractSubex(Match m)
         {
             ExtractedSubex.Add(m.Value);
             return ".#" + (ExtractedSubex.Count - 1) + "~";
@@ -3696,8 +3696,7 @@ namespace ASCompletion.Completion
 
         #region tools_functions
 
-
-        static public bool IsLiteralStyle(int style)
+        public static bool IsLiteralStyle(int style)
         {
             return (style == 4) || (style == 6) || (style == 7);
         }
@@ -3705,7 +3704,7 @@ namespace ASCompletion.Completion
         /// <summary>
         /// Text is word 
         /// </summary>
-        static public bool IsTextStyle(int style)
+        public static bool IsTextStyle(int style)
         {
             return style == 0 || style == 10 /*punctuation*/ || style == 11 /*identifier*/
                 || style == 16 /*word2 (secondary keywords: class name)*/
@@ -3716,7 +3715,7 @@ namespace ASCompletion.Completion
         /// <summary>
         /// Text is word or keyword
         /// </summary>
-        static public bool IsTextStyleEx(int style)
+        public static bool IsTextStyleEx(int style)
         {
             return style == 0 || style == 5 /*word (secondary keywords)*/
                 || style == 10 /*punctuation*/ || style == 11 /*identifier*/
@@ -3726,13 +3725,13 @@ namespace ASCompletion.Completion
                 || style == 127 /*PHP*/;
         }
 
-        static public bool IsCommentStyle(int style)
+        public static bool IsCommentStyle(int style)
         {
             return style == 1 || style == 2 || style == 3 /*comments*/
                 || style == 17 || style == 18 /*javadoc tags*/;
         }
 
-        static public string GetWordLeft(ScintillaControl Sci, ref int position)
+        public static string GetWordLeft(ScintillaControl Sci, ref int position)
         {
             // get the word characters from the syntax definition
             string characterClass = ScintillaControl.Configuration.GetLanguage(Sci.ConfigurationLanguage).characterclass.Characters;
@@ -3766,12 +3765,12 @@ namespace ASCompletion.Completion
             return word;
         }
 
-        static public ASResult GetExpressionType(ScintillaControl sci, int position)
+        public static ASResult GetExpressionType(ScintillaControl sci, int position)
         {
             return GetExpressionType(sci, position, true);
         }
 
-        static public ASResult GetExpressionType(ScintillaControl sci, int position, bool filterVisibility)
+        public static ASResult GetExpressionType(ScintillaControl sci, int position, bool filterVisibility)
         {
             // context
             int line = sci.LineFromPosition(position);
@@ -3800,7 +3799,7 @@ namespace ASCompletion.Completion
             }
         }
 
-        static private MemberList GetTypeParameters(MemberModel model)
+        private static MemberList GetTypeParameters(MemberModel model)
         {
             MemberList retVal = null;
             string template = model.Template;
@@ -3864,7 +3863,7 @@ namespace ASCompletion.Completion
             return retVal;
         }
 
-        static private MemberList GetVisibleElements()
+        private static MemberList GetVisibleElements()
         {
             MemberList known = ASContext.Context.GetVisibleExternalElements();
 
@@ -3884,7 +3883,7 @@ namespace ASCompletion.Completion
             return known;
         }
 
-        static private MemberList GetVisibleTypeParameters()
+        private static MemberList GetVisibleTypeParameters()
         {
             var typeParams = GetTypeParameters(ASContext.Context.CurrentClass);
 
@@ -3902,10 +3901,10 @@ namespace ASCompletion.Completion
         }
 
         /// <summary>
-        /// Returns whether or not position is insidse of an expression
+        /// Returns whether or not position is inside of an expression
         /// block in Haxe String interpolation ('${expr}')
         /// </summary>
-        static private bool IsInterpolationExpr(ScintillaControl sci, int position)
+        private static bool IsInterpolationExpr(ScintillaControl sci, int position)
         {
             ContextFeatures features = ASContext.Context.Features;
             if (!features.hasStringInterpolation ||
@@ -3934,7 +3933,7 @@ namespace ASCompletion.Completion
         /// Whether the character at the position is inside of the
         /// brackets of haxe metadata (@:allow(path) etc)
         /// </summary>
-        static private bool IsMetadataArgument(ScintillaControl sci, int position)
+        private static bool IsMetadataArgument(ScintillaControl sci, int position)
         {
             if (!ASContext.Context.CurrentModel.haXe || ASContext.Context.CurrentMember != null)
                 return false;
@@ -3967,7 +3966,7 @@ namespace ASCompletion.Completion
         #endregion
 
         #region tooltips formatting
-        static public string GetToolTipText(ASResult result)
+        public static string GetToolTipText(ASResult result)
         {
             if (result.Member != null && result.InClass != null)
             {
@@ -3994,7 +3993,7 @@ namespace ASCompletion.Completion
             return details.TrimStart(new char[] { ' ', '\u2026' });
         }
 
-        static private string MemberTooltipText(MemberModel member, ClassModel inClass)
+        private static string MemberTooltipText(MemberModel member, ClassModel inClass)
         {
             // modifiers
             FlagType ft = member.Flags;
@@ -4057,14 +4056,14 @@ namespace ASCompletion.Completion
         #endregion
 
         #region automatic code generation
-        static private ASExpr LastExpression;
+        private static ASExpr LastExpression;
 
         /// <summary>
         /// When typing a fully qualified class name:
         /// - automatically insert import statement 
         /// - replace with short name
         /// </summary>
-        static internal void HandleCompletionInsert(ScintillaControl sci, int position, string text, char trigger, ICompletionListItem item)
+        internal static void HandleCompletionInsert(ScintillaControl sci, int position, string text, char trigger, ICompletionListItem item)
         {
             // if the current class hash was set, we want to store whatever the user selected as the last-completed member for this class.
             if (currentClassHash != null)
@@ -4442,7 +4441,7 @@ namespace ASCompletion.Completion
     {
         public TemplateItem(MemberModel oMember) : base(oMember) { }
 
-        override public string Description
+        public override string Description
         {
             get
             {
@@ -4554,7 +4553,7 @@ namespace ASCompletion.Completion
     /// <summary>
     /// Parsed expression with it's function context
     /// </summary>
-    sealed public class ASExpr
+    public sealed class ASExpr
     {
         public int Position;
         public MemberModel ContextMember;
@@ -4585,7 +4584,7 @@ namespace ASCompletion.Completion
     /// <summary>
     /// Expressions/tokens evaluation result
     /// </summary>
-    sealed public class ASResult
+    public sealed class ASResult
     {
         public ClassModel Type;
         public ClassModel InClass;

@@ -6014,4 +6014,8 @@
     <value>Keeps the caret centered when caret is navigated to.</value>
     <comment>Added after 5.1.1</comment>
   </data>
+  <data name="CodeRefactor.Label.Inline" xml:space="preserve">
+    <value>Inline...</value>
+    <comment>Added after 5.2.0</comment>
+  </data>
 </root>

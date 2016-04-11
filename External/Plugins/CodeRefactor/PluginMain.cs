@@ -264,6 +264,7 @@ namespace CodeRefactor
             this.refactorMainMenu.ExtractMethodMenuItem.Click += this.ExtractMethodClicked;
             this.refactorMainMenu.DelegateMenuItem.Click += this.DelegateMethodsClicked;
             this.refactorMainMenu.ExtractLocalVariableMenuItem.Click += this.ExtractLocalVariableClicked;
+            this.refactorMainMenu.InlineMenuItem.Click += InlineClicked;
             this.refactorMainMenu.CodeGeneratorMenuItem.Click += this.CodeGeneratorMenuItemClicked;
             this.refactorMainMenu.BatchMenuItem.Click += this.BatchMenuItemClicked;
             this.refactorContextMenu = new RefactorMenu(false);
@@ -274,6 +275,7 @@ namespace CodeRefactor
             this.refactorContextMenu.DelegateMenuItem.Click += this.DelegateMethodsClicked;
             this.refactorContextMenu.ExtractMethodMenuItem.Click += this.ExtractMethodClicked;
             this.refactorContextMenu.ExtractLocalVariableMenuItem.Click += this.ExtractLocalVariableClicked;
+            this.refactorContextMenu.InlineMenuItem.Click += InlineClicked;
             this.refactorContextMenu.CodeGeneratorMenuItem.Click += this.CodeGeneratorMenuItemClicked;
             this.refactorContextMenu.BatchMenuItem.Click += this.BatchMenuItemClicked;
             ContextMenuStrip editorMenu = PluginBase.MainForm.EditorMenu;
@@ -301,6 +303,7 @@ namespace CodeRefactor
             PluginBase.MainForm.RegisterShortcutItem("RefactorMenu.Move", this.refactorMainMenu.MoveMenuItem);
             PluginBase.MainForm.RegisterShortcutItem("RefactorMenu.ExtractMethod", this.refactorMainMenu.ExtractMethodMenuItem);
             PluginBase.MainForm.RegisterShortcutItem("RefactorMenu.ExtractLocalVariable", this.refactorMainMenu.ExtractLocalVariableMenuItem);
+            PluginBase.MainForm.RegisterShortcutItem("RefactorMenu.Inline", this.refactorMainMenu.InlineMenuItem);
             PluginBase.MainForm.RegisterShortcutItem("RefactorMenu.GenerateDelegateMethods", this.refactorMainMenu.DelegateMenuItem);
             PluginBase.MainForm.RegisterShortcutItem("RefactorMenu.OrganizeImports", this.refactorMainMenu.OrganizeMenuItem);
             PluginBase.MainForm.RegisterShortcutItem("RefactorMenu.TruncateImports", this.refactorMainMenu.TruncateMenuItem);
@@ -310,6 +313,7 @@ namespace CodeRefactor
             PluginBase.MainForm.RegisterSecondaryItem("RefactorMenu.Move", this.refactorContextMenu.MoveMenuItem);
             PluginBase.MainForm.RegisterSecondaryItem("RefactorMenu.ExtractMethod", this.refactorContextMenu.ExtractMethodMenuItem);
             PluginBase.MainForm.RegisterSecondaryItem("RefactorMenu.ExtractLocalVariable", this.refactorContextMenu.ExtractLocalVariableMenuItem);
+            PluginBase.MainForm.RegisterSecondaryItem("RefactorMenu.Inline", this.refactorContextMenu.InlineMenuItem);
             PluginBase.MainForm.RegisterSecondaryItem("RefactorMenu.GenerateDelegateMethods", this.refactorContextMenu.DelegateMenuItem);
             PluginBase.MainForm.RegisterSecondaryItem("RefactorMenu.OrganizeImports", this.refactorContextMenu.OrganizeMenuItem);
             PluginBase.MainForm.RegisterSecondaryItem("RefactorMenu.TruncateImports", this.refactorContextMenu.TruncateMenuItem);
@@ -358,6 +362,9 @@ namespace CodeRefactor
                             this.refactorMainMenu.DelegateMenuItem.Enabled = true;
                         }
                     }
+                    var enabled = result.Member != null && (result.Member.Flags & FlagType.LocalVar) > 0;
+                    this.refactorMainMenu.InlineMenuItem.Enabled = enabled;
+                    this.refactorContextMenu.InlineMenuItem.Enabled = enabled;
                 }
                 else
                 {
@@ -365,6 +372,8 @@ namespace CodeRefactor
                     this.refactorContextMenu.RenameMenuItem.Enabled = false;
                     this.editorReferencesItem.Enabled = false;
                     this.viewReferencesItem.Enabled = false;
+                    this.refactorMainMenu.InlineMenuItem.Enabled = false;
+                    this.refactorContextMenu.InlineMenuItem.Enabled = false;
                 }
                 IASContext context = ASContext.Context;
                 if (context != null && context.CurrentModel != null)
@@ -664,6 +673,22 @@ namespace CodeRefactor
                     ExtractLocalVariableCommand command = new ExtractLocalVariableCommand(suggestion);
                     command.Execute();
                 }
+            }
+            catch (Exception ex)
+            {
+                ErrorManager.ShowError(ex);
+            }
+        }
+
+        /// <summary>
+        /// Invoked when the user selects the "Inline" command
+        /// </summary>
+        static void InlineClicked(object sender, EventArgs eventArgs)
+        {
+            try
+            {
+                var command = new InlineLocalVariableCommand();
+                command.Execute();
             }
             catch (Exception ex)
             {

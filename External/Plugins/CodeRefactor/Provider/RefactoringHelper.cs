@@ -344,25 +344,17 @@ namespace CodeRefactor.Provider
         /// <returns>If "asynchronous" is false, will return the search results, otherwise returns null on bad input or if running in asynchronous mode.</returns>
         public static FRResults FindTargetInFiles(ASResult target, FRProgressReportHandler progressReportHandler, FRFinishedHandler findFinishedHandler, Boolean asynchronous, Boolean onlySourceFiles, Boolean ignoreSdkFiles)
         {
-            Boolean currentFileOnly = false;
             // checks target is a member
             if (target == null || ((target.Member == null || String.IsNullOrEmpty(target.Member.Name))
                 && (target.Type == null || !CheckFlag(target.Type.Flags, FlagType.Class) && !target.Type.IsEnum())))
             {
                 return null;
             }
-            else
-            {
-                // if the target we are trying to rename exists as a local variable or a function parameter we only need to search the current file
-                if (target.Member != null && (
-                        target.Member.Access == Visibility.Private
-                        || CheckFlag(target.Member.Flags, FlagType.LocalVar)
-                        || CheckFlag(target.Member.Flags, FlagType.ParameterVar))
-                    )
-                {
-                    currentFileOnly = true;
-                }
-            }
+            // if the target we are trying to rename exists as a local variable or a function parameter we only need to search the current file
+            bool currentFileOnly = target.Member != null && (
+                target.Member.Access == Visibility.Private
+                || CheckFlag(target.Member.Flags, FlagType.LocalVar)
+                || CheckFlag(target.Member.Flags, FlagType.ParameterVar));
             FRConfiguration config;
             IProject project = PluginBase.CurrentProject;
             String file = PluginBase.MainForm.CurrentDocument.FileName;

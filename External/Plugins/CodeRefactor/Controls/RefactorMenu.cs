@@ -15,6 +15,7 @@ namespace CodeRefactor.Controls
             this.MoveMenuItem = this.DropDownItems.Add(TextHelper.GetString("Label.Move")) as ToolStripMenuItem;
             this.ExtractMethodMenuItem = this.DropDownItems.Add(TextHelper.GetString("Label.ExtractMethod"), null) as ToolStripMenuItem;
             this.ExtractLocalVariableMenuItem = this.DropDownItems.Add(TextHelper.GetString("Label.ExtractLocalVariable"), null) as ToolStripMenuItem;
+            this.InlineMenuItem = this.DropDownItems.Add(TextHelper.GetString("Label.Inline"), null) as ToolStripMenuItem;
             this.DelegateMenuItem = this.DropDownItems.Add(TextHelper.GetString("Label.DelegateMethods"), null) as ToolStripMenuItem;
             if (createSurroundMenu)
             {
@@ -77,10 +78,14 @@ namespace CodeRefactor.Controls
         public ToolStripMenuItem ExtractLocalVariableMenuItem { get; private set; }
 
         /// <summary>
+        /// Accessor to the InlineMenuItem
+        /// </summary>
+        public ToolStripMenuItem InlineMenuItem { get; private set; }
+
+        /// <summary>
         /// Accessor to the CodeGeneratorMenuItem
         /// </summary>
         public ToolStripMenuItem CodeGeneratorMenuItem { get; private set; }
-
     }
 
 }
