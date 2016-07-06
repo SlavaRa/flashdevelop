@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using ASCompletion.Completion;
 using ASCompletion.Model;
@@ -65,9 +64,9 @@ namespace CodeRefactor.Commands
             {
                 var sci = PluginBase.MainForm.CurrentDocument.SciControl;
                 value = sci.GetLine(member.LineFrom);
-                var index = value.IndexOf("=", StringComparison.Ordinal);
+                var index = value.IndexOfOrdinal("=");
                 value = value.Substring(index + "=".Length);
-                value = value.Trim(new char[] {'=', ' ', '\t', '\n', '\r', ';', '.'});
+                value = value.Trim('=', ' ', '\t', '\n', '\r', ';', '.');
             }
             findAllReferencesCommand = new FindAllReferences(target, false, false) {OnlySourceFiles = true};
             findAllReferencesCommand.OnRefactorComplete += OnFindAllReferencesCompleted;
@@ -87,10 +86,11 @@ namespace CodeRefactor.Commands
             UserInterfaceManager.ProgressDialog.Show();
             UserInterfaceManager.ProgressDialog.SetTitle(TextHelper.GetString("Info.UpdatingReferences"));
             MessageBar.Locked = true;
+            var statusMessage = TextHelper.GetString("Info.Updating");
             foreach (var entry in args.Results)
             {
                 var fileName = entry.Key;
-                UserInterfaceManager.ProgressDialog.UpdateStatusMessage(TextHelper.GetString("Info.Updating") + " \"" + fileName + "\"");
+                UserInterfaceManager.ProgressDialog.UpdateStatusMessage(statusMessage + " \"" + fileName + "\"");
                 var doc = AssociatedDocumentHelper.LoadDocument(fileName);
                 var sci = doc.SciControl;
                 var matches = entry.Value;
@@ -136,10 +136,7 @@ namespace CodeRefactor.Commands
                     changedLine = changedLine.Substring(0, column) + value + changedLine.Substring(column + match.Length);
                     lineChanges[lineNumber] = changedLine;
                     lineOffsets[lineNumber] = offset + (newValueLength - match.Length);
-                    if (!reportableLines.ContainsKey(lineNumber))
-                    {
-                        reportableLines[lineNumber] = new List<string>();
-                    }
+                    if (!reportableLines.ContainsKey(lineNumber)) reportableLines[lineNumber] = new List<string>();
                     reportableLines[lineNumber].Add(entry.Key + ":" + match.Line + ": chars " + column + "-" + (column + newValueLength) + " : {0}");
                 }
                 foreach (var lineSetsToReport in reportableLines)

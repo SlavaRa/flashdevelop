@@ -364,7 +364,7 @@ namespace CodeRefactor
                             this.refactorMainMenu.DelegateMenuItem.Enabled = true;
                         }
                     }
-                    var enabled = result.Member != null && (result.Member.Flags & FlagType.LocalVar) > 0;
+                    enabled = result.Member != null && (result.Member.Flags & FlagType.LocalVar) > 0;
                     this.refactorMainMenu.InlineMenuItem.Enabled = enabled;
                     this.refactorContextMenu.InlineMenuItem.Enabled = enabled;
                 }
@@ -380,7 +380,7 @@ namespace CodeRefactor
                 IASContext context = ASContext.Context;
                 if (context != null && context.CurrentModel != null)
                 {
-                    bool enabled = langIsValid && context.CurrentModel.Imports.Count > 0;
+                    var enabled = langIsValid && context.CurrentModel.Imports.Count > 0;
                     this.refactorContextMenu.OrganizeMenuItem.Enabled = enabled;
                     this.refactorContextMenu.TruncateMenuItem.Enabled = enabled;
                     this.refactorMainMenu.OrganizeMenuItem.Enabled = enabled;
