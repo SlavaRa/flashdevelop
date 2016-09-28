@@ -57,6 +57,8 @@ namespace ProjectManager.Projects.Haxe
 
         public bool IsFlashOutput { get { return HaxeTarget == "swf"; } }
 
+        public bool IsJavaOutput { get { return HaxeTarget == "java"; } }
+
         public override string GetInsertFileText(string inFile, string path, string export, string nodeType)
         {
             bool isInjectionTarget = (UsesInjection && path == GetAbsolutePath(InputPath));
@@ -164,11 +166,21 @@ namespace ProjectManager.Projects.Haxe
             {
                 // SWC libraries
                 if (isFlash)
+                {
                     foreach (LibraryAsset asset in LibraryAssets)
                     {
                         if (asset.IsSwc)
                             pr.Add("-swf-lib " + asset.Path);
                     }
+                }
+                else if (IsJavaOutput)
+                {
+                    foreach (LibraryAsset asset in LibraryAssets)
+                    {
+                        if (asset.IsJar)
+                            pr.Add("-java-lib " + asset.Path);
+                    }
+                }
 
                 // libraries
                 foreach (string lib in CompilerOptions.Libraries)
@@ -180,10 +192,8 @@ namespace ProjectManager.Projects.Haxe
 
                 // class paths
                 List<String> classPaths = new List<String>();
-                foreach (string cp in paths)
-                    classPaths.Add(cp);
-                foreach (string cp in this.Classpaths)
-                    classPaths.Add(cp);
+                classPaths.AddRange(paths);
+                classPaths.AddRange(Classpaths);
                 foreach (string cp in classPaths)
                 {
                     String ccp = String.Join("/", cp.Split('\\'));

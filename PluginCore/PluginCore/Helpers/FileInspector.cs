@@ -59,7 +59,7 @@ namespace PluginCore.Helpers
 
         public static bool IsSwc(string path, string ext)
         {
-            return ext == ".swc" || ext == ".ane" || ext == ".jar";
+            return ext == ".swc" || ext == ".ane" || IsJar(path, ext);
         }
 
         public static bool IsFont(string path, string ext)
@@ -159,6 +159,10 @@ namespace PluginCore.Helpers
             return ext == ".template";
         }
 
+        public static bool IsJar(string path, string ext)
+        {
+            return ext == ".jar";
+        }
     }
 
 }

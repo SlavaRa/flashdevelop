@@ -38,6 +38,7 @@ namespace ProjectManager.Projects
         public bool IsFont { get { return FileInspector.IsFont(Path, Extension); } }
         public bool IsSwf { get { return FileInspector.IsSwf(Path, Extension); } }
         public bool IsSwc { get { return FileInspector.IsSwc(Path, Extension); } }
+        public bool IsJar { get { return FileInspector.IsJar(Path, Extension); } }
 
         public string Extension { get { return System.IO.Path.GetExtension(Path).ToLower(); } }
         

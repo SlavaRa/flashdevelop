@@ -392,28 +392,27 @@ namespace HaXeContext
             if (proj != null)
             {
                 // swf-libs
-                if (HaxeTarget == "flash" && majorVersion >= 9)
+                if (proj.IsFlashOutput)
                 {
-                    foreach(LibraryAsset asset in proj.LibraryAssets)
-                        if (asset.IsSwc)
-                        {
-                            string path = proj.GetAbsolutePath(asset.Path);
-                            if (File.Exists(path)) AddPath(path);
-                        }
-                    foreach(string p in proj.CompilerOptions.Additional)
-                        if (p.IndexOfOrdinal("-swf-lib ") == 0) {
-                            string path = proj.GetAbsolutePath(p.Substring(9));
-                            if (File.Exists(path)) AddPath(path);
-                        }
+                    if (majorVersion >= 9)
+                    {
+                        foreach(LibraryAsset asset in proj.LibraryAssets)
+                            if (asset.IsSwc)
+                            {
+                                string path = proj.GetAbsolutePath(asset.Path);
+                                if (File.Exists(path)) AddPath(path);
+                            }
+                        foreach(string p in proj.CompilerOptions.Additional)
+                            if (p.IndexOfOrdinal("-swf-lib ") == 0) {
+                                string path = proj.GetAbsolutePath(p.Substring(9));
+                                if (File.Exists(path)) AddPath(path);
+                            }
+                    }
                 }
-                
-                TraceManager.Add($"{nameof(HaxeTarget)}:{HaxeTarget}");
-                // java-libs
-                if (HaxeTarget == "java")
+                else if (proj.IsJavaOutput)
                 {
                     foreach (string p in proj.CompilerOptions.Additional)
                     {
-                        TraceManager.Add($"{nameof(p)}:{p}");
                         if (p.IndexOfOrdinal("-java-lib ") == 0)
                         {
                             string path = proj.GetAbsolutePath(p.Substring(10));
