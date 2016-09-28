@@ -389,26 +389,40 @@ namespace HaXeContext
                 if (Directory.Exists(extraCP)) AddPath(extraCP);
             }
             HaxeProject proj = PluginBase.CurrentProject as HaxeProject;
-
-            // swf-libs
-            if (HaxeTarget == "flash" && majorVersion >= 9 && proj != null)
-            {
-                foreach(LibraryAsset asset in proj.LibraryAssets)
-                    if (asset.IsSwc)
-                    {
-                        string path = proj.GetAbsolutePath(asset.Path);
-                        if (File.Exists(path)) AddPath(path);
-                    }
-                foreach(string p in proj.CompilerOptions.Additional)
-                    if (p.IndexOfOrdinal("-swf-lib ") == 0) {
-                        string path = proj.GetAbsolutePath(p.Substring(9));
-                        if (File.Exists(path)) AddPath(path);
-                    }
-            }
-
-            // add haxe libraries
             if (proj != null)
             {
+                // swf-libs
+                if (HaxeTarget == "flash" && majorVersion >= 9)
+                {
+                    foreach(LibraryAsset asset in proj.LibraryAssets)
+                        if (asset.IsSwc)
+                        {
+                            string path = proj.GetAbsolutePath(asset.Path);
+                            if (File.Exists(path)) AddPath(path);
+                        }
+                    foreach(string p in proj.CompilerOptions.Additional)
+                        if (p.IndexOfOrdinal("-swf-lib ") == 0) {
+                            string path = proj.GetAbsolutePath(p.Substring(9));
+                            if (File.Exists(path)) AddPath(path);
+                        }
+                }
+                
+                TraceManager.Add($"{nameof(HaxeTarget)}:{HaxeTarget}");
+                // java-libs
+                if (HaxeTarget == "java")
+                {
+                    foreach (string p in proj.CompilerOptions.Additional)
+                    {
+                        TraceManager.Add($"{nameof(p)}:{p}");
+                        if (p.IndexOfOrdinal("-java-lib ") == 0)
+                        {
+                            string path = proj.GetAbsolutePath(p.Substring(10));
+                            if (File.Exists(path)) AddPath(path);
+                        }
+                    }
+                }
+
+                // add haxe libraries
                 foreach (string param in proj.BuildHXML(new string[0], "", false))
                     if (!string.IsNullOrEmpty(param) && param.IndexOfOrdinal("-lib ") == 0)
                     {
