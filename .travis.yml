@@ -14,4 +14,3 @@ script:
   - mono External/Tools/SetVersion/SetVersion.exe FlashDevelop/Properties/AssemblyInfo.cs "5.1.0" 
   - xbuild ./PluginCore/PluginCore.csproj /p:Configuration=Debug /p:Platform="AnyCPU" /t:Rebuild
   - xbuild ./FlashDevelop.sln /p:Configuration=Debug /p:Platform=x86 /t:Rebuild
-  - xbuild ./FlashDevelop.sln /p:Configuration=Debug /p:Platform=x64 /t:Rebuild
