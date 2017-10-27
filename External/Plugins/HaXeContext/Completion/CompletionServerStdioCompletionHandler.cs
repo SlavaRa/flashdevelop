@@ -40,17 +40,17 @@ namespace HaXeContext
             if (!IsRunning()) StartServer();
             try
             {
-                var sb = new StringBuilder("--cwd " + ((HaxeProject) PluginBase.CurrentProject).Directory);
-                sb.Append(" ");
-                sb.Append(string.Join(" ", args));
+                var sb = new StringBuilder();
+                sb.AppendLine("--cwd \"" + ((HaxeProject) PluginBase.CurrentProject).Directory + "\"");
+                foreach (var it in args)
+                    sb.AppendLine(it);
                 if (!string.IsNullOrEmpty(fileContent))
                 {
                     sb.Append("\x01");
                     sb.Append(fileContent);
                 }
-                sb.Append("\0");
+                else sb.Append("\0");
                 var data = sb.ToString();
-                if(haxeProcess.StartInfo.Arguments.Contains("-v ")) TraceManager.Add(data.Length + data);
                 var bytes = Encoding.UTF8.GetBytes(data);
                 var writer = new BinaryWriter(haxeProcess.StandardInput.BaseStream);
                 writer.Write(BitConverter.GetBytes(bytes.Length));

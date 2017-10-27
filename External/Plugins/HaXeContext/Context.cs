@@ -1249,7 +1249,7 @@ namespace HaXeContext
                     else
                     {
                         if (haxeSettings.CompletionServerWaitStdio && GetCurrentSDKVersion() >= "3.3.0")
-                            completionModeHandler = new CompletionServerStdioCompletionHandler(CreateHaxeProcess("-v --wait stdio"));
+                            completionModeHandler = new CompletionServerStdioCompletionHandler(CreateHaxeProcess("--wait stdio"));
                         else completionModeHandler = new CompletionServerCompletionHandler(CreateHaxeProcess("--wait " + port), port);
                         ((ICompletionServerCompletionHandler) completionModeHandler).FallbackNeeded += Context_FallbackNeeded;
                     }
