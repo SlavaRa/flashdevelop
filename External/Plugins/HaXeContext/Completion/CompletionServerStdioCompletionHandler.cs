@@ -15,9 +15,9 @@ namespace HaXeContext
     {
         public event FallbackNeededHandler FallbackNeeded;
 
-        private readonly Process haxeProcess;
-        private bool listening;
-        private bool failure;
+        readonly Process haxeProcess;
+        bool listening;
+        bool failure;
 
         public CompletionServerStdioCompletionHandler(Process haxeProcess)
         {
@@ -49,29 +49,14 @@ namespace HaXeContext
                     sb.Append(fileContent);
                 }
                 sb.Append("\0");
-                if(haxeProcess.StartInfo.Arguments.Contains("-v ")) TraceManager.Add(sb.ToString());
+                var data = sb.ToString();
+                if(haxeProcess.StartInfo.Arguments.Contains("-v ")) TraceManager.Add(data.Length + data);
+                var bytes = Encoding.UTF8.GetBytes(data);
                 var writer = new BinaryWriter(haxeProcess.StandardInput.BaseStream);
-                writer.Write(sb.ToString());
-                writer.Flush();
-                //haxeProcess.StandardInput.Write(sb);
-                //haxeProcess.StandardInput.Flush();
-                return "";
-                /*
-                var writer = haxeProcess.StandardInput;
-                writer.WriteLine("--cwd " + ((HaxeProject) PluginBase.CurrentProject).Directory);
-                foreach (var arg in args)
-                    writer.WriteLine(arg);
-                if (fileContent != null)
-                {
-                    writer.Write("\x01");
-                    writer.Write(fileContent);
-                }
-                writer.Write("\0");
+                writer.Write(BitConverter.GetBytes(bytes.Length));
+                writer.Write(bytes);
                 writer.Flush();
                 return "";
-                var lines = haxeProcess.StandardError.ReadToEnd();
-                return lines;
-                */
             }
             catch(Exception ex)
             {
