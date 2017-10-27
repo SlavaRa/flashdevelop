@@ -1235,7 +1235,7 @@ namespace HaXeContext
             SetHaxeEnvironment(currentSDK);
 
             // configure completion provider
-            var haxeSettings = (settings as HaXeSettings);
+            var haxeSettings = (HaXeSettings) settings;
             features.externalCompletion = haxeSettings.CompletionMode != HaxeCompletionModeEnum.FlashDevelop;
 
             switch (haxeSettings.CompletionMode)
@@ -1244,15 +1244,14 @@ namespace HaXeContext
                     completionModeHandler = new CompilerCompletionHandler(CreateHaxeProcess(""));
                     break;
                 case HaxeCompletionModeEnum.CompletionServer:
-                    if (haxeSettings.CompletionServerPort < 1024)
-                        completionModeHandler = new CompilerCompletionHandler(CreateHaxeProcess(""));
+                    var port = haxeSettings.CompletionServerPort;
+                    if (port < 1024) completionModeHandler = new CompilerCompletionHandler(CreateHaxeProcess(""));
                     else
                     {
-                        completionModeHandler =
-                            new CompletionServerCompletionHandler(
-                                CreateHaxeProcess("--wait " + haxeSettings.CompletionServerPort),
-                                haxeSettings.CompletionServerPort);
-                        (completionModeHandler as CompletionServerCompletionHandler).FallbackNeeded += new FallbackNeededHandler(Context_FallbackNeeded);
+                        if (haxeSettings.CompletionServerWaitStdio && GetCurrentSDKVersion() >= "3.3.0")
+                            completionModeHandler = new CompletionServerStdioCompletionHandler(CreateHaxeProcess("-v --wait stdio"));
+                        else completionModeHandler = new CompletionServerCompletionHandler(CreateHaxeProcess("--wait " + port), port);
+                        ((ICompletionServerCompletionHandler) completionModeHandler).FallbackNeeded += Context_FallbackNeeded;
                     }
                     break;
             }

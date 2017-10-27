@@ -11,7 +11,7 @@ namespace HaXeContext
 {
     public delegate void FallbackNeededHandler(bool notSupported);
 
-    public class CompletionServerCompletionHandler : IHaxeCompletionHandler
+    public class CompletionServerCompletionHandler : ICompletionServerCompletionHandler
     {
         public event FallbackNeededHandler FallbackNeeded;
 
