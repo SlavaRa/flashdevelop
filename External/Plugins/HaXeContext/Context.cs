@@ -760,7 +760,6 @@ namespace HaXeContext
         /// <summary>
         /// Return imported classes list (not null)
         /// </summary>
-        /// <param name="package">Package to explore</param>
         /// <param name="inFile">Current file</param>
         public override MemberList ResolveImports(FileModel inFile)
         {
@@ -995,8 +994,6 @@ namespace HaXeContext
 
             if (aClass.QualifiedName == features.dynamicKey)
             {
-                ClassModel indexClass = ResolveType(indexType, inFile);
-                //if (!indexClass.IsVoid()) return indexClass;
                 return MakeCustomObjectClass(aClass, indexType);
             }
 
@@ -1007,18 +1004,16 @@ namespace HaXeContext
                     return otherClass;
 
             // resolve T
-            string Tdef = "<T>";
             string Tname = "T";
             Match m = re_Template.Match(aClass.Type);
             if (m.Success)
             {
                 Tname = m.Groups[1].Value;
-                Tdef = "<" + Tname + ">";
             }
             Regex reReplaceType = new Regex("\\b" + Tname + "\\b");
 
             // clone the type
-            aClass = aClass.Clone() as ClassModel;
+            aClass = (ClassModel) aClass.Clone();
             aClass.Name = baseType.Substring(baseType.LastIndexOf('.') + 1) + "<" + indexType + ">";
             aClass.IndexType = indexType;
 

@@ -1590,7 +1590,7 @@ namespace FlashDevelop
         /// </summary>
         public void OnScintillaControlMarginClick(ScintillaControl sci, Int32 modifiers, Int32 position, Int32 margin)
         {
-            if (margin == 2)
+            if (margin == ScintillaManager.FoldingMargin)
             {
                 Int32 line = sci.LineFromPosition(position);
                 if (Control.ModifierKeys == Keys.Control) MarkerManager.ToggleMarker(sci, 0, line);
@@ -2665,9 +2665,6 @@ namespace FlashDevelop
         {
             try
             {
-                var button = (ToolStripItem)sender;
-                var reason = ((ItemData)button.Tag).Tag as string;
-                
                 if (this.CurrentDocument.IsUntitled)
                 {
                     this.saveFileDialog.FileName = this.CurrentDocument.FileName;
@@ -2684,6 +2681,8 @@ namespace FlashDevelop
                 }
                 else if (this.CurrentDocument.IsModified)
                 {
+                    var button = (ToolStripItem)sender;
+                    var reason = ((ItemData)button.Tag).Tag;
                     this.CurrentDocument.Save(this.CurrentDocument.FileName, reason);
                 }
             }

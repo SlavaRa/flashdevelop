@@ -27,9 +27,9 @@ namespace FlashDevelop.Managers
         private static readonly Object initializationLock = new Object();
         public static event Action ConfigurationLoaded;
 
-        const int LineMargin = 2;
-        const int BookmarksMargin = 0;
-        const int FoldingMargin = 3;
+        internal const int LineMargin = 2;
+        internal const int BookmarksMargin = 0;
+        internal const int FoldingMargin = 3;
 
         static ScintillaManager()
         {
@@ -300,6 +300,8 @@ namespace FlashDevelop.Managers
                 if (!useFolding && !viewBookmarks && !viewLineNumbers) sci.SetMarginWidthN(FoldingMargin, 0);
                 else if (useFolding) sci.SetMarginWidthN(FoldingMargin, ScaleArea(sci, 15));
                 else sci.SetMarginWidthN(FoldingMargin, ScaleArea(sci, 2));
+
+                sci.SetMarginWidthN(1, 0); //Inheritance Margin (see ASCompletion.PluginMain.Margin)
                 /**
                 * Adjust caret policy based on settings
                 */
