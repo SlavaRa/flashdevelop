@@ -81,7 +81,7 @@ namespace AS3Context
         /// <summary>
         /// Create virtual FileModel objects from Abc bytecode
         /// </summary>
-        /// <param name="abcs"></param>
+        /// <param name="parser"></param>
         /// <param name="path"></param>
         /// <param name="context"></param>
         public static void Convert(ContentParser parser, PathModel path, IASContext context)

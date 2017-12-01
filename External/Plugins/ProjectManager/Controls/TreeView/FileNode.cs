@@ -43,6 +43,7 @@ namespace ProjectManager.Controls.TreeView
 
             if (FileInspector.IsSwf(filePath, ext) || FileInspector.IsSwc(filePath, ext))
                 return new SwfFileNode(filePath);
+            if (ext == ".dll") return new DllFileNode(filePath);
             else if (FileAssociations.ContainsKey(ext)) // custom nodes building
                 return FileAssociations[ext](filePath);
             else

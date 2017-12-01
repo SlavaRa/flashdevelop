@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Reflection;
 using PluginCore.Localization;
 using PluginCore.Helpers;
 using PluginCore.Managers;
@@ -14,6 +15,7 @@ using ASCompletion.Completion;
 using ASCompletion.Model;
 using CodeRefactor.Provider;
 using HaXeContext.CodeRefactor.Provider;
+using HaXeContext.Helpers;
 using HaXeContext.Linters;
 using LintingHelper.Managers;
 using SwfOp;
@@ -320,6 +322,16 @@ namespace HaXeContext
                 var parser = new ContentParser(path.Path);
                 parser.Run();
                 AbcConverter.Convert(parser, path, contextInstance);
+                if (!path.HasFile(fileName)) return false;
+                var model = path.GetFile(fileName);
+                ASComplete.OpenVirtualFile(model);
+                return true;
+            }
+            if (ext == ".dll")
+            {
+                var fileName = Path.Combine(container, virtualPath.Substring(p + 2).Replace('.', Path.DirectorySeparatorChar));
+                var path = new PathModel(container, contextInstance);
+                LibraryConverter.Convert(path, contextInstance);
                 if (!path.HasFile(fileName)) return false;
                 var model = path.GetFile(fileName);
                 ASComplete.OpenVirtualFile(model);
