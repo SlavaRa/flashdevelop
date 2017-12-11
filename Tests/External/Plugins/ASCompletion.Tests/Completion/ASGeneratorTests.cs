@@ -17,6 +17,7 @@ using System.Text.RegularExpressions;
 using AS3Context;
 using HaXeContext;
 using PluginCore.Helpers;
+using PluginCore.Managers;
 
 namespace ASCompletion.Completion
 {
@@ -919,6 +920,16 @@ namespace ASCompletion.Completion
                                 .Returns(ReadAllTextAS3("AfterGenerateFunction_MemberDefaultBodyStyle_UncompilableCode_issue1645_2"))
                                 .SetName("Issue 1645. Case 2")
                                 .SetDescription("https://github.com/fdorg/flashdevelop/issues/1645");
+                        yield return
+                            new TestCaseData(ReadAllTextAS3("BeforeGenerateFunction_issue1780_1"), GeneratorJobType.Function)
+                                .Returns(ReadAllTextAS3("AfterGenerateFunction_issue1780_1"))
+                                .SetName("foo(Math.round(1.5))")
+                                .SetDescription("https://github.com/fdorg/flashdevelop/issues/1780");
+                        yield return
+                            new TestCaseData(ReadAllTextAS3("BeforeGenerateFunction_issue1780_2"), GeneratorJobType.Function)
+                                .Returns(ReadAllTextAS3("AfterGenerateFunction_issue1780_2"))
+                                .SetName("foo(round(1.5))")
+                                .SetDescription("https://github.com/fdorg/flashdevelop/issues/1780");
                     }
                 }
 
@@ -1057,6 +1068,21 @@ namespace ASCompletion.Completion
                                 .Returns(ReadAllTextHaxe("AfterGenerateFunction_MemberDefaultBodyStyle_UncompilableCode_issue1645_2"))
                                 .SetName("Issue1645. Case 2")
                                 .SetDescription("https://github.com/fdorg/flashdevelop/issues/1645");
+                        yield return
+                            new TestCaseData(ReadAllTextHaxe("BeforeGenerateFunction_issue1780_1"), GeneratorJobType.Function)
+                                .Returns(ReadAllTextHaxe("AfterGenerateFunction_issue1780_1"))
+                                .SetName("foo(Math.round(1.5))")
+                                .SetDescription("https://github.com/fdorg/flashdevelop/issues/1780");
+                        yield return
+                            new TestCaseData(ReadAllTextHaxe("BeforeGenerateFunction_issue1780_2"), GeneratorJobType.Function)
+                                .Returns(ReadAllTextHaxe("AfterGenerateFunction_issue1780_2"))
+                                .SetName("foo(round(1.5))")
+                                .SetDescription("https://github.com/fdorg/flashdevelop/issues/1780");
+                        yield return
+                            new TestCaseData(ReadAllTextHaxe("BeforeGenerateFunction_issue1836"), GeneratorJobType.FunctionPublic)
+                                .Returns(ReadAllTextHaxe("AfterGenerateFunction_issue1836"))
+                                .SetName("Issue 1836. Case 1")
+                                .SetDescription("https://github.com/fdorg/flashdevelop/issues/1836");
                     }
                 }
 
@@ -2683,6 +2709,10 @@ namespace ASCompletion.Completion
                             new TestCaseData(ReadAllTextHaxe("ParseFunctionParameters_Function"))
                                 .Returns(new List<MemberModel> {new ClassModel {Name = "Function", InFile = FileModel.Ignore}})
                                 .SetName("Parse function parameters of foo(function() {})");
+                        yield return
+                            new TestCaseData(ReadAllTextHaxe("ParseFunctionParameters_Math.random.1.5"))
+                                .Returns(new List<MemberModel> {new ClassModel {Name = "Function", InFile = FileModel.Ignore}})
+                                .SetName("Parse function parameters of foo(Math.random(1.5))");
                     }
                 }
 
@@ -3206,6 +3236,11 @@ namespace ASCompletion.Completion
                                 .Returns(ReadAllTextHaxe("AfterContextualGeneratorTests_issue1747_4"))
                                 .SetName("Issue1747. Case 4")
                                 .SetDescription("https://github.com/fdorg/flashdevelop/issues/1747");
+                        yield return
+                            new TestCaseData("BeforeContextualGeneratorTests_issue1767_1")
+                                .Returns(ReadAllTextHaxe("AfterContextualGeneratorTests_issue1767_1"))
+                                .SetName("Issue1767. Case 1")
+                                .SetDescription("https://github.com/fdorg/flashdevelop/issues/1767");
                     }
                 }
 
@@ -3236,6 +3271,68 @@ namespace ASCompletion.Completion
                     ASGenerator.contextToken = sci.GetWordFromPosition(sci.CurrentPos);
                     ASGenerator.ContextualGenerator(sci, new List<ICompletionListItem>());
                     return sci.Text;
+                }
+            }
+
+            [TestFixture]
+            public class GenerateClassTests : GenerateJob
+            {
+                public IEnumerable<TestCaseData> HaxeTestCases
+                {
+                    get
+                    {
+                        yield return
+                            new TestCaseData("BeforeGenerateClassTest_issue1762_1", "$(Boundary)dynamicValue:Dynamic$(Boundary)")
+                                .SetName("Issue1762. Case 1")
+                                .SetDescription("https://github.com/fdorg/flashdevelop/issues/1762");
+                    }
+                }
+
+                [Test, TestCaseSource(nameof(HaxeTestCases))]
+                public void Haxe(string fileName, string constructorArgs) => HaxeImpl(fileName, constructorArgs, sci);
+
+                internal static void HaxeImpl(string fileName, string constructorArgs, ScintillaControl sci)
+                {
+                    SetHaxeFeatures(sci);
+                    var sourceText = ReadAllTextHaxe(fileName);
+                    fileName = GetFullPathHaxe(fileName);
+                    ASContext.Context.CurrentModel.FileName = fileName;
+                    PluginBase.MainForm.CurrentDocument.FileName.Returns(fileName);
+                    Common(sourceText, constructorArgs, sci);
+                }
+
+                internal static void Common(string sourceText, string constructorArgs, ScintillaControl sci)
+                {
+                    sci.Text = sourceText;
+                    SnippetHelper.PostProcessSnippets(sci, 0);
+                    var currentModel = ASContext.Context.CurrentModel;
+                    new ASFileParser().ParseSrc(currentModel, sci.Text);
+                    var currentClass = currentModel.Classes[0];
+                    ASContext.Context.CurrentClass.Returns(currentClass);
+                    ASContext.Context.CurrentModel.Returns(currentModel);
+                    var currentMember = currentClass.Members.Items.FirstOrDefault();
+                    ASContext.Context.CurrentMember.Returns(currentMember);
+                    ASGenerator.contextToken = sci.GetWordFromPosition(sci.CurrentPos);
+                    var handler = Substitute.For<IEventHandler>();
+                    handler
+                        .When(it => it.HandleEvent(Arg.Any<object>(), Arg.Any<NotifyEvent>(), Arg.Any<HandlingPriority>()))
+                        .Do(it =>
+                        {
+                            var e = it.ArgAt<NotifyEvent>(1);
+                            switch (e.Type)
+                            {
+                                case EventType.Command:
+                                    EventManager.RemoveEventHandler(handler);
+                                    e.Handled = true;
+                                    var de = (DataEvent) e;
+                                    var info = (Hashtable) de.Data;
+                                    var actualArgs = (string) info[nameof(constructorArgs)];
+                                    Assert.AreEqual(constructorArgs, actualArgs);
+                                    break;
+                            }
+                        });
+                    EventManager.AddEventHandler(handler, EventType.Command);
+                    ASGenerator.GenerateJob(GeneratorJobType.Class, currentMember, currentClass, null, null);
                 }
             }
         }
