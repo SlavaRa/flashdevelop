@@ -19,12 +19,16 @@ namespace HaXeContext.Model
         [TestFixtureSetUp]
         public void Setup() => SetHaxeFeatures(sci);
 
-        [Test(Description = "abstract Foo from Some<T> {}")]
+        [Test(Description = "abstract Strings from Array<String> {}")]
         public void ParseAbstractIssue2039()
         {
-            var model = ASContext.Context.GetCodeModel(ReadAllText("ParseAbstract_issue2039_1"));
+            SetSrc(sci, ReadAllText("ParseAbstract_issue2039_1"));
+            var model = ASContext.Context.GetCodeModel(ASContext.Context.CurrentModel, sci.Text);
             Assert.AreEqual(1, model.Classes.Count);
-            Assert.AreEqual("Strings", model.Classes[0].Name);
+            var type = model.Classes.Last();
+            Assert.AreEqual("Strings", type.Name);
+            type.ResolveExtends();
+            Assert.AreEqual(ASContext.Context.ResolveType(ASContext.Context.Features.arrayKey, null), type.Extends);
         }
 
         [Test]
