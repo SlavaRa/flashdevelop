@@ -1458,6 +1458,11 @@ namespace HaXeContext
             var exprValue = expression.Value;
             if (!hxsettings.DisableMixedCompletion || hxsettings.CompletionMode == HaxeCompletionModeEnum.FlashDevelop)
             {
+                /**
+                 * Character Code
+                 * You can use the .code property on a constant single-char string in order to compile its ASCII character code:
+                 * "#".code // will compile as 35
+                 */
                 if (exprValue.Length >= 3)
                 {
                     var first = exprValue[0];
