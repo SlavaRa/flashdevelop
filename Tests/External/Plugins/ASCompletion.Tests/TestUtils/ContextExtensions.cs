@@ -40,10 +40,15 @@ namespace ASCompletion.TestUtils
             mock.CurrentModel.Returns(context.CurrentModel);
             var visibleExternalElements = context.GetVisibleExternalElements();
             mock.GetVisibleExternalElements().Returns(visibleExternalElements);
-            mock.GetCodeModel(null).ReturnsForAnyArgs(x =>
+            mock.GetCodeModel((string)null).ReturnsForAnyArgs(x =>
             {
                 var src = x[0] as string;
                 return string.IsNullOrEmpty(src) ? null : context.GetCodeModel(src);
+            });
+            mock.GetCodeModel((FileModel)null).ReturnsForAnyArgs(x =>
+            {
+                var src = x[0] as FileModel;
+                return src == null ? null : context.GetCodeModel(src);
             });
             mock.GetCodeModel(Arg.Any<string>(), Arg.Any<bool>()).ReturnsForAnyArgs(x =>
             {
@@ -77,6 +82,9 @@ namespace ASCompletion.TestUtils
                 var expr = it.ArgAt<ASExpr>(1);
                 return expr == null ? null : context.ResolveDotContext(it.ArgAt<ScintillaControl>(0), expr, it.ArgAt<bool>(2));
             });
+            mock.When(it => it.ResolveDotContext(Arg.Any<ScintillaControl>(), Arg.Any<ASExpr>(), Arg.Any<MemberList>()))
+                .Do(it => context.ResolveDotContext(it.ArgAt<ScintillaControl>(0), it.ArgAt<ASExpr>(1), it.ArgAt<MemberList>(2)));
+            mock.ResolvePackage(null, false).ReturnsForAnyArgs(it => context.ResolvePackage(it.ArgAt<string>(0), it.ArgAt<bool>(1)));
             mock.When(it => it.ResolveTopLevelElement(Arg.Any<string>(), Arg.Any<ASResult>()))
                 .Do(it => context.ResolveTopLevelElement(it.ArgAt<string>(0), it.ArgAt<ASResult>(1)));
             mock.TypesAffinity(null, null).ReturnsForAnyArgs(it =>
@@ -126,7 +134,7 @@ namespace ASCompletion.TestUtils
             PlatformData.Load(Path.Combine(PathHelper.AppDir, platformsFile));
             PluginBase.CurrentProject = new HaxeProject("haxe")
             {
-                CurrentSDK = Environment.GetEnvironmentVariable("HAXEPATH")
+                CurrentSDK = Environment.GetEnvironmentVariable("HAXEPATH")?.TrimEnd('\\', '/')
             };
             context.BuildClassPath();
             foreach (var it in context.Classpath)

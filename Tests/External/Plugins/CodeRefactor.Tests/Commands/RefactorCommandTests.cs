@@ -30,6 +30,9 @@ namespace CodeRefactor.Commands
                     yield return new TestCaseData(ReadAllTextHaxe("BeforeExtractLocalVariable_fromGeneric"), "newVar")
                         .Returns(ReadAllTextHaxe("AfterExtractLocalVariable_fromGeneric"))
                         .SetName("ExtractLocaleVariable from Generic");
+                    yield return new TestCaseData(ReadAllTextHaxe("BeforeExtractLocalVariable_fromGeneric_2"), "newVar")
+                        .Returns(ReadAllTextHaxe("AfterExtractLocalVariable_fromGeneric_2"))
+                        .SetName("new Test<String>('test') -> var newVar:Test<String> = new Test<String>('test')");
                     yield return new TestCaseData(ReadAllTextHaxe("BeforeExtractLocalVariable_fromString"), "newVar")
                         .Returns(ReadAllTextHaxe("AfterExtractLocalVariable_fromString"))
                         .SetName("ExtractLocaleVariable from String");
@@ -40,6 +43,12 @@ namespace CodeRefactor.Commands
                         .Ignore("Not supported at the moment")
                         .Returns(ReadAllTextHaxe("AfterExtractLocalVariable_inSinglelineMethod"))
                         .SetName("ExtractLocaleVariable in single line method");
+                    yield return new TestCaseData(ReadAllTextHaxe("BeforeExtractLocalVariable_arrayInitializer_1"), "newVar")
+                        .Returns(ReadAllTextHaxe("AfterExtractLocalVariable_arrayInitializer_1"))
+                        .SetName("[1,2,3] -> var newArray:Array<T> = [1,2,3]");
+                    yield return new TestCaseData(ReadAllTextHaxe("BeforeExtractLocalVariable_arrayInitializer_2"), "newVar")
+                        .Returns(ReadAllTextHaxe("AfterExtractLocalVariable_arrayInitializer_2"))
+                        .SetName("[1,2,3].push(4) -> var newArray:Int = [1,2,3].push(4)");
                 }
             }
 
@@ -56,13 +65,11 @@ namespace CodeRefactor.Commands
                 {
                     yield return new TestCaseData(ReadAllTextAS3("BeforeExtractLocalVariable"), "newVar")
                         .Returns(ReadAllTextAS3("AfterExtractLocalVariable"))
-                        .SetName("ExtractLocaleVariable");
+                        .SetName("getChildByName('child') -> var newVar:DisplayObject = getChildByName('child')");
                     yield return new TestCaseData(ReadAllTextAS3("BeforeExtractLocalVariable_fromString"), "newVar")
-                        .Ignore("Not supported at the moment")
                         .Returns(ReadAllTextAS3("AfterExtractLocalVariable_fromString"))
                         .SetName("ExtractLocaleVariable from String");
                     yield return new TestCaseData(ReadAllTextAS3("BeforeExtractLocalVariable_fromNumber"), "newVar")
-                        .Ignore("Not supported at the moment")
                         .Returns(ReadAllTextAS3("AfterExtractLocalVariable_fromNumber"))
                         .SetName("ExtractLocaleVariable from Number");
                 }
@@ -208,44 +215,59 @@ namespace CodeRefactor.Commands
                 sci.SetProperty("fold.preprocessor", "1");
             }
 
-            static IEnumerable<TestCaseData> HaxeTestCases
+            static IEnumerable<TestCaseData> TestCases
             {
                 get
                 {
-                    yield return new TestCaseData(ReadAllTextHaxe("BeforeOrganizeImports"), "BeforeOrganizeImports.hx")
+                    yield return new TestCaseData(ReadAllTextHaxe("BeforeOrganizeImports"), "BeforeOrganizeImports.hx", false)
                         .Returns(ReadAllTextHaxe("AfterOrganizeImports"))
                         .SetName("OrganizeImports");
-                    yield return new TestCaseData(ReadAllTextHaxe("BeforeOrganizeImports_withImportsFromSameModule"), "Main.hx")
+                    yield return new TestCaseData(ReadAllTextHaxe("BeforeOrganizeImports_withImportsFromSameModule"), "Main.hx", false)
                         .Returns(ReadAllTextHaxe("AfterOrganizeImports_withImportsFromSameModule"))
                         .SetName("Issue782. Package is empty.");
-                    yield return new TestCaseData(ReadAllTextHaxe("BeforeOrganizeImports_withImportsFromSameModule2"), "Main.hx")
+                    yield return new TestCaseData(ReadAllTextHaxe("BeforeOrganizeImports_withImportsFromSameModule2"), "Main.hx", false)
                         .Returns(ReadAllTextHaxe("AfterOrganizeImports_withImportsFromSameModule2"))
                         .SetName("Issue782. Package is not empty.");
-                    yield return new TestCaseData(ReadAllTextHaxe("BeforeOrganizeImports_withImportsFromSameModule2"), "Main.hx")
+                    yield return new TestCaseData(ReadAllTextHaxe("BeforeOrganizeImports_withImportsFromSameModule2"), "Main.hx", false)
                         .Returns(ReadAllTextHaxe("AfterOrganizeImports_withImportsFromSameModule2"))
                         .SetName("Issue782. Package is not empty.");
-                    yield return new TestCaseData(ReadAllTextHaxe("BeforeOrganizeImports_withElseIfDirective"), "Main.hx")
+                    yield return new TestCaseData(ReadAllTextHaxe("BeforeOrganizeImports_withElseIfDirective"), "Main.hx", false)
                         .Returns(ReadAllTextHaxe("AfterOrganizeImports_withElseIfDirective"))
                         .SetName("Issue783. Shouldn't touch #elseif blocks.");
                 }
             }
 
-            [Test, TestCaseSource(nameof(HaxeTestCases))]
-            public string Haxe(string sourceText, string fileName) => HaxeImpl(sci, sourceText, fileName);
-
-            public static string HaxeImpl(ScintillaControl sci, string sourceText, string fileName)
+            static IEnumerable<TestCaseData> Issue1342TestCases
             {
-                SetHaxeFeatures(sci);
-                return Common(sci, sourceText, fileName);
+                get
+                {
+                    yield return new TestCaseData(ReadAllTextHaxe("BeforeOrganizeImports_Issue1342"), "BeforeOrganizeImports.hx", true)
+                        .Returns(ReadAllTextHaxe("AfterOrganizeImports_Issue1342"))
+                        .SetName("Issue1342. Separate Packages = True");
+                }
             }
 
-            internal static string Common(ScintillaControl sci, string sourceText, string fileName)
+            [
+                Test,
+                TestCaseSource(nameof(TestCases)),
+                TestCaseSource(nameof(Issue1342TestCases)),
+            ]
+            public string Haxe(string sourceText, string fileName, bool separatePackages) => HaxeImpl(sci, sourceText, fileName, separatePackages);
+
+            public static string HaxeImpl(ScintillaControl sci, string sourceText, string fileName, bool separatePackages)
+            {
+                SetHaxeFeatures(sci);
+                return Common(sci, sourceText, fileName, separatePackages);
+            }
+
+            internal static string Common(ScintillaControl sci, string sourceText, string fileName, bool separatePackages)
             {
                 ASContext.Context.CurrentModel.FileName = fileName;
                 SetSrc(sci, sourceText);
-                CommandFactoryProvider.GetFactory(sci)
-                    .CreateOrganizeImportsCommand()
-                    .Execute();
+                var command = CommandFactoryProvider.GetFactory(sci)
+                    .CreateOrganizeImportsCommand();
+                ((Commands.OrganizeImports) command).SeparatePackages = separatePackages;
+                command.Execute();
                 return sci.Text;
             }
         }
