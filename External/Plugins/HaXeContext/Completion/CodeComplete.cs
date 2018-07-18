@@ -454,7 +454,6 @@ namespace HaXeContext.Completion
                         var pattern = c + ".#" + (context.SubExpressions.Count - 1) + "~";
                         var startIndex = expression.IndexOfOrdinal(pattern) + pattern.Length;
                         expression = type.Name + ".#" + expression.Substring(startIndex);
-                        //if (context.SubExpressions.Count == 1) context.SubExpressions = null;
                     }
                 }
                 // for example: ~/pattern/.<complete>
@@ -471,6 +470,13 @@ namespace HaXeContext.Completion
                         var type = ctx.ResolveToken(expr, inFile);
                         if (!type.IsVoid()) expression = type.Name + ".#" + expression.Substring(pattern.Length);
                     }
+                }
+                else if (expression.EndsWithOrdinal(".new"))
+                {
+                    expression = expression.Substring(0, expression.Length - 4);
+                    context.WordBefore = "new";
+                    context.WordBeforePosition = context.PositionExpression;
+                    context.Value = context.Value.Substring(0, context.Value.Length - 4);
                 }
                 /**
                  * for example:

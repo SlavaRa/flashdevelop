@@ -1629,7 +1629,6 @@ namespace HaXeContext
                     type.ResolveExtends();
                     type = type.Extends;
                 }
-                return;
             }
         }
 
