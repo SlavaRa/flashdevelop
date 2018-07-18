@@ -242,7 +242,10 @@ namespace HaXeContext.Completion
                     .SetName("import | ");
                 yield return new TestCaseData("BeforeOnCharAndReplaceText_17", '.', true)
                     .Returns(CodeCompleteTests.ReadAllText("AfterOnCharAndReplaceText_17"))
-                    .SetName("Foo.| -> Foo.new");
+                    .SetName("Foo.| -> Foo.new. public constructor");
+                yield return new TestCaseData("BeforeOnCharAndReplaceText_18", '.', true)
+                    .Returns(CodeCompleteTests.ReadAllText("AfterOnCharAndReplaceText_18"))
+                    .SetName("Foo.| -> Foo.new. private constructor");
             }
         }
 

@@ -731,7 +731,7 @@ namespace HaXeContext
             if (withClass != null && inClass.InFile == withClass.InFile)
                 return Visibility.Public | Visibility.Private;
             // inheritance affinity
-            ClassModel tmp = inClass;
+            var tmp = inClass;
             while (!tmp.IsVoid())
             {
                 if (tmp == withClass)
@@ -1606,12 +1606,17 @@ namespace HaXeContext
                     return;
                 }
             }
+            /**
+             * for example:
+             * Type.<complete> -> Type.new
+             */
             if (expression.IsStatic && expression.Type != null && expression.Type.Flags.HasFlag(FlagType.Class))
             {
                 var type = expression.Type;
+                var access = TypesAffinity(Context.CurrentClass, type);
                 while (!type.IsVoid())
                 {
-                    var member = type.Members.Search(type.Name, FlagType.Constructor, Visibility.Public);
+                    var member = type.Members.Search(type.Name, FlagType.Constructor, access);
                     if (member != null)
                     {
                         member = (MemberModel) member.Clone();
@@ -1620,6 +1625,7 @@ namespace HaXeContext
                         result.Add(member);
                         return;
                     }
+                    if (type.Flags.HasFlag(FlagType.Abstract)) break;
                     type.ResolveExtends();
                     type = type.Extends;
                 }

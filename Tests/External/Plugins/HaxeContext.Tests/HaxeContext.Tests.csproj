@@ -558,6 +558,8 @@
     <EmbeddedResource Include="Test Files\generators\code\AfterGeneratePublicFunction_issue2201_5.hx" />
     <EmbeddedResource Include="Test Files\completion\BeforeOnCharAndReplaceText_17.hx" />
     <EmbeddedResource Include="Test Files\completion\AfterOnCharAndReplaceText_17.hx" />
+    <EmbeddedResource Include="Test Files\completion\BeforeOnCharAndReplaceText_18.hx" />
+    <EmbeddedResource Include="Test Files\completion\AfterOnCharAndReplaceText_18.hx" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
