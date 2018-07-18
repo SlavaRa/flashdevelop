@@ -1563,29 +1563,7 @@ namespace HaXeContext
             return hxsettings.DisableMixedCompletion ? new MemberList() : null;
         }
 
-        public override void ResolveDotContext(ScintillaControl sci, ASExpr expression, MemberList result)
-        {
-            var exprValue = expression.Value;
-            /**
-             * Character Code
-             * You can use the .code property on a constant single-char string in order to compile its ASCII character code:
-             * "#".code // will compile as 35
-             */
-            if (exprValue.Length >= 3)
-            {
-                var first = exprValue[0];
-                if ((first == '\"' || first == '\'') && expression.SubExpressions != null && expression.SubExpressions.Count == 1)
-                {
-                    var s = exprValue.Replace(".#0~.", string.Empty);
-                    if (s.Length == 3 || (s.Length == 4 && s[1] == '\\'))
-                    {
-                        result.Add(new MemberModel("code", "Int", FlagType.Getter, Visibility.Public) {Comments = "The character code of this character(inlined at compile-time)"});
-                    }
-                }
-            }
-        }
-
-        internal void OnDotCompletionResult(HaxeComplete hc,  HaxeCompleteResult result, HaxeCompleteStatus status)
+        internal void OnDotCompletionResult(HaxeComplete hc, HaxeCompleteResult result, HaxeCompleteStatus status)
         {
             resolvingDot = false;
 
@@ -1603,6 +1581,49 @@ namespace HaXeContext
                 case HaxeCompleteStatus.TYPE:
                     // eg. Int
                     break;
+            }
+        }
+
+        public override void ResolveDotContext(ScintillaControl sci, ASResult expression, MemberList result)
+        {
+            if (expression.IsNull()) return;
+            var exprValue = expression.Context.Value;
+            /**
+             * Character Code
+             * You can use the .code property on a constant single-char string in order to compile its ASCII character code:
+             * "#".code // will compile as 35
+             */
+            if (exprValue.Length >= 3)
+            {
+                var first = exprValue[0];
+                if ((first == '\"' || first == '\'') && expression.Context.SubExpressions != null && expression.Context.SubExpressions.Count == 1)
+                {
+                    var s = exprValue.Replace(".#0~.", string.Empty);
+                    if (s.Length == 3 || (s.Length == 4 && s[1] == '\\'))
+                    {
+                        result.Add(new MemberModel("code", "Int", FlagType.Getter, Visibility.Public) { Comments = "The character code of this character(inlined at compile-time)" });
+                    }
+                    return;
+                }
+            }
+            if (expression.IsStatic && expression.Type != null && expression.Type.Flags.HasFlag(FlagType.Class))
+            {
+                var type = expression.Type;
+                while (!type.IsVoid())
+                {
+                    var member = type.Members.Search(type.Name, FlagType.Constructor, Visibility.Public);
+                    if (member != null)
+                    {
+                        member = (MemberModel) member.Clone();
+                        member.Name = "new";
+                        member.Type = type.Name;
+                        result.Add(member);
+                        return;
+                    }
+                    type.ResolveExtends();
+                    type = type.Extends;
+                }
+                return;
             }
         }
 

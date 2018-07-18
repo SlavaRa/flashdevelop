@@ -240,6 +240,9 @@ namespace HaXeContext.Completion
                 yield return new TestCaseData("BeforeOnCharAndReplaceText_10", ' ', false)
                     .Returns(CodeCompleteTests.ReadAllText("AfterOnCharAndReplaceText_10"))
                     .SetName("import | ");
+                yield return new TestCaseData("BeforeOnCharAndReplaceText_17", '.', true)
+                    .Returns(CodeCompleteTests.ReadAllText("AfterOnCharAndReplaceText_17"))
+                    .SetName("Foo.| -> Foo.new");
             }
         }
 

@@ -1955,13 +1955,11 @@ namespace ASCompletion.Completion
                 DotContextResolved(Sci, expr, items, autoHide);
                 return true;
             }
-            var mix = new MemberList();
-            ctx.ResolveDotContext(Sci, expr, mix);
 
             // Context
             ASResult result;
             ClassModel tmpClass;
-            bool outOfDate = (expr.Separator == ":") && ctx.UnsetOutOfDate();
+            var outOfDate = (expr.Separator == ":") && ctx.UnsetOutOfDate();
             var cFile = ctx.CurrentModel;
             var cClass = ctx.CurrentClass;
 
@@ -1981,8 +1979,7 @@ namespace ASCompletion.Completion
                     if (outOfDate) ctx.SetOutOfDate();
                     return true;
                 }
-                if (autoHide && features.hasE4X && IsXmlType(result.Type))
-                    return true;
+                if (autoHide && features.hasE4X && IsXmlType(result.Type)) return true;
                 tmpClass = result.Type;
             }
             else
@@ -1996,7 +1993,9 @@ namespace ASCompletion.Completion
                 }
                 else tmpClass = cClass;
             }
-
+            
+            var mix = new MemberList();
+            ctx.ResolveDotContext(Sci, result, mix);
             //stores a reference to our current class.  tmpClass gets overwritten later, so we need to store the current class separately
             var classScope = tmpClass;
             // local vars are the first thing to try
