@@ -245,7 +245,10 @@ namespace HaXeContext.Completion
                     .SetName("Foo.| -> Foo.new. public constructor");
                 yield return new TestCaseData("BeforeOnCharAndReplaceText_18", '.', true)
                     .Returns(CodeCompleteTests.ReadAllText("AfterOnCharAndReplaceText_18"))
-                    .SetName("Foo.| -> Foo.new. private constructor");
+                    .SetName("Foo.| -> Foo.new. private constructor. Case 1");
+                yield return new TestCaseData("BeforeOnCharAndReplaceText_19", '.', true)
+                    .Returns(CodeCompleteTests.ReadAllText("AfterOnCharAndReplaceText_19"))
+                    .SetName("Foo.| -> Foo.new. private constructor. Case 2");
             }
         }
 
