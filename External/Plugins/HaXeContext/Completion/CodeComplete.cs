@@ -471,6 +471,7 @@ namespace HaXeContext.Completion
                         if (!type.IsVoid()) expression = type.Name + ".#" + expression.Substring(pattern.Length);
                     }
                 }
+                // for example: Type.new.<complete>
                 else if (expression.EndsWithOrdinal(".new"))
                 {
                     expression = expression.Substring(0, expression.Length - 4);
