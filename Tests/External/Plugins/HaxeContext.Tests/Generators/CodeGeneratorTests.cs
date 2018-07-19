@@ -696,6 +696,9 @@ namespace HaXeContext.Generators
                 yield return new TestCaseData("BeforeAssignStatementToVar_unsafe_cast_3", GeneratorJobType.AssignStatementToVar, true)
                     .Returns(ReadAllText("AfterAssignStatementToVar_unsafe_cast_3"))
                     .SetName("cast []|");
+                yield return new TestCaseData("BeforeAssignStatementToVar_new_1", GeneratorJobType.AssignStatementToVar, true)
+                    .Returns(ReadAllText("AfterAssignStatementToVar_new_1"))
+                    .SetName("Type.new| ");
             }
         }
 

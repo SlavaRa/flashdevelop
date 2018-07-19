@@ -477,7 +477,7 @@ namespace HaXeContext.Completion
                     expression = expression.Substring(0, expression.Length - 4);
                     context.WordBefore = "new";
                     context.WordBeforePosition = context.PositionExpression;
-                    context.Value = context.Value.Substring(0, context.Value.Length - 4);
+                    context.Value = expression;
                 }
                 /**
                  * for example:

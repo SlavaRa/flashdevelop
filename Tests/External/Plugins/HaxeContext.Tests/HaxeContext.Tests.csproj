@@ -562,6 +562,8 @@
     <EmbeddedResource Include="Test Files\completion\AfterOnCharAndReplaceText_18.hx" />
     <EmbeddedResource Include="Test Files\completion\BeforeOnCharAndReplaceText_19.hx" />
     <EmbeddedResource Include="Test Files\completion\AfterOnCharAndReplaceText_19.hx" />
+    <EmbeddedResource Include="Test Files\generators\code\BeforeAssignStatementToVar_new_1.hx" />
+    <EmbeddedResource Include="Test Files\generators\code\AfterAssignStatementToVar_new_1.hx" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
