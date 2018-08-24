@@ -285,6 +285,13 @@ namespace FlashDevelop.Docking
             this.Controls.Add(this.splitContainer);
         }
 
+        public void AddVirtualControls(String file, String text, Int32 codepage)
+        {
+            this.editor = ScintillaManager.CreateControl(file, text, codepage);
+            this.editor.ConfigurationLanguage = "haxe";
+            this.Controls.Add(this.editor);
+        }
+
         /// <summary>
         /// Syncs both of the scintilla editors
         /// </summary>

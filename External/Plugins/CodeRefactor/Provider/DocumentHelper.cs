@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using PluginCore;
+using PluginCore.Managers;
 
 namespace CodeRefactor.Provider
 {
@@ -130,7 +131,7 @@ namespace CodeRefactor.Provider
         /// </summary>
         public ITabbedDocument LoadDocument(String fileName)
         {
-            ITabbedDocument newDocument = (ITabbedDocument)PluginBase.MainForm.OpenEditableDocument(fileName);
+            ITabbedDocument newDocument = (ITabbedDocument)PluginBase.MainForm.OpenVirtualDocument(fileName);
             this.RegisterLoadedDocument(newDocument);
             return newDocument;
         }
@@ -159,6 +160,7 @@ namespace CodeRefactor.Provider
         {
             if (this.filesOpenedDocumentReferences.ContainsKey(fileName) && !this.initiallyOpenedFiles.ContainsKey(fileName))
             {
+                TraceManager.Add("Close");
                 this.filesOpenedDocumentReferences[fileName].Close();
                 this.filesOpenedAndUsed.Remove(fileName);
                 this.filesOpenedDocumentReferences.Remove(fileName);

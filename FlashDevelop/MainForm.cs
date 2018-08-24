@@ -718,6 +718,47 @@ namespace FlashDevelop
             return this.OpenEditableDocument(file, null, true);
         }
 
+        public DockContent OpenVirtualDocument(string fileName)
+        {
+            var file = PathHelper.GetPhysicalPathName(fileName);
+            var info = FileHelper.GetEncodingFileInfo(file);
+            if (info.CodePage == -1) return null; // If the file is locked, stop.
+            DockContent result;
+            if (CurrentDocument != null && CurrentDocument.IsUntitled && !CurrentDocument.IsModified && Documents.Length == 1)
+            {
+                closingForOpenFile = true;
+                CurrentDocument.Close();
+                closingForOpenFile = false;
+                result = CreateVirtualDocument(file, info.Contents, info.CodePage);
+            }
+            else result = CreateVirtualDocument(file, info.Contents, info.CodePage);
+            var document = (TabbedDocument)result;
+            document.SciControl.SaveBOM = info.ContainsBOM;
+            return result;
+        }
+
+        /// <summary>
+        /// Creates a new empty document
+        /// </summary>
+        public DockContent CreateVirtualDocument(string file, string text, int codepage)
+        {
+            try
+            {
+                //this.notifyOpenFile = true;
+                var tabbedDocument = new TabbedDocument();
+                tabbedDocument.Text = Path.GetFileName(file);
+                tabbedDocument.AddVirtualControls(file, text, codepage);
+                tabbedDocument.Closed += (s, e) => tabbedDocument.SciControl.Dispose();
+                //tabbedDocument.Show();
+                return tabbedDocument;
+            }
+            catch (Exception ex)
+            {
+                ErrorManager.ShowError(ex);
+                return null;
+            }
+        }
+
         #endregion
 
         #region Construct Components

@@ -182,6 +182,9 @@ namespace PluginCore
         /// Opens an editable document.
         /// </summary>
         DockContent OpenEditableDocument(String file);
+
+        DockContent OpenVirtualDocument(string fileName);
+
         /// <summary>
         /// Creates a new custom document.
         /// </summary>
