@@ -49,7 +49,15 @@ namespace HaXeContext
         private bool resolvingDot;
         private bool resolvingFunction;
         HaxeCompletionCache hxCompletionCache;
-        ClassModel stubFunctionClass;
+
+        internal static readonly ClassModel stubFunctionClass = new ClassModel
+        {
+            Name = "Function",
+            Type = "Function",
+            Flags = FlagType.Class,
+            Access = Visibility.Public,
+            InFile = new FileModel {Package = "haxe", Module = "Constraints"},
+        };
 
         public Context(HaXeSettings initSettings) : this(initSettings, path => null)
         {
@@ -66,13 +74,7 @@ namespace HaXeContext
             hasLevels = false;
             docType = "Void"; // "flash.display.MovieClip";
 
-            stubFunctionClass = new ClassModel();
-            stubFunctionClass.Name = stubFunctionClass.Type = "Function";
-            stubFunctionClass.Flags = FlagType.Class;
-            stubFunctionClass.Access = Visibility.Public;
-            var funFile = new FileModel{Package = "haxe", Module = "Constraints"};
-            funFile.Classes.Add(stubFunctionClass);
-            stubFunctionClass.InFile = funFile;
+            stubFunctionClass.InFile.Classes.Add(stubFunctionClass);
 
             /* DESCRIBE LANGUAGE FEATURES */
 
@@ -124,6 +126,7 @@ namespace HaXeContext
             features.objectKey = "Dynamic";
             features.booleanKey = "Bool";
             features.numberKey = "Float";
+            features.IntegerKey = "Int";
             features.stringKey = "String";
             features.arrayKey = "Array<T>";
             features.dynamicKey = "Dynamic";
@@ -590,7 +593,7 @@ namespace HaXeContext
             contextSetup.AdditionalPaths.Add(path);
         }
 
-        override protected bool ExplorePath(PathModel path)
+        protected override bool ExplorePath(PathModel path)
         {
             if (!path.WasExplored && !path.IsVirtual && !path.IsTemporaryPath)
             {
@@ -782,10 +785,10 @@ namespace HaXeContext
         public override Visibility TypesAffinity(ClassModel inClass, ClassModel withClass)
         {
             // same file
-            if (withClass != null && inClass.InFile == withClass.InFile)
+            if (withClass != null && inClass.InFile == withClass.InFile && inClass.BaseType == withClass.BaseType)
                 return Visibility.Public | Visibility.Private;
             // inheritance affinity
-            ClassModel tmp = inClass;
+            var tmp = inClass;
             while (!tmp.IsVoid())
             {
                 if (tmp == withClass)
@@ -1088,19 +1091,18 @@ namespace HaXeContext
             // unknown type
             if (string.IsNullOrEmpty(cname) || cname == features.voidKey || classPath == null)
                 return ClassModel.VoidClass;
-
+            
             // handle generic types
-            if (cname.IndexOf('<') > 0)
+            if (cname.Contains('<'))
             {
                 var genType = re_genericType.Match(cname);
                 if (genType.Success)
                     return ResolveGenericType(genType.Groups["gen"].Value, genType.Groups["type"].Value, inFile);
                 return ClassModel.VoidClass;
             }
-
+            
             // typed array
-            if (cname.IndexOf('@') > 0)
-                return ResolveTypeIndex(cname, inFile);
+            if (cname.Contains('@')) return ResolveTypeIndex(cname, inFile);
 
             var package = "";
             var inPackage = (features.hasPackages && inFile != null) ? inFile.Package : "";
@@ -1423,10 +1425,10 @@ namespace HaXeContext
             if (string.IsNullOrEmpty(type) || type == features.voidKey) return null;
             switch (type)
             {
-                case "Float":
                 case "Int":
-                case "UInt":
-                case "Bool": return null;
+                case "UInt": return "0";
+                case "Float": return "Math.NaN";
+                case "Bool": return "false";
                 default: return "null";
             }
         }
@@ -1642,23 +1644,6 @@ namespace HaXeContext
             return hxsettings.DisableMixedCompletion ? new MemberList() : null;
         }
 
-        public override void ResolveDotContext(ScintillaControl sci, ASExpr expression, MemberList result)
-        {
-            var exprValue = expression.Value;
-            if (exprValue.Length >= 3)
-            {
-                var first = exprValue[0];
-                if ((first == '\"' || first == '\'') && expression.SubExpressions != null && expression.SubExpressions.Count == 1)
-                {
-                    var s = exprValue.Replace(".#0~.", string.Empty);
-                    if (s.Length == 3 || (s.Length == 4 && s[1] == '\\'))
-                    {
-                        result.Add(new MemberModel("code", "Int", FlagType.Getter, Visibility.Public) {Comments = "The character code of this character(inlined at compile-time)"});
-                    }
-                }
-            }
-        }
-
         internal void OnDotCompletionResult(HaxeComplete hc,  HaxeCompleteResult result, HaxeCompleteStatus status)
         {
             resolvingDot = false;
@@ -1680,6 +1665,48 @@ namespace HaXeContext
             }
         }
 
+        public override void ResolveDotContext(ScintillaControl sci, ASResult expression, MemberList result)
+        {
+            if (expression.IsStatic && expression.Type is ClassModel type 
+                && type.InFile is FileModel file && file.Classes.Count > 1
+                && type == GetPublicClass(file))
+            {
+                // add sub-types
+                foreach (var it in file.Classes)
+                {
+                    if (it != type) result.Add(it);
+                }
+                return;
+            }
+            var exprValue = expression.Context.Value;
+            if (exprValue.Length >= 3)
+            {
+                var first = exprValue[0];
+                if ((first == '\"' || first == '\'') && expression.Context.SubExpressions != null && expression.Context.SubExpressions.Count == 1)
+                {
+                    var s = exprValue.Replace(".#0~.", string.Empty);
+                    if (s.Length == 3 || (s.Length == 4 && s[1] == '\\'))
+                    {
+                        result.Add(new MemberModel("code", "Int", FlagType.Getter, Visibility.Public) {Comments = "The character code of this character(inlined at compile-time)"});
+                    }
+                }
+            }
+        }
+
+        ClassModel GetPublicClass(FileModel file)
+        {
+            if (file?.Classes != null)
+            {
+                var module = file.Module == "" ? Path.GetFileNameWithoutExtension(file.FileName) : file.Module;
+                foreach (var model in file.Classes)
+                    if ((model.Flags & (FlagType.Class | FlagType.Interface | FlagType.Enum)) != 0 && model.Name == module)
+                    {
+                        return model;
+                    }
+            }
+            return ClassModel.VoidClass;
+        }
+
         /// <summary>
         /// Return the top-level elements (this, super) for the current file
         /// </summary>
@@ -1690,8 +1717,8 @@ namespace HaXeContext
             if (topLevel == null) return hxCompletionCache.OtherElements;
             var items = new MemberList();
             if (topLevel.OutOfDate) InitTopLevelElements();
-            items.Merge(topLevel.Members);
-            items.Merge(hxCompletionCache.OtherElements);
+            items.Add(topLevel.Members);
+            items.Add(hxCompletionCache.OtherElements);
             return items;
         }
 
@@ -1701,15 +1728,19 @@ namespace HaXeContext
             var list = GetTopLevelElements();
             if (list != null && list.Count > 0)
             {
-                var item = list.Search(token, 0, 0);
-                if (item != null)
+                var items = list.MultipleSearch(token, 0, 0);
+                if (items != null)
                 {
-                    result.InClass = ClassModel.VoidClass;
-                    result.InFile = item.InFile;
-                    result.Member = item;
-                    result.Type = ResolveType(item.Type, item.InFile);
-                    result.IsStatic = false;
-                    result.IsPackage = false;
+                    if (items.Count == 1)
+                    {
+                        var item = items[0];
+                        result.InClass = ClassModel.VoidClass;
+                        result.InFile = item.InFile;
+                        result.Member = item;
+                        result.Type = ResolveType(item.Type, item.InFile);
+                        result.IsStatic = false;
+                        result.IsPackage = false;
+                    }
                     return;
                 }
             }

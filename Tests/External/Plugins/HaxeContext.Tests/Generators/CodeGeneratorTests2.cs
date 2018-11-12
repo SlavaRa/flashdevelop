@@ -188,14 +188,40 @@ namespace HaXeContext.Generators
         {
             get
             {
-                yield return new TestCaseData("BeforeContextualGeneratorTests_issue2301_1", GeneratorJobType.ConstructorOfEnum, true)
+                yield return new TestCaseData("BeforeContextualGeneratorTests_issue2301_1", GeneratorJobType.EnumConstructor, true)
                     .Returns(CodeGeneratorTests.ReadAllText("AfterContextualGeneratorTests_issue2301_1"))
                     .SetName("Enum.Fo|o. Issue 2301. Case 1.")
                     .SetDescription("https://github.com/fdorg/flashdevelop/issues/2301");
-                yield return new TestCaseData("BeforeContextualGeneratorTests_issue2301_2", GeneratorJobType.ConstructorOfEnum, true)
+                yield return new TestCaseData("BeforeContextualGeneratorTests_issue2301_2", GeneratorJobType.EnumConstructor, true)
                     .Returns(CodeGeneratorTests.ReadAllText("AfterContextualGeneratorTests_issue2301_2"))
-                    .SetName("Enum.Fo|o(1, '', true). Issue 2301. Case 2.")
+                    .SetName("Enum.Fo|o(1.0, '', true). Issue 2301. Case 2.")
                     .SetDescription("https://github.com/fdorg/flashdevelop/issues/2301");
+                yield return new TestCaseData("BeforeContextualGeneratorTests_issue2301_3", GeneratorJobType.EnumConstructor, true)
+                    .Returns(CodeGeneratorTests.ReadAllText("AfterContextualGeneratorTests_issue2301_3"))
+                    .SetName("Enum.Fo|o(1, '', true). Issue 2301. Case 3.")
+                    .SetDescription("https://github.com/fdorg/flashdevelop/issues/2301");
+            }
+        }
+
+        static IEnumerable<TestCaseData> GenerateSwitchIssue2409TestCases
+        {
+            get
+            {
+                yield return new TestCaseData("BeforeContextualGeneratorTests_issue2409_1", GeneratorJobType.Switch, true)
+                    .Returns(CodeGeneratorTests.ReadAllText("AfterContextualGeneratorTests_issue2409_1"))
+                    .SetName("thi|s. Generate switch labels. Issue 2409. Case 1.")
+                    .SetDescription("https://github.com/fdorg/flashdevelop/issues/2301");
+            }
+        }
+
+        static IEnumerable<TestCaseData> InterfaceContextualGeneratorTestCases
+        {
+            get 
+            {
+                yield return new TestCaseData("BeforeGenerateGetterSetter_issue2473_6", GeneratorJobType.IVariable, true)
+                    .Returns(CodeGeneratorTests.ReadAllText("AfterGenerateGetterSetter_issue2473_6"))
+                    .SetName("Generate Variable. Issue 2473. Case 6")
+                    .SetDescription("https://github.com/fdorg/flashdevelop/issues/2473");
             }
         }
 
@@ -204,6 +230,8 @@ namespace HaXeContext.Generators
             TestCaseSource(nameof(Issue2301TestCases)),
             TestCaseSource(nameof(GenerateSwitchLabelsIssue1759TestCases)),
             TestCaseSource(nameof(GenerateSwitchLabelsIssue2285TestCases)),
+            TestCaseSource(nameof(GenerateSwitchIssue2409TestCases)),
+            TestCaseSource(nameof(InterfaceContextualGeneratorTestCases)),
         ]
         public string ContextualGenerator(string fileName, GeneratorJobType job, bool hasGenerator) => ContextualGenerator(sci, fileName, job, hasGenerator);
 
@@ -211,10 +239,6 @@ namespace HaXeContext.Generators
         {
             SetSrc(sci, CodeGeneratorTests.ReadAllText(fileName));
             CodeGeneratorTests.SetCurrentFile(fileName);
-            var context = (Context) ASContext.GetLanguageContext("haxe");
-            context.CurrentModel = ASContext.Context.CurrentModel;
-            context.completionCache.IsDirty = true;
-            context.GetTopLevelElements();
             var options = new List<ICompletionListItem>();
             ASGenerator.ContextualGenerator(sci, options);
             if (hasGenerator)

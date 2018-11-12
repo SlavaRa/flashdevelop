@@ -101,6 +101,7 @@ namespace ASCompletion.Context
                 {
                     item.Enabled = isValid;
                 }
+                ClassModel.VoidClass.Name = context.Features.voidKey;
             }
         }
 
@@ -1286,7 +1287,7 @@ namespace ASCompletion.Context
         public virtual MemberList ResolveDotContext(ScintillaControl sci, ASExpr expression, bool autoHide) => null;
 
         /// <inheritdoc />
-        public virtual void ResolveDotContext(ScintillaControl sci, ASExpr expression, MemberList result)
+        public virtual void ResolveDotContext(ScintillaControl sci, ASResult expression, MemberList result)
         {
         }
 

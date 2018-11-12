@@ -1,9 +1,3 @@
-/*
- * 
- * User: Philippe Elsass
- * Date: 18/03/2006
- * Time: 19:03
- */
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -517,7 +511,9 @@ namespace HaXeContext.Model
                                 curMethod = null;
                             }
                             inFunction = false;
+                            inType = false;
                             length = 0;
+                            valueLength = 0;
                         }
                         else if (valueLength < VALUE_BUFFER) valueBuffer[valueLength++] = c1;
                         continue;
@@ -563,7 +559,25 @@ namespace HaXeContext.Model
                     }
                     else if (c1 == '{')
                     {
-                        if (!inType || valueLength == 0 || valueBuffer[valueLength - 1] == '<' || paramBraceCount > 0 || paramTempCount > 0)
+                        // for example: function(v:String):{v<cursor>String {
+                        if (inAnonType && inType && valueLength > 0
+                            && valueBuffer[valueLength - 1] != ':'
+                            && valueBuffer[valueLength - 1] != '>'
+                            && valueBuffer[valueLength - 1] != '<'
+                            && valueBuffer[valueLength - 1] != '(')
+                        {
+                            foundColon = false;
+                            inAnonType = false;
+                            inType = false;
+                            inValue = false;
+                            hadValue = false;
+                            inGeneric = false;
+                            valueLength = 0;
+                            length = 0;
+                            context = 0;
+                            paramBraceCount = 0;
+                        }
+                        else if (!inType || valueLength == 0 || valueBuffer[valueLength - 1] == '<' || paramBraceCount > 0 || paramTempCount > 0)
                         {
                             paramBraceCount++;
                             stopParser = true;
@@ -606,6 +620,12 @@ namespace HaXeContext.Model
                     else if (c1 == '>')
                     {
                         if (ba[i - 2] == '-') { /*haxe method signatures*/ }
+                        else if (paramBraceCount > 0 && inAnonType)
+                        {
+                            valueBuffer[valueLength++] = c1;
+                            if (paramTempCount > 0) paramTempCount--;
+                            continue;
+                        }
                         else if (paramTempCount > 0)
                         {
                             paramTempCount--;
@@ -643,12 +663,7 @@ namespace HaXeContext.Model
                     // in params, store the default value
                     else if ((inParams || inType) && valueLength < VALUE_BUFFER)
                     {
-                        if (c1 <= 32)
-                        {
-                            if (valueLength > 0 && valueBuffer[valueLength - 1] != ' ')
-                                valueBuffer[valueLength++] = ' ';
-                        }
-                        else valueBuffer[valueLength++] = c1;
+                        if (c1 > 32) valueBuffer[valueLength++] = c1;
                     }
 
                     // detect keywords
@@ -717,6 +732,7 @@ namespace HaXeContext.Model
                         curMember.Type = param;
                         length = 0;
                         inType = false;
+                        if (c1 == ';') curMember = null;
                     }
                     // method parameter's default value 
                     else if ((curMember.Flags & FlagType.Variable) > 0)
@@ -755,7 +771,7 @@ namespace HaXeContext.Model
                         addChar = true;
                         if (!inValue && context == FlagType.Variable && !foundColon)
                         {
-                            var keepContext = inParams && (length == 0 || buffer[0] == '.');
+                            var keepContext = inParams && buffer[0] == '.';
                             if (!keepContext) context = 0;
                         }
                     }
@@ -792,6 +808,7 @@ namespace HaXeContext.Model
                         && curClass.Flags is var f && (f & FlagType.Extern) == 0 && (f & FlagType.TypeDef) == 0 && (f & FlagType.Interface) == 0)
                     {
                         inFunction = true;
+                        inType = false;
                         i -= 2;
                         continue;
                     }
@@ -934,6 +951,20 @@ namespace HaXeContext.Model
                         // start of block
                         if (c1 == '{')
                         {
+                            if (foundColon && length == 0) // copy Haxe anonymous type
+                            {
+                                inValue = true;
+                                hadValue = false;
+                                inType = true;
+                                inAnonType = true;
+                                valueLength = 0;
+                                valueBuffer[valueLength++] = c1;
+                                paramBraceCount = 1;
+                                paramParCount = 0;
+                                paramSqCount = 0;
+                                paramTempCount = 0;
+                                continue;
+                            }
                             // parse package/class block
                             if (context == FlagType.Package || context == FlagType.Class) context = 0;
                             else if (context == FlagType.Enum) // parse enum block
@@ -980,28 +1011,13 @@ namespace HaXeContext.Model
                             }
                             else if (context == FlagType.Abstract) // parse abstract block
                             {
-                                if (curClass != null && (curClass.Flags & FlagType.Abstract) > 0)
-                                    inAbstract = true;
+                                if (curClass != null && (curClass.Flags & FlagType.Abstract) > 0) inAbstract = true;
                                 else
                                 {
                                     context = 0;
                                     curModifiers = 0;
                                     braceCount++; // ignore block
                                 }
-                            }
-                            else if (foundColon && length == 0) // copy Haxe anonymous type
-                            {
-                                inValue = true;
-                                hadValue = false;
-                                inType = true;
-                                inAnonType = true;
-                                valueLength = 0;
-                                valueBuffer[valueLength++] = c1;
-                                paramBraceCount = 1;
-                                paramParCount = 0;
-                                paramSqCount = 0;
-                                paramTempCount = 0;
-                                continue;
                             }
                             else if (foundConstant) // start config block
                             {
@@ -1012,6 +1028,11 @@ namespace HaXeContext.Model
                             else if (ScriptMode) // not in a class, parse if/for/while/do blocks
                             {
                                 context = 0;
+                            }
+                            else if (curMember != null && (curMember.Flags & FlagType.Function) != 0 && length == 0 && !foundColon)
+                            {
+                                inType = false;
+                                braceCount++;
                             }
                             else braceCount++; // ignore block
                         }
@@ -1399,6 +1420,7 @@ namespace HaXeContext.Model
             for (var i = model.Classes.Count - 1; i >= 0; i--)
             {
                 var @class = model.Classes[i];
+                FinalizeMembers(@class.Members.Items);
                 if (@class.MetaDatas == null || @class.Members.Count == 0) continue;
                 for (var j = @class.MetaDatas.Count - 1; j >= 0; j--)
                 {
@@ -1412,8 +1434,22 @@ namespace HaXeContext.Model
                     }
                 }
             }
+            FinalizeMembers(model.Members.Items);
             if (model.FileName.Length == 0 || model.FileName.EndsWithOrdinal("_cache")) return;
             if (model.PrivateSectionIndex == 0) model.PrivateSectionIndex = line + 1;
+            // utils
+            void FinalizeMembers(IList<MemberModel> members)
+            {
+                for (var i = members.Count - 1; i >= 0; i--)
+                {
+                    var member = members[i];
+                    if ((member.Flags & FlagType.Variable) != 0 && member.Type is string type && IsFunctionType(type))
+                    {
+                        member.Flags |= FlagType.Function;
+                        FunctionTypeToMemberModel(type, features, member);
+                    }
+                }
+            }
         }
         #endregion
 
@@ -1612,7 +1648,6 @@ namespace HaXeContext.Model
                     }
                 }
             }
-
             // a declaration keyword was recognized
             if (foundKeyword != 0)
             {
@@ -1645,11 +1680,11 @@ namespace HaXeContext.Model
                 curMember = null;
                 return true;
             }
-
-            // when not in a class, parse if/for/while blocks
+            // when not in a class, parse if/for/while/switch/try...catch blocks
             if (ScriptMode)
             {
-                if (token == "catch" || token == "for")
+                if (token == "case") curModifiers = 0;
+                else if (token == "catch" || token == "for")
                 {
                     curModifiers = 0;
                     foundKeyword = FlagType.Variable;
@@ -1657,11 +1692,9 @@ namespace HaXeContext.Model
                     return false;
                 }
             }
-
             if (inValue && valueMember != null) valueMember = null;
             if (!evalContext) return false;
             if (dotIndex > 0) token = curToken.Text;
-
             // some heuristic around Enums & Typedefs
             if (inEnum && !inValue)
             {
@@ -1673,7 +1706,9 @@ namespace HaXeContext.Model
                 curModifiers = 0;
                 curAccess = Visibility.Public;
             }
-            else if (!inTypedef && curModifiers == FlagType.TypeDef && curClass != null && token != "extends")
+            else if (!inTypedef && (curModifiers & FlagType.TypeDef) != 0
+                     && curClass != null && (curClass.Flags & FlagType.TypeDef) != 0
+                     && token != "extends")
             {
                 curClass.ExtendsType = token;
                 curModifiers = 0;
@@ -1686,7 +1721,6 @@ namespace HaXeContext.Model
                 modifiersLine = 0;
                 return true;
             }
-
 
             /* EVAL DECLARATION */
 
@@ -1964,7 +1998,7 @@ namespace HaXeContext.Model
                             // class member
                             else if (curClass != null)
                             {
-                                FlagType forcePublic = FlagType.Interface;
+                                var forcePublic = FlagType.Interface;
                                 forcePublic |= FlagType.Intrinsic | FlagType.TypeDef;
                                 if ((curClass.Flags & forcePublic) > 0)
                                     member.Access = Visibility.Public;
@@ -1997,7 +2031,7 @@ namespace HaXeContext.Model
                         member = new MemberModel();
                         member.Comments = curComment;
 
-                        int t = token.IndexOf('<');
+                        var t = token.IndexOf('<');
                         if (t > 0)
                         {
                             member.Template = token.Substring(t);
@@ -2068,7 +2102,7 @@ namespace HaXeContext.Model
             return false;
         }
 
-        private void AddClass(FileModel model, ClassModel curClass)
+        static void AddClass(FileModel model, ClassModel curClass)
         {
             // avoid empty duplicates due to Haxe directives
             for (int i = 0, count = model.Classes.Count; i < count; i++)
@@ -2088,7 +2122,7 @@ namespace HaXeContext.Model
         QType QualifiedName(FileModel inFile, string name) 
         {
             var qt = new QType();
-            var type = name;
+            string type;
             if (inFile.Package == "") type = name;
             else if (inFile.Module == "" || inFile.Module == name) type = inFile.Package + "." + name;
             else type = inFile.Package + "." + inFile.Module + "." + name;
@@ -2111,6 +2145,119 @@ namespace HaXeContext.Model
         }
 
         #endregion
+
+        public static MemberModel FunctionTypeToMemberModel(string type, ContextFeatures features) => FunctionTypeToMemberModel(type, features, new MemberModel());
+
+        internal static MemberModel FunctionTypeToMemberModel(string type, ContextFeatures features, MemberModel result)
+        {
+            type = CleanFunctionType(type);
+            var voidKey = features.voidKey;
+            if (result.Parameters == null) result.Parameters = new List<MemberModel>();
+            var parCount = 0;
+            var braCount = 0;
+            var genCount = 0;
+            var startPosition = 0;
+            var typeLength = type.Length;
+            for (var i = 0; i < typeLength; i++)
+            {
+                string parameterType = null;
+                var c = type[i];
+                if (c == '(') parCount++;
+                else if (c == ')')
+                {
+                    parCount--;
+                    if (parCount == 0 && braCount == 0 && genCount == 0)
+                    {
+                        parameterType = type.Substring(startPosition, (i + 1) - startPosition);
+                        startPosition = i + 1;
+                    }
+                }
+                else if (c == '{') braCount++;
+                else if (c == '}')
+                {
+                    braCount--;
+                    if (parCount == 0 && braCount == 0 && genCount == 0)
+                    {
+                        parameterType = type.Substring(startPosition, (i + 1) - startPosition);
+                        startPosition = i + 1;
+                    }
+                }
+                else if (c == '<') genCount++;
+                else if (c == '>' && type[i - 1] != '-')
+                {
+                    genCount--;
+                    if (parCount == 0 && braCount == 0 && genCount == 0)
+                    {
+                        parameterType = type.Substring(startPosition, (i + 1) - startPosition);
+                        startPosition = i + 1;
+                    }
+                }
+                else if (parCount == 0 && braCount == 0 && genCount == 0 && c == '-' && type[i + 1] == '>')
+                {
+                    if (i > startPosition) parameterType = type.Substring(startPosition, i - startPosition);
+                    startPosition = i + 2;
+                    i++;
+                }
+                if (parameterType == null)
+                {
+                    if (i == typeLength - 1 && i >= startPosition) result.Type = type.Substring(startPosition);
+                    continue;
+                }
+                var parameterName = $"parameter{result.Parameters.Count}";
+                if (parameterType.StartsWith('?'))
+                {
+                    parameterName = $"?{parameterName}";
+                    parameterType = parameterType.TrimStart('?');
+                }
+                parameterType = CleanFunctionType(parameterType);
+                if (i == typeLength - 1) result.Type = parameterType;
+                else result.Parameters.Add(new MemberModel(parameterName, parameterType, FlagType.ParameterVar, 0));
+            }
+            if (result.Parameters.Count == 1 && result.Parameters[0].Type == voidKey) result.Parameters.Clear();
+            return result;
+        }
+
+        internal static bool IsFunctionType(string type)
+        {
+            if (string.IsNullOrEmpty(type)) return false;
+            type = CleanFunctionType(type);
+            var genCount = 0;
+            var groupCount = 0;
+            var length = type.Length - 1;
+            for (var i = 0; i < length; i++)
+            {
+                var c = type[i];
+                if (c == '(' || c == '[' || c == '{') groupCount++;
+                else if (c == ')' || c == ']' || c == '}') groupCount--;
+                else if (groupCount == 0)
+                {
+                    if (c == '<') genCount++;
+                    else if (c == '>' && type[i - 1] != '-') genCount--;
+                    else if (genCount == 0 && c == '-' && i + 1 is int p && p < length && type[p] == '>')
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        static string CleanFunctionType(string type)
+        {
+            if (!string.IsNullOrEmpty(type))
+            {
+                var parCount = 0;
+                while (type[0] == '(' && type[type.Length - 1] == ')')
+                {
+                    foreach (var c in type)
+                    {
+                        if (c == '(') parCount++;
+                        else if (c == ')') parCount--;
+                        else if (parCount == 0) return type;
+                    }
+                    type = type.Substring(1, type.Length - 2);
+                }
+            }
+            return type;
+        }
     }
 
     public class QType

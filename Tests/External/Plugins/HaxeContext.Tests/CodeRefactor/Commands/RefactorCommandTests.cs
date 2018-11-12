@@ -143,10 +143,22 @@ namespace HaXeContext.CodeRefactor.Commands
             }
         }
 
+        static IEnumerable<TestCaseData> RenameEnumAbstractValueTestIssue2373Cases
+        {
+            get
+            {
+                yield return new TestCaseData("BeforeRename_issue2373_1", "NewName")
+                    .Returns(ReadAllText("AfterRename_issue2373_1"))
+                    .SetName("AType.Enu|mAbstractValue. Issue 2373. Case 1")
+                    .SetDescription("https://github.com/fdorg/flashdevelop/issues/2373");
+            }
+        }
+
         [
             Test,
             TestCaseSource(nameof(TestCases)),
             TestCaseSource(nameof(RenameEnumTestCases)),
+            TestCaseSource(nameof(RenameEnumAbstractValueTestIssue2373Cases)),
         ]
         public string Rename(string fileName, string newName)
         {
@@ -181,24 +193,13 @@ namespace HaXeContext.CodeRefactor.Commands
         {
             var sourceText = ReadAllText(fileName);
             fileName = GetFullPath(fileName);
-            fileName = Path.GetFileNameWithoutExtension(fileName).Replace('.', Path.DirectorySeparatorChar) +
-                       Path.GetExtension(fileName);
+            fileName = Path.GetFileNameWithoutExtension(fileName).Replace('.', Path.DirectorySeparatorChar)
+                       + Path.GetExtension(fileName);
             fileName = Path.GetFullPath(fileName);
             fileName = fileName.Replace($"\\FlashDevelop\\Bin\\Debug\\{nameof(HaXeContext)}\\Test_Files\\", ProjectPath);
             fileName = fileName.Replace(".hx", "_withoutEntryPoint.hx");
             ASContext.Context.CurrentModel.FileName = fileName;
             PluginBase.MainForm.CurrentDocument.FileName.Returns(fileName);
-            //{TODO slavara: quick hack
-            ASContext.Context.When(it => it.ResolveTopLevelElement(Arg.Any<string>(), Arg.Any<ASResult>()))
-                .Do(it =>
-                {
-                    var ctx = (Context) ASContext.GetLanguageContext("haxe");
-                    ctx.CurrentModel.FileName = fileName;
-                    ctx.GetCodeModel(ctx.CurrentModel, sci.Text);
-                    ctx.completionCache.IsDirty = true;
-                    ctx.ResolveTopLevelElement(it.ArgAt<string>(0), it.ArgAt<ASResult>(1));
-                });
-            //}
             return global::CodeRefactor.Commands.RefactorCommandTests.RenameTests.Rename(sci, sourceText, newName);
         }
     }
