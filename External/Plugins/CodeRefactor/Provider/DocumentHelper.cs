@@ -132,6 +132,7 @@ namespace CodeRefactor.Provider
         public ITabbedDocument LoadDocument(String fileName)
         {
             ITabbedDocument newDocument = (ITabbedDocument)PluginBase.MainForm.OpenVirtualDocument(fileName);
+            //ITabbedDocument newDocument = (ITabbedDocument)PluginBase.MainForm.OpenEditableDocument(fileName);
             this.RegisterLoadedDocument(newDocument);
             return newDocument;
         }
@@ -160,7 +161,7 @@ namespace CodeRefactor.Provider
         {
             if (this.filesOpenedDocumentReferences.ContainsKey(fileName) && !this.initiallyOpenedFiles.ContainsKey(fileName))
             {
-                TraceManager.Add("Close");
+                TraceManager.Add($"Closed: {fileName}");
                 this.filesOpenedDocumentReferences[fileName].Close();
                 this.filesOpenedAndUsed.Remove(fileName);
                 this.filesOpenedDocumentReferences.Remove(fileName);
@@ -194,7 +195,7 @@ namespace CodeRefactor.Provider
             }
         }
 
-        internal bool ContainsOpenedDocument(string filenName) => filesOpenedDocumentReferences.ContainsKey(filenName);
+        internal bool ContainsOpenedDocument(string fileName) => filesOpenedDocumentReferences.ContainsKey(fileName);
 
         internal ITabbedDocument GetOpenedDocument(string fileName) => filesOpenedDocumentReferences[fileName];
     }

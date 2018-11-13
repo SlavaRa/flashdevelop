@@ -116,15 +116,14 @@ namespace CodeRefactor.Provider
         /// </summary>
         public static ASResult GetRefactorTargetFromFile(string path, DocumentHelper associatedDocumentHelper)
         {
-            string fileName = Path.GetFileNameWithoutExtension(path);
-            int line = 0;
-            var doc = associatedDocumentHelper.LoadDocument(path);
-            ScintillaControl sci = doc != null ? doc.SciControl : null;
+            var sci = associatedDocumentHelper.LoadDocument(path)?.SciControl;
             if (sci == null) return null; // Should not happen...
-            List<ClassModel> classes = ASContext.Context.CurrentModel.Classes;
+            var fileName = Path.GetFileNameWithoutExtension(path);
+            var line = 0;
+            var classes = ASContext.Context.CurrentModel.Classes;
             if (classes.Count > 0)
             {
-                foreach (ClassModel classModel in classes)
+                foreach (var classModel in classes)
                 {
                     if (classModel.Name.Equals(fileName))
                     {
@@ -141,31 +140,26 @@ namespace CodeRefactor.Provider
             {
                 foreach (MemberModel member in ASContext.Context.CurrentModel.Members)
                 {
-                    if (member.Name.Equals(fileName))
-                    {
-                        line = member.LineFrom;
-                        break;
-                    }
+                    if (!member.Name.Equals(fileName)) continue;
+                    line = member.LineFrom;
+                    break;
                 }
             }
-            if (line > 0)
-            {
-                sci.SelectText(fileName, sci.PositionFromLine(line));
-                return GetDefaultRefactorTarget();
-            }
+            if (line == 0) return null;
+            sci.SelectText(fileName, sci.PositionFromLine(line));
+            return GetDefaultRefactorTarget();
 
-            return null;
         }
 
         /// <summary>
         /// Checks if a given search match actually points to the given target source
         /// </summary>
         /// <returns>True if the SearchMatch does point to the target source.</returns>
-        public static ASResult DeclarationLookupResult(ScintillaControl Sci, int position, DocumentHelper associatedDocumentHelper)
+        public static ASResult DeclarationLookupResult(ScintillaControl sci, int position, DocumentHelper associatedDocumentHelper)
         {
-            if (!ASContext.Context.IsFileValid || (Sci == null)) return null;
+            if (!ASContext.Context.IsFileValid || (sci == null)) return null;
             // get type at cursor position
-            ASResult result = ASComplete.GetExpressionType(Sci, position);
+            var result = ASComplete.GetExpressionType(sci, position);
             if (result.IsPackage) return result;
             // open source and show declaration
             if (!result.IsNull())
@@ -175,8 +169,8 @@ namespace CodeRefactor.Provider
                 if (model == null || model.FileName == "") return null;
                 ClassModel inClass = result.InClass ?? result.Type;
                 // for Back command
-                int lookupLine = Sci.CurrentLine;
-                int lookupCol = Sci.CurrentPos - Sci.PositionFromLine(lookupLine);
+                int lookupLine = sci.CurrentLine;
+                int lookupCol = sci.CurrentPos - sci.PositionFromLine(lookupLine);
                 ASContext.Panel.SetLastLookupPosition(ASContext.Context.CurrentFile, lookupLine, lookupCol);
                 // open the file
                 if (model != ASContext.Context.CurrentModel)
@@ -184,7 +178,7 @@ namespace CodeRefactor.Provider
                     if (model.FileName.Length > 0 && File.Exists(model.FileName))
                     {
                         if (!associatedDocumentHelper.ContainsOpenedDocument(model.FileName)) associatedDocumentHelper.LoadDocument(model.FileName);
-                        Sci = associatedDocumentHelper.GetOpenedDocument(model.FileName).SciControl;
+                        sci = associatedDocumentHelper.GetOpenedDocument(model.FileName).SciControl;
                     }
                     else
                     {
@@ -200,10 +194,10 @@ namespace CodeRefactor.Provider
                         {
                             result.Member = result.InFile.Members.Search(result.Member.Name, 0, 0);
                         }
-                        Sci = ASContext.CurSciControl;
+                        sci = ASContext.CurSciControl;
                     }
                 }
-                if (Sci == null) return null;
+                if (sci == null) return null;
                 if ((inClass == null || inClass.IsVoid()) && result.Member == null) return null;
                 int line = 0;
                 string name = null;
@@ -234,8 +228,8 @@ namespace CodeRefactor.Provider
                 }
                 if (line > 0) // select
                 {
-                    if (isClass) ASComplete.LocateMember(Sci, "(class|interface)", name, line);
-                    else ASComplete.LocateMember(Sci, "(function|var|const|get|set|property|[,(])", name, line);
+                    if (isClass) ASComplete.LocateMember(sci, "(class|interface)", name, line);
+                    else ASComplete.LocateMember(sci, "(function|var|const|get|set|property|[,(])", name, line);
                 }
                 return result;
             }

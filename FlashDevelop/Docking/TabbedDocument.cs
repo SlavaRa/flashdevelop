@@ -269,27 +269,29 @@ namespace FlashDevelop.Docking
             this.splitContainer.Panel2Collapsed = true;
             Int32 oldDoc = this.editor.DocPointer;
             this.editor2.DocPointer = oldDoc;
-            this.editor.SavePointLeft += delegate
-            {
-                Globals.MainForm.OnDocumentModify(this);
-            };
-            this.editor.SavePointReached += delegate
+            this.editor.SavePointLeft += sender => Globals.MainForm.OnDocumentModify(this);
+            this.editor.SavePointReached += sender =>
             {
                 this.editor.MarkerDeleteAll(2);
                 this.IsModified = false;
             };
-            this.editor.FocusChanged += new FocusHandler(this.EditorFocusChanged);
-            this.editor2.FocusChanged += new FocusHandler(this.EditorFocusChanged);
-            this.editor.UpdateSync += new UpdateSyncHandler(this.EditorUpdateSync);
-            this.editor2.UpdateSync += new UpdateSyncHandler(this.EditorUpdateSync);
+            this.editor.FocusChanged += this.EditorFocusChanged;
+            this.editor2.FocusChanged += this.EditorFocusChanged;
+            this.editor.UpdateSync += this.EditorUpdateSync;
+            this.editor2.UpdateSync += this.EditorUpdateSync;
             this.Controls.Add(this.splitContainer);
         }
 
-        public void AddVirtualControls(String file, String text, Int32 codepage)
+        public void AddVirtualControls(string file, string text, int codepage)
         {
-            this.editor = ScintillaManager.CreateControl(file, text, codepage);
-            this.editor.ConfigurationLanguage = "haxe";
-            this.Controls.Add(this.editor);
+            var language = ScintillaManager.SciConfig.GetLanguageFromFile(file);
+            editor = ScintillaManager.CreateControl(file, text, codepage);
+            editor2 = editor;
+            editor.ConfigurationLanguage = language;
+            splitContainer = new SplitContainer();
+            splitContainer.Panel1.Controls.Add(editor);
+            splitContainer.Panel2.Controls.Add(editor);
+            Controls.Add(editor);
         }
 
         /// <summary>

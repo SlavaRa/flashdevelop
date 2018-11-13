@@ -149,7 +149,6 @@ namespace FlashDevelop
         public static Boolean Silent;
         public static Boolean IsFirst;
         public static String[] Arguments;
-
         #endregion
 
         #region Public Properties
@@ -267,13 +266,12 @@ namespace FlashDevelop
             set { this.appSettings = value; }
         }
 
+        TabbedDocument currentDocument;
+
         /// <summary>
         /// Gets the CurrentDocument
         /// </summary>
-        public ITabbedDocument CurrentDocument
-        {
-            get { return this.dockPanel.ActiveDocument as ITabbedDocument; }
-        }
+        public ITabbedDocument CurrentDocument => currentDocument ?? dockPanel.ActiveDocument as ITabbedDocument;
 
         /// <summary>
         /// Is FlashDevelop closing?
@@ -610,10 +608,14 @@ namespace FlashDevelop
             }
         }
 
+        public DockContent OpenEditableDocument(string file) => OpenEditableDocument(file, null, true);
+
+        public DockContent OpenEditableDocument(string file, bool restorePosition) => OpenEditableDocument(file, null, restorePosition);
+
         /// <summary>
         /// Opens the specified file and creates an editable document
         /// </summary>
-        public DockContent OpenEditableDocument(String org, Encoding encoding, Boolean restorePosition)
+        public DockContent OpenEditableDocument(string org, Encoding encoding, bool restorePosition)
         {
             DockContent createdDoc;
             EncodingFileInfo info;
@@ -627,14 +629,14 @@ namespace FlashDevelop
                     this.SmartNew(null, null);
                     return null;
                 }
-                else return null;
+                return null;
             }
-            else if (file.EndsWithOrdinal(".delete.fdz"))
+            if (file.EndsWithOrdinal(".delete.fdz"))
             {
                 this.CallCommand("RemoveZip", file);
                 return null;
             }
-            else if (file.EndsWithOrdinal(".fdz"))
+            if (file.EndsWithOrdinal(".fdz"))
             {
                 this.CallCommand("ExtractZip", file);
                 if (file.IndexOf("theme", StringComparison.OrdinalIgnoreCase) != -1)
@@ -651,11 +653,12 @@ namespace FlashDevelop
             }
             try
             {
-                foreach (ITabbedDocument doc in this.Documents)
+                foreach (var doc in this.Documents)
                 {
                     if (doc.IsEditable && doc.FileName.ToUpper() == file.ToUpper())
                     {
                         doc.Activate();
+                        currentDocument = null;
                         return doc as DockContent;
                     }
                 }
@@ -707,15 +710,8 @@ namespace FlashDevelop
                 }
             });
             ButtonManager.UpdateFlaggedButtons();
+            currentDocument = null;
             return createdDoc;
-        }
-        public DockContent OpenEditableDocument(String file, Boolean restorePosition)
-        {
-            return this.OpenEditableDocument(file, null, restorePosition);
-        }
-        public DockContent OpenEditableDocument(String file)
-        {
-            return this.OpenEditableDocument(file, null, true);
         }
 
         public DockContent OpenVirtualDocument(string fileName)
@@ -734,6 +730,11 @@ namespace FlashDevelop
             else result = CreateVirtualDocument(file, info.Contents, info.CodePage);
             var document = (TabbedDocument)result;
             document.SciControl.SaveBOM = info.ContainsBOM;
+            currentDocument = document;
+            document.Closing += (sender, args) =>
+            {
+                if (document == currentDocument) currentDocument = null;
+            };
             return result;
         }
 
@@ -744,12 +745,9 @@ namespace FlashDevelop
         {
             try
             {
-                //this.notifyOpenFile = true;
                 var tabbedDocument = new TabbedDocument();
                 tabbedDocument.Text = Path.GetFileName(file);
                 tabbedDocument.AddVirtualControls(file, text, codepage);
-                tabbedDocument.Closed += (s, e) => tabbedDocument.SciControl.Dispose();
-                //tabbedDocument.Show();
                 return tabbedDocument;
             }
             catch (Exception ex)
