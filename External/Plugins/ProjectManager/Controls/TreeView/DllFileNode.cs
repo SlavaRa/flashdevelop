@@ -1,3 +1,4 @@
+using System;
 using System.Reflection;
 using System.Windows.Forms;
 
@@ -37,7 +38,15 @@ namespace ProjectManager.Controls.TreeView
             var modules = assembly.GetLoadedModules();
             foreach (var module in modules)
             {
-                var types = module.GetTypes();
+                Type[] types = null;
+                try
+                {
+                    types = module.GetTypes();
+                }
+                catch (Exception e)
+                {
+                    continue;
+                }
                 if (types.Length > 0)
                 {
                     var node = new ClassesNode(BackingPath);

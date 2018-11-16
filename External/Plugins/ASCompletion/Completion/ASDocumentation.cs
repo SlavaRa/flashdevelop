@@ -1,12 +1,7 @@
-/*
- * Documentation completion/generation
- */
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Text;
 using System.Text.RegularExpressions;
 using ASCompletion.Context;
 using ASCompletion.Model;
@@ -33,137 +28,35 @@ namespace ASCompletion.Completion
     
     public class ASDocumentation
     {
-        static private List<ICompletionListItem> docVariables;
-        static private BoxItem boxSimpleClose;
-        static private BoxItem boxMethodParams;
+        private static List<ICompletionListItem> docVariables;
         
         #region regular_expressions
-        static private Regex re_splitFunction = new Regex("(?<keys>[\\w\\s]*)[\\s]function[\\s]*(?<fname>[^(]*)\\((?<params>[^()]*)\\)(?<type>.*)",
-                                                          ASFileParserRegexOptions.SinglelineComment);
-        static private Regex re_property = new Regex("^(get|set)\\s", RegexOptions.Compiled);
-        static private Regex re_variableType = new Regex("[\\s]*:[\\s]*(?<type>[\\w.?*]+)", ASFileParserRegexOptions.SinglelineComment);
-        static private Regex re_functionDeclaration = new Regex("[\\s\\w]*[\\s]function[\\s][\\s\\w$]+\\($", ASFileParserRegexOptions.SinglelineComment);
-        static private Regex re_tags = new Regex("<[/]?(p|br)[/]?>", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex re_tags = new Regex("<[/]?(p|br)[/]?>", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         #endregion
         
         #region Comment generation
-        static ASDocumentation()
-        {
-            boxSimpleClose = new BoxItem(TextHelper.GetString("Label.CompleteDocEmpty"));
-            boxMethodParams = new BoxItem(TextHelper.GetString("Label.CompleteDocDetails"));
-        }
-        
-        static public bool OnChar(ScintillaControl Sci, int Value, int position, int style)
+        static public bool OnChar(ScintillaControl sci, int value, int position, int style)
         {
             if (style == 3 || style == 124)
             {
-                switch (Value)
+                switch (value)
                 {
                     // documentation tag
-                    case '@':
-                        return HandleDocTagCompletion(Sci);
+                    case '@': return HandleDocTagCompletion(sci);
                     
                     // documentation bloc
-                    case '*':
-                        if ((position > 2) && (Sci.CharAt(position-3) == '/') && (Sci.CharAt(position-2) == '*')
-                            && ((position == 3) || (Sci.BaseStyleAt(position-4) != 3)))
-                        HandleBoxCompletion(Sci, position);
-                        break;
+                    case '*': return ASContext.Context.DocumentationGenerator.ContextualGenerator(sci, position, new List<ICompletionListItem>());
                 }
             }
             return false;
         }
-        
-        static private void CompleteTemplate(string Context)
-        {
-            // get indentation
-            ScintillaControl Sci = ASContext.CurSciControl;
-            if (Sci == null) return;
-            int position = Sci.CurrentPos;
-            int line = Sci.LineFromPosition(position);
-            int indent = Sci.LineIndentPosition(line) - Sci.PositionFromLine(line);
-            string tab = Sci.GetLine(line).Substring(0, indent);
-            // get EOL
-            int eolMode = Sci.EOLMode;
-            string newline = LineEndDetector.GetNewLineMarker(eolMode);
 
-            CommentBlockStyle cbs = PluginBase.Settings.CommentBlockStyle;
-            string star = cbs == CommentBlockStyle.Indented ? " *" : "*";
-            string parInd = cbs == CommentBlockStyle.Indented ? "\t" : " ";
-            if (!PluginBase.MainForm.Settings.UseTabs) parInd = " ";
-            
-            // empty box
-            if (Context == null)
-            {
-                Sci.ReplaceSel(newline + tab + star + " " + newline + tab + star + "/");
-                position += newline.Length + tab.Length + 1 + star.Length;
-                Sci.SetSel(position, position);
-            }
-
-            // method details
-            else
-            {
-                string box = newline + tab + star + " ";
-                Match mFun = re_splitFunction.Match(Context);
-                if (mFun.Success && !re_property.IsMatch(mFun.Groups["fname"].Value))
-                {
-                    // parameters
-                    MemberList list = ParseMethodParameters(mFun.Groups["params"].Value);
-                    foreach (MemberModel param in list)
-                        box += newline + tab + star + " @param" + parInd + param.Name;
-                    // return type
-                    Match mType = re_variableType.Match(mFun.Groups["type"].Value);
-                    if (mType.Success && !mType.Groups["type"].Value.Equals("void", StringComparison.OrdinalIgnoreCase))
-                        box += newline + tab + star + " @return"; //+mType.Groups["type"].Value;
-                }
-                box += newline + tab + star + "/";
-                Sci.ReplaceSel(box);
-                position += newline.Length + tab.Length + 1 + star.Length;
-                Sci.SetSel(position, position);
-            }
-        }
-
-        /// <summary>
-        /// Returns parameters string as member list
-        /// </summary>
-        /// <param name="parameters">Method parameters</param>
-        /// <returns>Member list</returns>
-        static private MemberList ParseMethodParameters(string parameters)
-        {
-            MemberList list = new MemberList();
-            if (parameters == null)
-                return list;
-            int p = parameters.IndexOf('(');
-            if (p >= 0)
-                parameters = parameters.Substring(p + 1, parameters.IndexOf(')') - p - 1);
-            parameters = parameters.Trim();
-            if (parameters.Length == 0)
-                return list;
-            string[] sparam = parameters.Split(',');
-            string[] parType;
-            MemberModel param;
-            char[] toClean = new char[] { ' ', '\t', '\n', '\r', '*', '?' };
-            foreach (string pt in sparam)
-            {
-                parType = pt.Split(':');
-                param = new MemberModel();
-                param.Name = parType[0].Trim(toClean);
-                if (param.Name.Length == 0)
-                    continue;
-                if (parType.Length == 2) param.Type = parType[1].Trim();
-                else param.Type = ASContext.Context.Features.objectKey;
-                param.Flags = FlagType.Variable | FlagType.Dynamic;
-                list.Add(param);
-            }
-            return list;
-        }
-        
-        static private bool HandleDocTagCompletion(ScintillaControl Sci)
+        static private bool HandleDocTagCompletion(ScintillaControl sci)
         {
             if (ASContext.CommonSettings.JavadocTags == null || ASContext.CommonSettings.JavadocTags.Length == 0)
                 return false;
 
-            string txt = Sci.GetLine(Sci.CurrentLine).TrimStart();
+            string txt = sci.GetLine(sci.CurrentLine).TrimStart();
             if (!Regex.IsMatch(txt, "^\\*[\\s]*\\@"))
                 return false;
             
@@ -171,93 +64,15 @@ namespace ASCompletion.Completion
             if (docVariables == null)
             {
                 docVariables = new List<ICompletionListItem>();
-                TagItem item;
                 foreach (string tag in ASContext.CommonSettings.JavadocTags)
                 {
-                    item = new TagItem(tag);
-                    docVariables.Add(item);
+                    docVariables.Add(new TagItem(tag));
                 }               
             }
             
             // show
             CompletionList.Show(docVariables, true, "");
             return true;
-        }
-        
-        static private bool HandleBoxCompletion(ScintillaControl Sci, int position)
-        {
-            // is the block before a function declaration?
-            int len = Sci.TextLength-1;
-            char c;
-            StringBuilder sb = new StringBuilder();
-            while (position < len)
-            {
-                c = (char)Sci.CharAt(position);
-                sb.Append(c);
-                if (c == '(' || c == ';' || c == '{' || c == '}') break;
-                position++;
-            }
-            string signature = sb.ToString();
-            if (re_functionDeclaration.IsMatch(signature))
-            {
-                // get method signature
-                position++;
-                while (position < len)
-                {
-                    c = (char)Sci.CharAt(position);
-                    sb.Append(c);
-                    if (c == ';' || c == '{') break;
-                    position++;
-                }
-                signature = sb.ToString();
-            }
-            else signature = null;
-            
-            // build templates list
-            List<ICompletionListItem> templates = new List<ICompletionListItem>();
-            if (signature != null)
-            {
-                boxMethodParams.Context = signature;
-                templates.Add(boxMethodParams);
-            }
-            templates.Add(boxSimpleClose);
-            
-            // show
-            CompletionList.Show(templates, true, "");
-            return true;
-        }
-        
-        
-        /// <summary>
-        /// Box template completion list item
-        /// </summary>
-        private class BoxItem : ICompletionListItem
-        {
-            private string label;
-            public string Context;
-            
-            public BoxItem(string label) 
-            {
-                this.label = label;
-            }
-            
-            public string Label { 
-                get { return label; }
-            }
-            public string Description { 
-                get { return TextHelper.GetString("Label.DocBoxTemplate"); }
-            }
-            
-            public Bitmap Icon {
-                get { return (Bitmap)ASContext.Panel.GetIcon(PluginUI.ICON_TEMPLATE); }
-            }
-            
-            public string Value { 
-                get {
-                    CompleteTemplate(Context);
-                    return null;
-                }
-            }
         }
         
         /// <summary>
@@ -291,12 +106,12 @@ namespace ASCompletion.Completion
         
         #region Tooltips
 
-        static private Regex reNewLine = new Regex("[\r\n]+", RegexOptions.Compiled);
-        static private Regex reKeepTags = new Regex("<([/]?(b|i|s|u))>", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        static private Regex reSpecialTags = new Regex("<([/]?)(code|small|strong|em)>", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        static private Regex reStripTags = new Regex("<[/]?[a-z]+[^>]*>", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        static private Regex reDocTags = new Regex("\n@(?<tag>[a-z]+)\\s", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        static private Regex reSplitParams = new Regex("(?<var>[\\w$]+)\\s", RegexOptions.Compiled);
+        private static readonly Regex reNewLine = new Regex("[\r\n]+", RegexOptions.Compiled);
+        private static readonly Regex reKeepTags = new Regex("<([/]?(b|i|s|u))>", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex reSpecialTags = new Regex("<([/]?)(code|small|strong|em)>", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex reStripTags = new Regex("<[/]?[a-z]+[^>]*>", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex reDocTags = new Regex("\n@(?<tag>[a-z]+)\\s", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex reSplitParams = new Regex("(?<var>[\\w$]+)\\s", RegexOptions.Compiled);
 
         static public CommentBlock ParseComment(string comment)
         {
@@ -318,14 +133,18 @@ namespace ASCompletion.Completion
             });
             comment = reStripTags.Replace(comment, "");
             string[] lines = reNewLine.Split(comment);
-            char[] trim = new char[] { ' ', '\t', '*' };
+            char[] trim = { ' ', '\t', '*' };
             bool addNL = false;
             comment = "";
             foreach (string line in lines)
             {
                 string temp = line.Trim(trim);
                 if (addNL) comment += '\n' + temp;
-                else { comment += temp; addNL = true; }
+                else
+                {
+                    comment += temp;
+                    addNL = true;
+                }
             }
             // extraction
             CommentBlock cb = new CommentBlock();
@@ -341,11 +160,10 @@ namespace ASCompletion.Completion
             else cb.Description = "";
             cb.TagName = new ArrayList();
             cb.TagDesc = new ArrayList();
-            
-            Group gTag;
-            for(int i=0; i<tags.Count; i++)
+
+            for(int i = 0; i < tags.Count; i++)
             {
-                gTag = tags[i].Groups["tag"];
+                var gTag = tags[i].Groups["tag"];
                 string tag = gTag.Value;
                 int start = gTag.Index+gTag.Length;
                 int end = (i<tags.Count-1) ? tags[i+1].Index : comment.Length;
@@ -395,11 +213,8 @@ namespace ASCompletion.Completion
             }
         }
 
-        static public string RemoveHTMLTags(string tip)
-        {
-            return re_tags.Replace(tip, "");
-        }
-        
+        static public string RemoveHTMLTags(string tip) => re_tags.Replace(tip, "");
+
         /// <summary>
         /// Short contextual details to display in tips
         /// </summary>
@@ -464,10 +279,7 @@ namespace ASCompletion.Completion
         /// <summary>
         /// Split multiline text and return 2 lines or less of text
         /// </summary>
-        static public string Get2LinesOf(string text)
-        {
-            return Get2LinesOf(text, false);
-        }
+        static public string Get2LinesOf(string text) => Get2LinesOf(text, false);
 
         static public string Get2LinesOf(string text, bool alwaysAddShortcutDocs)
         {
