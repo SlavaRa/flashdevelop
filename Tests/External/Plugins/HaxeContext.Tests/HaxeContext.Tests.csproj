@@ -1277,6 +1277,9 @@
     <EmbeddedResource Include="Test Files\coderefactor\rename\AfterRename_issue2764_1.hx" />
     <EmbeddedResource Include="Test Files\parser\Issue2773_1.hx" />
     <EmbeddedResource Include="Test Files\parser\Issue2773_2.hx" />
+    <EmbeddedResource Include="Test Files\parser\Issue2776_1.hx" />
+    <EmbeddedResource Include="Test Files\parser\Issue2776_2.hx" />
+    <EmbeddedResource Include="Test Files\parser\Issue2776_3.hx" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

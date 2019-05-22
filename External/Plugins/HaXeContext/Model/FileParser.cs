@@ -65,7 +65,7 @@ namespace HaXeContext.Model
         private bool inValue;
         private bool hadValue;
         private bool inType;
-        bool inNewFunctionType;// Haxe4 e.g. `var v:(String, Int, Int)->Void`
+        bool inNewFunctionType;// Haxe4 e.g. `var v:(String, Int, Int)->Void`, https://haxe.org/download/version/4.0.0-preview.3/
         private bool inAnonType;
         private int flattenNextBlock;
         private FlagType foundKeyword;
@@ -176,11 +176,9 @@ namespace HaXeContext.Model
             inType = false;
             inGeneric = false;
             inAnonType = false;
-            var inFunction = false;
-
-            bool addChar = false;
-            int evalToken = 0;
-            //bool evalKeyword = true;
+            var inSingleLineFunction = false;
+            var addChar = false;
+            var evalToken = 0;
             context = 0;
             modifiers = 0;
             foundColon = false;
@@ -490,7 +488,7 @@ namespace HaXeContext.Model
                 }
                 if (!inValue)
                 {
-                    if (inFunction)
+                    if (inSingleLineFunction)
                     {
                         var abort = false;
                         if (c1 <= ' ')
@@ -538,7 +536,7 @@ namespace HaXeContext.Model
                                 if (!abort) curMethod.LineTo = line;
                                 curMethod = null;
                             }
-                            inFunction = false;
+                            inSingleLineFunction = false;
                             inType = false;
                             length = 0;
                             valueLength = 0;
@@ -964,11 +962,11 @@ namespace HaXeContext.Model
                         hadWS = false;
                         hadDot = false;
                         // for example: function foo() return null;
-                        if (!inFunction && context != 0 && curClass != null && curMethod != null && !inParams && !foundColon && c1 != ':' && c1 != ';' && c1 != '{' && c1 != '}' && braceCount == 0
+                        if (!inSingleLineFunction && context != 0 && curClass != null && curMethod != null && !inParams && !foundColon && c1 != ':' && c1 != ';' && c1 != '{' && c1 != '}' && braceCount == 0
                             && (curModifiers & FlagType.Function) != 0 && (curModifiers & FlagType.Extern) == 0
                             && curClass.Flags is var f && (f & FlagType.Extern) == 0 && (f & FlagType.TypeDef) == 0 && (f & FlagType.Interface) == 0)
                         {
-                            inFunction = true;
+                            inSingleLineFunction = true;
                             inType = false;
                             i -= 2;
                             continue;
