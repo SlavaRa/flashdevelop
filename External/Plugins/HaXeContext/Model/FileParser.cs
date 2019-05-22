@@ -65,7 +65,12 @@ namespace HaXeContext.Model
         private bool inValue;
         private bool hadValue;
         private bool inType;
-        bool inNewFunctionType;// Haxe4 e.g. `var v:(String, Int, Int)->Void`, https://haxe.org/download/version/4.0.0-preview.3/
+
+        /// <summary>
+        /// https://haxe.org/download/version/4.0.0-preview.3/
+        /// </summary>
+        bool inHaxe4FunctionType;
+
         private bool inAnonType;
         private int flattenNextBlock;
         private FlagType foundKeyword;
@@ -569,9 +574,9 @@ namespace HaXeContext.Model
 
                 // [Haxe4] parse `var v : (TParam1, TParam2)->TReturn` as `var v:TParam1->TParam2->TReturn`
                 if (c1 == ',' && inType && (!inGeneric || paramTempCount == 0) && !inParams
-                    && (inNewFunctionType || buffer[0] == '(' || (inValue && valueBuffer[0] == '(')))
+                    && (inHaxe4FunctionType || buffer[0] == '(' || (inValue && valueBuffer[0] == '(')))
                 {
-                    if (!inNewFunctionType)
+                    if (!inHaxe4FunctionType)
                     {
                         // transform `(Map<String, Int>,` to `Map<String, Int>,
                         if (valueLength > 0)
@@ -593,7 +598,7 @@ namespace HaXeContext.Model
                             }
                             length--;
                         }
-                        inNewFunctionType = true;
+                        inHaxe4FunctionType = true;
                     }
                     buffer[length++] = '-';
                     buffer[length++] = '>';
@@ -1038,7 +1043,7 @@ namespace HaXeContext.Model
                                 if (paramParCount > 0)
                                 {
                                     paramParCount--;
-                                    if (inNewFunctionType) inNewFunctionType = false;
+                                    if (inHaxe4FunctionType) inHaxe4FunctionType = false;
                                     else addChar = true;
                                 }
                                 else if (paramParCount == 0 && paramTempCount == 0 && paramBraceCount == 0 && paramSqCount == 0)
