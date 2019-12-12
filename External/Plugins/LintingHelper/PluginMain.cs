@@ -16,8 +16,8 @@ namespace LintingHelper
 {
     public class PluginMain : IPlugin
     {
-        private Settings settingObject;
-        private string settingFilename;
+        Settings settingObject;
+        string settingFilename;
 
         public int Api => 1;
 
@@ -43,13 +43,13 @@ namespace LintingHelper
 
         public void Dispose() => SaveSettings();
 
-        private void AddEventHandlers()
+        void AddEventHandlers()
         {
             BatchProcessManager.AddBatchProcessor(new BatchProcess.LintProcessor());
             EventManager.AddEventHandler(this, EventType.FileOpen | EventType.FileSave | EventType.FileModify | EventType.Command);
         }
 
-        private void InitBasics()
+        void InitBasics()
         {
             var path = Path.Combine(PathHelper.DataDir, nameof(LintingHelper));
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
@@ -57,14 +57,14 @@ namespace LintingHelper
             TraceManager.RegisterTraceGroup(LintingManager.TraceGroup, TextHelper.GetStringWithoutMnemonics("Label.LintingResults"));
         }
 
-        private void LoadSettings()
+        void LoadSettings()
         {
             settingObject = new Settings();
             if (!File.Exists(settingFilename)) SaveSettings();
             else settingObject = (Settings) ObjectSerializer.Deserialize(settingFilename, settingObject);
         }
 
-        private void SaveSettings() => ObjectSerializer.Serialize(settingFilename, settingObject);
+        void SaveSettings() => ObjectSerializer.Serialize(settingFilename, settingObject);
 
         public void HandleEvent(object sender, NotifyEvent e, HandlingPriority priority)
         {
