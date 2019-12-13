@@ -113,16 +113,10 @@ namespace FlashDebugger
                     break;
                 
                 case EventType.UIClosing:
-                    if (debugManager.FlashInterface.isDebuggerStarted)
-                    {
-                        debugManager.FlashInterface.Detach();
-                    }
+                    if (debugManager.FlashInterface.isDebuggerStarted) debugManager.FlashInterface.Detach();
                     break;
 
                 case EventType.ApplySettings:
-                    menusHelper.UpdateMenuState(this);
-                    break;
-
                 case EventType.FileSwitch:
                     menusHelper.UpdateMenuState(this);
                     break;
@@ -131,9 +125,9 @@ namespace FlashDebugger
                     var de = (DataEvent)e;
                     if (de.Action == "AS3Context.StartDebugger")
                     {
-                        if (settingObject.StartDebuggerOnTestMovie)
+                        if (settingObject.StartDebuggerOnTestMovie && debugManager.Start(de.Data != null))
                         {
-                            if (debugManager.Start(de.Data != null)) de.Handled = true;
+                            de.Handled = true;
                         }
                         return;
                     }
@@ -171,32 +165,31 @@ namespace FlashDebugger
                         }
                     }
                     else if (disableDebugger) return;
-                    if (de.Action == ProjectManagerCommands.HotBuild || de.Action == ProjectManagerCommands.BuildProject)
+                    switch (de.Action)
                     {
-                        if (debugManager.FlashInterface.isDebuggerStarted)
-                        {
-                            if (debugManager.FlashInterface.isDebuggerSuspended)
+                        case ProjectManagerCommands.HotBuild:
+                        case ProjectManagerCommands.BuildProject:
+                            if (debugManager.FlashInterface.isDebuggerStarted)
                             {
-                                debugManager.Continue_Click(null, null);
+                                if (debugManager.FlashInterface.isDebuggerSuspended)
+                                {
+                                    debugManager.Continue_Click(null, null);
+                                }
+                                debugManager.Stop_Click(null, null);
                             }
-                            debugManager.Stop_Click(null, null);
-                        }
-                    }
-                    if (de.Action == ProjectManagerEvents.TestProject)
-                    {
-                        if (debugManager.FlashInterface.isDebuggerStarted)
-                        {
-                            if (debugManager.FlashInterface.isDebuggerSuspended)
+                            break;
+                        case ProjectManagerEvents.TestProject:
+                            if (debugManager.FlashInterface.isDebuggerStarted)
                             {
-                                debugManager.Continue_Click(null, null);
-                                e.Handled = true;
-                                return;
+                                if (debugManager.FlashInterface.isDebuggerSuspended)
+                                {
+                                    debugManager.Continue_Click(null, null);
+                                    e.Handled = true;
+                                    return;
+                                }
                             }
-                        }
-                    }
-                    if (de.Action == ProjectManagerEvents.TestProject)
-                    {
-                        menusHelper.UpdateMenuState(this, DebuggerState.Initializing);
+                            menusHelper.UpdateMenuState(this, DebuggerState.Initializing);
+                            break;
                     }
                     break;
             }
@@ -265,10 +258,7 @@ namespace FlashDebugger
                 SaveSettings();
                 firstRun = true;
             }
-            else
-            {
-                settingObject = (Settings)ObjectSerializer.Deserialize(settingFilename, settingObject);
-            }
+            else settingObject = (Settings) ObjectSerializer.Deserialize(settingFilename, settingObject);
         }
 
         /// <summary>

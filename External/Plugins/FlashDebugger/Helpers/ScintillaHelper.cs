@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using FlashDebugger.Properties;
 using PluginCore;
@@ -37,7 +36,7 @@ namespace FlashDebugger
             sci.ModEventMask |= (int)ModificationFlags.ChangeMarker;
             sci.MarkerChanged += SciControl_MarkerChanged;
             sci.MarginSensitiveN(BreakpointMargin, true);
-            int mask = sci.GetMarginMaskN(BreakpointMargin);
+            var mask = sci.GetMarginMaskN(BreakpointMargin);
             mask |= GetMarkerMask(markerBPEnabled);
             mask |= GetMarkerMask(markerBPDisabled);
             mask |= GetMarkerMask(markerBPNotAvailable);
@@ -49,14 +48,14 @@ namespace FlashDebugger
             sci.MarkerDefineRGBAImage(markerBPEnabled, enabledImage);
             sci.MarkerDefineRGBAImage(markerBPDisabled, disabledImage);
             sci.MarkerDefineRGBAImage(markerCurrentLine, curlineImage);
-            Language lang = PluginBase.MainForm.SciConfig.GetLanguage("as3"); // default
+            var lang = PluginBase.MainForm.SciConfig.GetLanguage("as3"); // default
             sci.MarkerSetBack(markerBPEnabled, lang.editorstyle.ErrorLineBack); // enable
             sci.MarkerSetBack(markerBPDisabled, lang.editorstyle.DisabledLineBack); // disable
             sci.MarginClick += SciControl_MarginClick;
-            sci.Modified += sci_Modified;
+            sci.Modified += Sci_Modified;
         }
 
-        public static void sci_Modified(ScintillaControl sender, int position, int modificationType, string text, int length, int linesAdded, int line, int foldLevelNow, int foldLevelPrev)
+        public static void Sci_Modified(ScintillaControl sender, int position, int modificationType, string text, int length, int linesAdded, int line, int foldLevelNow, int foldLevelPrev)
         {
             if (linesAdded != 0)
             {
@@ -69,7 +68,7 @@ namespace FlashDebugger
         {
             if (line < 0) return;
             var document = DocumentManager.FindDocument(sender);
-            if (document is null || !document.IsEditable) return;
+            if (document is null) return;
             ApplyHighlights(document.SplitSci1, line, true);
             ApplyHighlights(document.SplitSci2, line, false);
         }
@@ -250,7 +249,7 @@ namespace FlashDebugger
             foreach (var document in PluginBase.MainForm.Documents)
             {
                 var sci = document.SciControl;
-                if (sci != null && name == sci.FileName) return sci;
+                if (sci != null && sci.FileName == name) return sci;
             }
             return null;
         }
@@ -271,7 +270,7 @@ namespace FlashDebugger
             foreach (var document in documents)
             {
                 var sci = document.SciControl;
-                if (sci != null && filefullpath == sci.FileName) return document;
+                if (sci != null && sci.FileName == filefullpath) return document;
             }
             return null;
         }
@@ -371,6 +370,5 @@ namespace FlashDebugger
         }
         
         #endregion
-
     }
 }
