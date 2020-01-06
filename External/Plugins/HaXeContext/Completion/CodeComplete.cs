@@ -31,6 +31,35 @@ namespace HaXeContext.Completion
                    || (sci.GetWordFromPosition(position) is { } word && (word == "cast" || word == "new"));
         }
 
+        /// <summary>
+        /// Whether the character at the position is inside of the
+        /// brackets of haxe metadata (@:allow(path) etc)
+        /// </summary>
+        protected override bool IsMetadataArgument(ScintillaControl sci, int position)
+        {
+            if (ASContext.Context.CurrentMember != null) return false;
+            var next = (char)sci.CharAt(position);
+            var openingBracket = false;
+            for (var i = position; i > 0; i--)
+            {
+                var c = next;
+                next = (char)sci.CharAt(i);
+                switch (c)
+                {
+                    case ')':
+                    case '}':
+                    case ';':
+                        return false;
+                    case '(':
+                        openingBracket = true;
+                        break;
+                }
+                if (openingBracket && c == ':' && next == '@')
+                    return true;
+            }
+            return false;
+        }
+
         public override bool IsRegexStyle(ScintillaControl sci, int position)
         {
             return base.IsRegexStyle(sci, position)
@@ -86,7 +115,7 @@ namespace HaXeContext.Completion
                     break;
                 case '(':
                     // for example: SomeType->(<complete>
-                    if (prevValue == '>' && (currentPos - 3) is int p && p > 0 && (char)sci.CharAt(p) == '-' && IsType(p))
+                    if (prevValue == '>' && (currentPos - 3) is { } p && p > 0 && (char)sci.CharAt(p) == '-' && IsType(p))
                         return HandleNewCompletion(sci, string.Empty, autoHide, string.Empty);
                     // for example: someFunction(<complete>
                     if (HandleFunctionCompletion(sci, currentPos, autoHide)) return false;
@@ -112,6 +141,30 @@ namespace HaXeContext.Completion
             return false;
             // Utils
             bool IsType(int position) => GetExpressionType(sci, position, false, true).Type is { } t && !t.IsVoid();
+        }
+
+        protected override bool HandleNewCompletion(ScintillaControl sci, string tail, bool autoHide, string keyword, List<ICompletionListItem> list)
+        {
+            if (keyword == "new")
+            {
+                list = list
+                    .Where(it =>
+                    {
+                        if (it is MemberItem item && item.Member is { } member)
+                        {
+                            var flags = member.Flags;
+                            if ((flags & FlagType.Interface) != 0 || (flags & FlagType.Enum) != 0) return false;
+                            var @class = member as ClassModel ?? ResolveType(member.Type, ASContext.Context.CurrentModel);
+                            if (@class is null) return false;
+                            var recursive = (@class.Flags & FlagType.Abstract) == 0;
+                            return @class.ContainsMember(FlagType.Access | FlagType.Function | FlagType.Constructor, recursive)
+                                   || @class.ContainsMember(FlagType.Function | FlagType.Constructor, recursive);
+                        }
+                        return true;
+                    })
+                    .ToList();
+            }
+            return base.HandleNewCompletion(sci, tail, autoHide, keyword, list);
         }
 
         /// <inheritdoc />
@@ -173,7 +226,7 @@ namespace HaXeContext.Completion
             var currentLine = sci.CurrentLine;
             var line = sci.GetLine(currentLine);
             // for example: @:forward() <complete>
-            if (line.LastIndexOf(')') is int p && (p != -1 && (sci.PositionFromLine(currentLine) + p) < sci.CurrentPos)) return false;
+            if (line.LastIndexOf(')') is { } p && (p != -1 && (sci.PositionFromLine(currentLine) + p) < sci.CurrentPos)) return false;
             string metaName;
             FlagType mask;
             if (line.StartsWithOrdinal("@:forward("))
@@ -1227,8 +1280,8 @@ namespace HaXeContext.Completion
                 if (expr.Type is { } leftExprType
                     && expr.Context.RightOperator is { } @operator
                     && PluginBase.MainForm.CurrentDocument?.SciControl is { } sci
-                    && expr.Context.Position is int position
-                    && GetCharLeft(sci, true, ref position) is char c
+                    && expr.Context.Position is { } position
+                    && GetCharLeft(sci, true, ref position) is { } c
                     && @operator.Contains(c))
                 {
                     if (leftExprType.Flags.HasFlag(FlagType.Abstract))
@@ -1615,7 +1668,7 @@ namespace HaXeContext.Completion
             var result = base.TypesAffinity(context, inClass, withClass);
             if (context != null
                 && PluginBase.MainForm.CurrentDocument?.SciControl is { } sci
-                && context.WordBefore == "privateAccess" && context.WordBeforePosition is int p
+                && context.WordBefore == "privateAccess" && context.WordBeforePosition is { } p
                 && sci.CharAt(p - 2) == '@' && sci.CharAt(p - 1) == ':') result |= Visibility.Private;
             return result;
         }
@@ -1734,7 +1787,7 @@ namespace HaXeContext.Completion
                     var startIndex = s.IndexOfOrdinal("Null<");
                     if (startIndex == -1) return s;
                     startIndex += 5;
-                    while (s.IndexOfOrdinal("Null<", startIndex) is int p && p != -1)
+                    while (s.IndexOfOrdinal("Null<", startIndex) is { } p && p != -1)
                     {
                         startIndex = p + 5;
                     }

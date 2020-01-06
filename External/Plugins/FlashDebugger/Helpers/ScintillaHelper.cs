@@ -291,8 +291,7 @@ namespace FlashDebugger
                     int end = start + sci.LineLength(line);
                     sci.SetSel(start, end);
                 }
-                else
-                    sci.SetSel(start, start);
+                else sci.SetSel(start, start);
             }
             return sci;
         }

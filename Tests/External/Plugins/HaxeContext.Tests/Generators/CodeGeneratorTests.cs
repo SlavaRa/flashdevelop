@@ -227,6 +227,19 @@ namespace HaXeContext.Generators
             }
         }
 
+        static IEnumerable<TestCaseData> GenerateToStringTestCases
+        {
+            get
+            {
+                yield return new TestCaseData("BeforeGenerateToString_1", GeneratorJobType.ToString, true)
+                    .Returns(ReadAllText("AfterGenerateToString_1"))
+                    .SetName("Generate toString(). Case 1");
+                yield return new TestCaseData("BeforeGenerateToString_2", GeneratorJobType.ToString, true)
+                    .Returns(ReadAllText("AfterGenerateToString_2"))
+                    .SetName("Generate toString(). Case 2");
+            }
+        }
+
         static IEnumerable<TestCaseData> ContextualGeneratorForOptionParametersTestCases
         {
             get
@@ -1744,6 +1757,17 @@ namespace HaXeContext.Generators
             }
         }
 
+        static IEnumerable<TestCaseData> GenerateVariableIssue2952TestCases
+        {
+            get
+            {
+                yield return new TestCaseData("BeforeGenerateVariable_issue2952_1", GeneratorJobType.VariablePublic, true)
+                    .Returns(ReadAllText("AfterGenerateVariable_issue2952_1"))
+                    .SetName("v$(EntryPoint) = new Array<Type>. Declare variable. Issue2952. Case 1")
+                    .SetDescription("https://github.com/fdorg/flashdevelop/issues/2952");
+            }
+        }
+
         static IEnumerable<TestCaseData> ImplementInterfaceTestCases
         {
             get
@@ -2189,6 +2213,7 @@ namespace HaXeContext.Generators
             TestCaseSource(nameof(GenerateVariableIssue2201TestCases)),
             TestCaseSource(nameof(GenerateVariableIssue1734TestCases)),
             TestCaseSource(nameof(GenerateVariableIssue2477TestCases)),
+            TestCaseSource(nameof(GenerateVariableIssue2952TestCases)),
             TestCaseSource(nameof(ImplementInterfaceTestCases)),
             TestCaseSource(nameof(ImplementInterfaceIssue2264TestCases)),
             TestCaseSource(nameof(ImplementInterfaceIssue2531TestCases)),
@@ -2208,6 +2233,7 @@ namespace HaXeContext.Generators
             TestCaseSource(nameof(ConvertStaticMethodCallToStaticExtensionCallIssue1565TestCases)),
             TestCaseSource(nameof(ConvertStaticMethodCallToStaticExtensionCallIssue2939TestCases)),
             TestCaseSource(nameof(InitializeLocalVariable2762TestCases)),
+            TestCaseSource(nameof(GenerateToStringTestCases)),
         ]
         public string ContextualGenerator(string fileName, GeneratorJobType job, bool hasGenerator) => ContextualGenerator(sci, fileName, job, hasGenerator);
 
