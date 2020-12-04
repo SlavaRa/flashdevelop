@@ -60,13 +60,15 @@ namespace ASCompletion.Context
 
         public ASContext()
         {
-            features = new ContextFeatures();
+            features = CreateContextFeatures();
             completionCache = new CompletionCache(this, null);
             cacheRefreshTimer = new Timer();
             cacheRefreshTimer.Interval = 1500; // delay initial refresh
             cacheRefreshTimer.Tick += CacheRefreshTimer_Tick;
         }
         #endregion
+
+        protected virtual ContextFeatures CreateContextFeatures() => new ContextFeatures();
 
         #region static properties
 

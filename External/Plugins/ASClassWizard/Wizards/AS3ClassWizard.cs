@@ -87,7 +87,7 @@ namespace ASClassWizard.Wizards
                     this.titleLabel.Text = label;
                     this.Text = label;
                 }
-                if (project.Language == "haxe")
+                if (project.Language.StartsWithOrdinal("haxe"))
                 {
                     this.internalRadio.Text = "private";
                     var label = TextHelper.GetString("Wizard.Label.NewHaxeClass");
@@ -106,12 +106,14 @@ namespace ASClassWizard.Wizards
         private void ValidateClass()
         {
             var errorMessage = "";
-            var regex = (project.Language == "haxe") ? REG_IDENTIFIER_HAXE : REG_IDENTIFIER_AS; 
+            var regex = project.Language.StartsWithOrdinal("haxe")
+                ? REG_IDENTIFIER_HAXE
+                : REG_IDENTIFIER_AS; 
             if (GetName().Length == 0)
                 errorMessage = TextHelper.GetString("Wizard.Error.EmptyClassName");
             else if (!Regex.Match(GetName(), regex, RegexOptions.Singleline).Success)
                 errorMessage = TextHelper.GetString("Wizard.Error.InvalidClassName");
-            else if (project.Language == "haxe" && char.IsLower(GetName()[0]))
+            else if (project.Language.StartsWithOrdinal("haxe") && char.IsLower(GetName()[0]))
                 errorMessage = TextHelper.GetString("Wizard.Error.LowercaseClassName");
 
             if (errorMessage.Length != 0)

@@ -290,7 +290,7 @@ namespace FlashDebugger
             if (!(document?.SciControl is {} sci)) return false;
             var lang = sci.ConfigurationLanguage;
             return lang == "as3"
-                   || lang == "haxe"
+                   || lang.StartsWithOrdinal("haxe")
                    || Path.GetExtension(sci.FileName) == ".mxml";
         }
 

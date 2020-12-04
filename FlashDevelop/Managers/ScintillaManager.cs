@@ -104,8 +104,8 @@ namespace FlashDevelop.Managers
         /// </summary>
         public static void UpdateControlSyntax(ScintillaControl sci)
         {
-            string language = SciConfig.GetLanguageFromFile(sci.FileName);
-            TextEvent te = new TextEvent(EventType.SyntaxDetect, language);
+            var language = SciConfig.GetLanguageFromFile(sci.FileName);
+            var te = new TextEvent(EventType.SyntaxDetect, language);
             EventManager.DispatchEvent(SciConfig, te);
             if (te.Handled && te.Value != null) language = te.Value;
             if (sci.ConfigurationLanguage != language)
@@ -122,14 +122,8 @@ namespace FlashDevelop.Managers
         {
             try
             {
-                if (PluginBase.Settings.EnsureLastLineEnd)
-                {
-                    sci.AddLastLineEnd();
-                }
-                if (PluginBase.Settings.EnsureConsistentLineEnds)
-                {
-                    sci.ConvertEOLs(sci.EOLMode);
-                }
+                if (PluginBase.Settings.EnsureLastLineEnd) sci.AddLastLineEnd();
+                if (PluginBase.Settings.EnsureConsistentLineEnds) sci.ConvertEOLs(sci.EOLMode);
                 if (PluginBase.Settings.StripTrailingSpaces)
                 {
                     sci.StripTrailingSpaces(((SettingObject)PluginBase.Settings).KeepIndentTabs);

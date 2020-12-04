@@ -78,7 +78,7 @@ namespace ASClassWizard
                     if (de.Action == "ProjectManager.CreateNewFile")
                     {
                         project = (Project) PluginBase.CurrentProject;
-                        if (project.Language.StartsWithOrdinal("as") || project.Language == "haxe")
+                        if (project.Language.StartsWithOrdinal("as") || project.Language.StartsWithOrdinal("haxe"))
                         {
                             var table = (Hashtable) de.Data;
                             var templateFile = table["templatePath"] as string;
@@ -132,7 +132,7 @@ namespace ASClassWizard
 
                 case EventType.ProcessArgs:
                     project = PluginBase.CurrentProject as Project;
-                    if (WizardContext.lastFileFromTemplate != null && project != null && (project.Language.StartsWithOrdinal("as") || project.Language == "haxe"))
+                    if (WizardContext.lastFileFromTemplate != null && project != null && (project.Language.StartsWithOrdinal("as") || project.Language.StartsWithOrdinal("haxe")))
                     {
                         var te = (TextEvent) e;
                         te.Value = WizardContext.ProcessArgs(te.Value);

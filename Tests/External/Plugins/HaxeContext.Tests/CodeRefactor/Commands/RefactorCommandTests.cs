@@ -189,7 +189,7 @@ namespace HaXeContext.CodeRefactor.Commands
         ]
         public string Rename(string fileName, string newName)
         {
-            ((HaXeSettings) ASContext.GetLanguageContext("haxe").Settings).CompletionMode = HaxeCompletionModeEnum.FlashDevelop;
+            ((HaXeSettings) ASContext.GetLanguageContext(sci.ConfigurationLanguage).Settings).CompletionMode = HaxeCompletionModeEnum.FlashDevelop;
             return Common(fileName, newName);
         }
 
@@ -212,7 +212,7 @@ namespace HaXeContext.CodeRefactor.Commands
         public string Rename2(string fileName, string newName, string sdkVersion)
         {
             ASContext.Context.Settings.InstalledSDKs = new[] {new InstalledSDK {Path = PluginBase.CurrentProject.CurrentSDK, Version = sdkVersion}};
-            ((HaXeSettings) ASContext.GetLanguageContext("haxe").Settings).CompletionMode = HaxeCompletionModeEnum.Compiler;
+            ((HaXeSettings) ASContext.GetLanguageContext(sci.ConfigurationLanguage).Settings).CompletionMode = HaxeCompletionModeEnum.Compiler;
             return Common(fileName, newName);
         }
 

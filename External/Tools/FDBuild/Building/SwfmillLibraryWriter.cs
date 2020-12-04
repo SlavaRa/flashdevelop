@@ -12,9 +12,7 @@ namespace ProjectManager.Building
         Project project;
 
         public SwfmillLibraryWriter(string libraryPath) : base(libraryPath, Encoding.UTF8)
-        {
-            Formatting = Formatting.Indented;
-        }
+            => Formatting = Formatting.Indented;
 
         public void WriteProject(Project project)
         {
@@ -32,7 +30,7 @@ namespace ProjectManager.Building
             WriteComment("Any modifications you make may be lost.");
             WriteStartElement("movie");
 
-            int maxFlashVersion = (project.Language == "haxe") ? 10 : 9;
+            int maxFlashVersion = project.Language.StartsWith("haxe", StringComparison.Ordinal) ? 10 : 9;
             int flashVersion = Math.Max(6, Math.Min(maxFlashVersion, project.MovieOptions.MajorVersion));
             WriteAttributeString("version", flashVersion.ToString());
 
@@ -89,9 +87,7 @@ namespace ProjectManager.Building
                 // project "cruft" accumulating.  This will be removed once
                 // I add support in the treeview for displaying "missing" project items
     
-                if (!File.Exists(asset.Path))
-                    continue;
-    
+                if (!File.Exists(asset.Path)) continue;
                 if (asset.IsSwf && asset.SwfMode == SwfAssetMode.Preloader)
                     AddSwf(asset);
             }
@@ -134,9 +130,7 @@ namespace ProjectManager.Building
         {
             foreach (LibraryAsset asset in project.LibraryAssets)
             {
-                if (!File.Exists(asset.Path))
-                    continue;
-    
+                if (!File.Exists(asset.Path)) continue;
                 if (!asset.IsSwf || asset.SwfMode == SwfAssetMode.Library)
                     AddAsset(asset);
             }
@@ -156,9 +150,9 @@ namespace ProjectManager.Building
         }
 
         string GetSafeId(string id)
-        {
-            return (project.Language == "haxe") ? char.ToUpper(id[2]) + id.Substring(3) : id;
-        }
+            => project.Language.StartsWith("haxe", StringComparison.Ordinal)
+                ? char.ToUpper(id[2]) + id.Substring(3)
+                : id;
 
         #endregion
 

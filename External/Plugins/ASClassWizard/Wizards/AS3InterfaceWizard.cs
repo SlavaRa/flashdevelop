@@ -74,7 +74,7 @@ namespace ASClassWizard.Wizards
                     titleLabel.Text = label;
                     Text = label;
                 }
-                else if (project.Language == "haxe")
+                else if (project.Language.StartsWithOrdinal("haxe"))
                 {
                     var label = TextHelper.GetString("Wizard.Label.NewHaxeInterface");
                     titleLabel.Text = label;
@@ -92,12 +92,12 @@ namespace ASClassWizard.Wizards
         void ValidateClass()
         {
             var errorMessage = "";
-            var regex = (project.Language == "haxe") ? REG_IDENTIFIER_HAXE : REG_IDENTIFIER_AS; 
+            var regex = project.Language.StartsWithOrdinal("haxe") ? REG_IDENTIFIER_HAXE : REG_IDENTIFIER_AS;
             if (GetName().Length == 0)
                 errorMessage = TextHelper.GetString("Wizard.Error.EmptyInterfaceName");
             else if (!Regex.Match(GetName(), regex, RegexOptions.Singleline).Success)
                 errorMessage = TextHelper.GetString("Wizard.Error.InvalidInterfaceName");
-            else if (project.Language == "haxe" && char.IsLower(GetName()[0]))
+            else if (project.Language.StartsWithOrdinal("haxe") && char.IsLower(GetName()[0]))
                 errorMessage = TextHelper.GetString("Wizard.Error.LowercaseInterfaceName");
 
             if (errorMessage.Length != 0)

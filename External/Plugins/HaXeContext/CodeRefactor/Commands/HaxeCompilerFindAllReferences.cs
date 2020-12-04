@@ -21,8 +21,10 @@ namespace HaXeContext.CodeRefactor.Commands
             UserInterfaceManager.ProgressDialog.Show();
             UserInterfaceManager.ProgressDialog.SetTitle(TextHelper.GetString("CodeRefactor.Info.FindingReferences"));
             UserInterfaceManager.ProgressDialog.UpdateStatusMessage(TextHelper.GetString("CodeRefactor.Info.SearchingFiles"));
-            var context = (Context) ASContext.GetLanguageContext("haxe");
-            var hc = context.GetHaxeComplete(PluginBase.MainForm.CurrentDocument.SciControl, CurrentTarget.Context, true, HaxeCompilerService.USAGE);
+            var sci = PluginBase.MainForm.CurrentDocument?.SciControl;
+            if (sci is null) return;
+            var context = (Context) ASContext.GetLanguageContext(sci.ConfigurationLanguage);
+            var hc = context.GetHaxeComplete(sci, CurrentTarget.Context, true, HaxeCompilerService.USAGE);
             hc.GetUsages(OnHaxeCompleteResultHandler);
         }
 

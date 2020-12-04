@@ -22,6 +22,8 @@ using HaXeContext.Generators;
 using HaXeContext.Model;
 using PluginCore.Utilities;
 using ScintillaNet;
+using SwfOp;
+using ContextFeatures = ASCompletion.Completion.ContextFeatures;
 
 namespace HaXeContext
 {
@@ -40,10 +42,11 @@ namespace HaXeContext
         public static string FLASH_OLD = "flash";
         public static string FLASH_NEW = "flash9";
         static string currentEnv;
-        static string currentSDK;
+        internal static string currentSDK;
 
         readonly HaXeSettings haxeSettings;
-        readonly Func<string, InstalledSDK> getCustomSDK;
+        readonly Func<InstalledSDK?> GetCurrentSDK;
+        readonly Func<string> GetLanguageName;
         Dictionary<string, List<string>> haxelibsCache;
         string haxeTarget;
         bool resolvingDot;
@@ -95,15 +98,18 @@ namespace HaXeContext
             Comments = "The character code of this character(inlined at compile-time)"
         };
 
-        public Context(HaXeSettings initSettings) : this(initSettings, path => null)
+        protected override ContextFeatures CreateContextFeatures() => new Completion.ContextFeatures();
+
+        public Context(HaXeSettings initSettings) : this(initSettings, () => null, () => "haxe")
         {
         }
         
-        public Context(HaXeSettings initSettings, Func<string, InstalledSDK> getCustomSDK)
+        public Context(HaXeSettings initSettings, Func<InstalledSDK> getCurrentSdk, Func<string> GetLanguageName)
         {
             haxeSettings = initSettings;
+            GetCurrentSDK = getCurrentSdk;
+            this.GetLanguageName = GetLanguageName;
             haxeSettings.Init();
-            this.getCustomSDK = getCustomSDK;
 
             /* AS-LIKE OPTIONS */
 
@@ -115,6 +121,7 @@ namespace HaXeContext
             /* DESCRIBE LANGUAGE FEATURES */
 
             // language constructs
+            var features = (Completion.ContextFeatures) Features;
             features.hasPackages = true;
             features.hasFriendlyParentPackages = true;
             features.hasModules = true;
@@ -156,6 +163,12 @@ namespace HaXeContext
             features.methodModifierDefault = Visibility.Private;
 
             // keywords
+            features.AbstractKey = "abstract";
+            features.MacroKey = "macro";
+            features.ClassKey = "class";
+            features.InterfaceKey = "interface";
+            features.EnumKey = "enum";
+            features.TypeDefKey = "typedef";
             features.ExtendsKey = "extends";
             features.ImplementsKey = "implements";
             features.dot = ".";
@@ -166,7 +179,7 @@ namespace HaXeContext
             features.IntegerKey = "Int";
             features.stringKey = "String";
             features.arrayKey = "Array<T>";
-            features.dynamicKey = "Dynamic";
+            features.dynamicKey = "Dynamic";// TODO slavara: dynamic?
             features.importKey = "import";
             features.importKeyAlt = "using";
             features.varKey = "var";
@@ -184,13 +197,32 @@ namespace HaXeContext
             features.ConstructorKey = "new";
             features.typesPreKeys = new[] {features.importKey, features.importKeyAlt, features.ConstructorKey, features.ExtendsKey, features.ImplementsKey};
             features.codeKeywords = new[] {
-                "var", "function", "new", "cast", "return", "break",
+                "var", "function", features.ConstructorKey, "cast", "return", "break",
                 "continue", "if", "else", "for", "in", "while", "do", "switch", "case", "default", "$type",
-                "null", "untyped", "true", "false", "try", "catch", "throw", "trace", "macro"
+                "null", "untyped", "true", "false", "try", "catch", "throw", "trace", features.MacroKey
             };
             features.declKeywords = new[] {features.varKey, features.functionKey};
-            features.accessKeywords = new[] {features.intrinsicKey, features.inlineKey, "dynamic", "macro", features.overrideKey, features.publicKey, features.privateKey, features.staticKey};
-            features.typesKeywords = new[] {features.importKey, features.importKeyAlt, "class", "interface", "typedef", "enum", "abstract" };
+            features.accessKeywords = new[]
+            {
+                features.intrinsicKey,
+                features.inlineKey,
+                "dynamic",
+                features.MacroKey,
+                features.overrideKey,
+                features.publicKey,
+                features.privateKey,
+                features.staticKey
+            };
+            features.typesKeywords = new[]
+            {
+                features.importKey,
+                features.importKeyAlt,
+                features.ClassKey,
+                features.InterfaceKey,
+                features.TypeDefKey,
+                features.EnumKey,
+                features.AbstractKey,
+            };
             features.ArithmeticOperators = new HashSet<char> {'+', '-', '*', '/', '%'};
             features.IncrementDecrementOperators = new[] {"++", "--"};
             features.BitwiseOperators = new[] {"~", "&", "|", "^", "<<", ">>", ">>>"};
@@ -216,7 +248,7 @@ namespace HaXeContext
 
         #region classpath management
 
-        List<string> LookupLibrary(string lib)
+        IEnumerable<string>? LookupLibrary(string lib)
         {
             try
             {
@@ -613,10 +645,10 @@ namespace HaXeContext
 
         public string GetHaxeTarget(string platformName)
         {
-            if (!PlatformData.SupportedLanguages.ContainsKey("haxe")) return null;
-            var haxeLang = PlatformData.SupportedLanguages["haxe"];
-            if (haxeLang is null) return null;
-            foreach (var platform in haxeLang.Platforms.Values)
+            if (!PlatformData.SupportedLanguages.TryGetValue(GetLanguageName(), out var lang))
+                return null;
+            if (lang is null) return null;
+            foreach (var platform in lang.Platforms.Values)
                 if (platform.Name == platformName) return platform.HaxeTarget;
             return null;
         }
@@ -671,7 +703,7 @@ namespace HaXeContext
             {
                 if (File.Exists(path.Path))
                 {
-                    var parser = new SwfOp.ContentParser(path.Path);
+                    var parser = new ContentParser(path.Path);
                     parser.Run();
                     AbcConverter.Convert(parser, path, this);
                 }
@@ -861,8 +893,6 @@ namespace HaXeContext
         #endregion
 
         #region SDK
-
-        InstalledSDK GetCurrentSDK() => (context.Settings ?? settings).InstalledSDKs?.FirstOrDefault(sdk => sdk.Path == currentSDK) ?? getCustomSDK(currentSDK);
 
         public SemVer GetCurrentSDKVersion() => GetCurrentSDK() is { } sdk ? new SemVer(sdk.Version) : SemVer.Zero;
 
@@ -1525,7 +1555,7 @@ namespace HaXeContext
             result = type;
             var imports = Context.ResolveImports(inFile);
             if ((type.Flags & FlagType.Enum) != 0 && (type.Flags & FlagType.Abstract) == 0
-                && Context.ResolveType("haxe.EnumTools.EnumValueTools", null) is { } @using && !@using.IsVoid())
+                                                  && Context.ResolveType("haxe.EnumTools.EnumValueTools", null) is { } @using && !@using.IsVoid())
             {
                 @using = @using.Clone();
                 @using.Flags |= FlagType.Using;
@@ -1661,7 +1691,7 @@ namespace HaXeContext
 
         public override IEnumerable<string> DecomposeTypes(IEnumerable<string> types)
         {
-            var characterClass = ScintillaControl.Configuration.GetLanguage("haxe").characterclass.Characters;
+            var characterClass = ScintillaControl.Configuration.GetLanguage(GetLanguageName()).characterclass.Characters;
             var result = new HashSet<string>();
             foreach (var type in types)
             {
@@ -1836,10 +1866,9 @@ namespace HaXeContext
             return procInfo;
         }
 
-        internal HaxeComplete GetHaxeComplete(ScintillaControl sci, ASExpr expression, bool autoHide, HaxeCompilerService compilerService)
+        internal virtual HaxeComplete GetHaxeComplete(ScintillaControl sci, ASExpr expression, bool autoHide, HaxeCompilerService compilerService)
         {
             var sdkVersion = GetCurrentSDKVersion();
-            if (sdkVersion >= "4.0.0") return new HaxeComplete400(sci, expression, autoHide, completionModeHandler, compilerService, sdkVersion);
             if (sdkVersion >= "3.3.0") return new HaxeComplete330(sci, expression, autoHide, completionModeHandler, compilerService, sdkVersion);
             return new HaxeComplete(sci, expression, autoHide, completionModeHandler, compilerService, sdkVersion);
         }

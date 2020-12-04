@@ -404,7 +404,7 @@ namespace CodeRefactor.Commands
                     if (!Results.ContainsKey(newFilePath)) Results[newFilePath] = new List<SearchMatch>();
                     Results[newFilePath].AddRange(matches);
                 }
-                else if (sci.ConfigurationLanguage == "haxe")
+                else if (sci.ConfigurationLanguage.StartsWithOrdinal("haxe"))
                 {
                     // haxe modules don't need to specify a package if it's empty
                     sci.InsertText(0, packageReplacement + ";\n\n");

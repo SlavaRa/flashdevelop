@@ -356,7 +356,7 @@ namespace HaXeContext
         public bool GetTopLevelElements(string fileName, MemberModel member)
         {
             SetSrc(sci, ReadAllText(fileName));
-            var context = ((ASContext) ASContext.GetLanguageContext("haxe"));
+            var context = ((ASContext) ASContext.GetLanguageContext(sci.ConfigurationLanguage));
             context.CurrentModel = ASContext.Context.CurrentModel;
             context.completionCache.IsDirty = true;
             var topLevelElements = context.GetTopLevelElements();
@@ -378,7 +378,7 @@ namespace HaXeContext
         public MemberModel ResolveTopLevelElement(string fileName)
         {
             SetSrc(sci, ReadAllText(fileName));
-            var context = (Context)ASContext.GetLanguageContext("haxe");
+            var context = (Context)ASContext.GetLanguageContext(sci.ConfigurationLanguage);
             context.CurrentModel = ASContext.Context.CurrentModel;
             context.completionCache.IsDirty = true;
             context.GetVisibleExternalElements();
@@ -414,7 +414,7 @@ namespace HaXeContext
         public List<MemberModel> ParseFileIssue1150_1(string fileName)
         {
             SetSrc(sci, ReadAllText(fileName));
-            var context = (Context)ASContext.GetLanguageContext("haxe");
+            var context = (Context)ASContext.GetLanguageContext(sci.ConfigurationLanguage);
             context.CurrentModel = ASContext.Context.CurrentModel;
             ASContext.Context.ResolveImports(null).ReturnsForAnyArgs(it =>
             {
@@ -439,7 +439,7 @@ namespace HaXeContext
         public void ParseFileIssue1150_2(string fileName, string fromClass)
         {
             SetSrc(sci, ReadAllText(fileName));
-            var context = (Context)ASContext.GetLanguageContext("haxe");
+            var context = (Context)ASContext.GetLanguageContext(sci.ConfigurationLanguage);
             context.CurrentModel = ASContext.Context.CurrentModel;
             ASContext.Context.ResolveImports(null).ReturnsForAnyArgs(it =>
             {
@@ -528,7 +528,7 @@ namespace HaXeContext
         public int BraceMatch(string sourceText)
         {
             SetSrc(sci, sourceText);
-            var result = ((Context)ASContext.GetLanguageContext("haxe")).BraceMatch(sci, sci.CurrentPos);
+            var result = ((Context)ASContext.GetLanguageContext(sci.ConfigurationLanguage)).BraceMatch(sci, sci.CurrentPos);
             return result;
         }
     }

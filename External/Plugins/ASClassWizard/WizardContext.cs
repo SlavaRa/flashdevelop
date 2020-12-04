@@ -191,7 +191,7 @@ namespace ASClassWizard
                 implements = " implements ";
                 index = 0;
 
-                if (lastFileOptions.Language == "haxe")
+                if (lastFileOptions.Language.StartsWithOrdinal("haxe"))
                 {
                     var isHaxe2 = PluginBase.CurrentSDK != null && PluginBase.CurrentSDK.Name.ToLower().Contains("haxe 2");
                     implementContinuation = isHaxe2 ? ", implements " : " implements ";
@@ -270,7 +270,7 @@ namespace ASClassWizard
                 access += lastFileOptions.isDynamic ? "dynamic " : "";
                 access += lastFileOptions.isFinal ? "final " : "";
             }
-            else if (lastFileOptions.Language == "haxe")
+            else if (lastFileOptions.Language.StartsWithOrdinal("haxe"))
             {
                 access = lastFileOptions.isPublic ? "public " : "private ";
                 access += lastFileOptions.isDynamic ? "dynamic " : "";

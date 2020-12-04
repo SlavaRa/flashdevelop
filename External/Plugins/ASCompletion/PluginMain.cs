@@ -229,7 +229,7 @@ namespace ASCompletion
                         if (sci is null) return;
                         if (sci.FileName.ToLower().EndsWithOrdinal(".as"))
                         {
-                            settingObject.LastASVersion = DetectActionscriptVersion(doc);
+                            settingObject.LastASVersion = GetLanguageName(doc);
                             ((TextEvent) e).Value = settingObject.LastASVersion;
                             e.Handled = true;
                         }
@@ -911,7 +911,7 @@ namespace ASCompletion
         /// </summary>
         /// <param name="doc">Document to check</param>
         /// <returns>Detected language</returns>
-        string DetectActionscriptVersion(ITabbedDocument doc)
+        string GetLanguageName(ITabbedDocument doc)
         {
             var parser = new ASFileParser();
             var sci = doc.SciControl;

@@ -68,7 +68,7 @@ namespace HaxeTypeWizard
         
         public void HandleEvent(object sender, NotifyEvent e, HandlingPriority priority)
         {
-            if (!(PluginBase.CurrentProject is Project project) || project.Language != "haxe") return;
+            if (!(PluginBase.CurrentProject is Project project) || !project.Language.StartsWithOrdinal("haxe")) return;
             switch (e.Type)
             {
                 case EventType.Command:

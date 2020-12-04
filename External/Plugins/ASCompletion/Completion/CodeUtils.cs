@@ -7,7 +7,7 @@
         /// </summary>
         public static bool IsTypeDecl(string line, string[] typesKeywords)
         {
-            foreach (string keyword in typesKeywords)
+            foreach (var keyword in typesKeywords)
             {
                 var p = line.IndexOf(keyword);
                 if (p >= 0) return IsSpaceAt(line, p - 1) && IsSpaceAt(line, p + keyword.Length);
@@ -30,9 +30,6 @@
         /// <summary>
         /// Look if character after first word of line is whitespace
         /// </summary>
-        public static bool IsSpaceAt(string line, int index)
-        {
-            return index < 0 || index >= line.Length || line[index] <= 32;
-        }
+        public static bool IsSpaceAt(string line, int index) => index < 0 || index >= line.Length || line[index] <= 32;
     }
 }

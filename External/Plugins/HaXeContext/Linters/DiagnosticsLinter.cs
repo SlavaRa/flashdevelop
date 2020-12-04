@@ -19,19 +19,16 @@ namespace HaXeContext.Linters
         readonly ProcessingQueue fileQueue;
 
         public DiagnosticsLinter(HaXeSettings settings)
-        {
-            fileQueue = new ProcessingQueue(settings.MaximumDiagnosticsProcesses <= 0 ? 5 : settings.MaximumDiagnosticsProcesses);
-        }
+            => fileQueue = new ProcessingQueue(settings.MaximumDiagnosticsProcesses <= 0
+                ? 5
+                : settings.MaximumDiagnosticsProcesses);
 
         public void LintAsync(IEnumerable<string> files, LintCallback callback)
         {
             var context = ASContext.GetLanguageContext("haxe") as Context;
-
             if (context is null || !(PluginBase.CurrentProject is ProjectManager.Projects.Haxe.HaxeProject) || !CanContinue(context)) return;
-            
             var total = files.Count();
             var list = new List<LintingResult>();
-
             string untitledFileStart = TextHelper.GetString("FlashDevelop.Info.UntitledFileStart");
             foreach (var file in files)
             {
@@ -160,10 +157,7 @@ namespace HaXeContext.Linters
         readonly int maxRunning;
         readonly HashSet<Task> running = new HashSet<Task>(); //TODO: running is modified on different threads
 
-        public ProcessingQueue(int maxConcurrent)
-        {
-            maxRunning = maxConcurrent;
-        }
+        public ProcessingQueue(int maxConcurrent) => maxRunning = maxConcurrent;
 
         public void Run(Action<Action> action)
         {

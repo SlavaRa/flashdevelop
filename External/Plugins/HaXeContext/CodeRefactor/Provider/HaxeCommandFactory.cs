@@ -5,6 +5,7 @@ using ASCompletion.Context;
 using ASCompletion.Model;
 using CodeRefactor.Commands;
 using CodeRefactor.Provider;
+using PluginCore;
 using PluginCore.FRService;
 
 namespace HaXeContext.CodeRefactor.Provider
@@ -33,7 +34,7 @@ namespace HaXeContext.CodeRefactor.Provider
 
         public override Command CreateFindAllReferencesCommand(ASResult target, bool output, bool ignoreDeclarations, bool onlySourceFiles)
         {
-            var context = (Context)ASContext.GetLanguageContext("haxe");
+            var context = (Context)ASContext.GetLanguageContext(PluginBase.MainForm.CurrentDocument?.SciControl?.ConfigurationLanguage);
             var settings = (HaXeSettings)context.Settings;
             if ((settings.EnabledFeatures & CompletionFeatures.EnableForFindAllReferences) == CompletionFeatures.EnableForFindAllReferences
                 && settings.CompletionMode != HaxeCompletionModeEnum.FlashDevelop

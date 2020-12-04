@@ -21,13 +21,13 @@ using ProjectManager;
 using ProjectManager.Projects.Haxe;
 using SwfOp;
 using System.Diagnostics;
+using ASCompletion.Context;
 
 namespace HaXeContext
 {
     public class PluginMain : IPlugin, InstalledSDKOwner
     {
         HaXeSettings settingObject;
-        Context contextInstance;
         string settingFilename;
         KeyValuePair<string, InstalledSDK> customSDK;
         int logCount;
@@ -82,7 +82,9 @@ namespace HaXeContext
             InitBasics();
             LoadSettings();
             AddEventHandlers();
-            LintingManager.RegisterLinter("haxe", new DiagnosticsLinter(settingObject));
+            var linter = new DiagnosticsLinter(settingObject);
+            LintingManager.RegisterLinter("haxe3", linter);
+            LintingManager.RegisterLinter("haxe", linter);
         }
 
         /// <summary>
@@ -103,6 +105,7 @@ namespace HaXeContext
             {
                 case EventType.Command:
                     if (!(e is DataEvent de)) return;
+                    var ctx = GetContext();
                     var action = de.Action;
                     if (action == ProjectManagerEvents.RunCustomCommand)
                     {
@@ -111,8 +114,8 @@ namespace HaXeContext
                     }
                     else if (action == ProjectManagerEvents.BuildProject || action == ProjectManagerEvents.TestProject)
                     {
-                        if (contextInstance.completionModeHandler is CompletionServerCompletionHandler completionHandler && !completionHandler.IsRunning())
-                            completionHandler.StartServer();
+                        if (ctx.completionModeHandler is CompletionServerCompletionHandler handler && !handler.IsRunning())
+                            handler.StartServer();
                     }
                     else if (action == ProjectManagerEvents.CleanProject)
                     {
@@ -123,32 +126,39 @@ namespace HaXeContext
                     else if (action == ProjectManagerEvents.Project || action == ProjectManagerEvents.OpenProjectProperties)
                     {
                         var project = de.Data as IProject;
-                        
                         if (action == ProjectManagerEvents.Project) ExternalToolchain.Monitor(project);
-                        
-                        var projectPath = project != null ? Path.GetDirectoryName(project.ProjectPath) : "";
-                        foreach (InstalledSDK sdk in settingObject.InstalledSDKs)
+                        var projectPath = project != null ? Path.GetDirectoryName(project.ProjectPath) : string.Empty;
+                        foreach (var sdk in settingObject.InstalledSDKs)
                             if (sdk.IsHaxeShim) ValidateHaxeShimSDK(sdk, GetSDKPath(sdk), projectPath);
                         if (project?.CurrentSDK == customSDK.Key && (customSDK.Value?.IsHaxeShim ?? false))
                             ValidateHaxeShimSDK(customSDK.Value, GetSDKPath(customSDK.Value), projectPath);
                     }
-                    else if (action == "Context.SetHaxeEnvironment")
-                    {
-                        contextInstance.SetHaxeEnvironment(de.Data as string);
-                    }
+                    else if (action == "Context.SetHaxeEnvironment") ctx.SetHaxeEnvironment(de.Data as string);
                     else if (action == ProjectManagerEvents.OpenVirtualFile)
                     {
-                        if (PluginBase.CurrentProject != null && PluginBase.CurrentProject.Language == "haxe")
+                        if (PluginBase.CurrentProject?.Language == GetLanguageName())
                             e.Handled = OpenVirtualFileModel((string) de.Data);
                     }
                     break;
                 case EventType.UIStarted:
                     ValidateSettings();
                     customSDK = new KeyValuePair<string, InstalledSDK>();
-                    contextInstance = new Context(settingObject, GetCustomSDK);
-                    // Associate this context with haxe language
-                    ASCompletion.Context.ASContext.RegisterLanguage(contextInstance, "haxe");
-                    CommandFactoryProvider.Register("haxe", new HaxeCommandFactory());
+                    ASContext.RegisterLanguage(new Context(settingObject, GetCurrentSdk, GetLanguageName), "haxe3");
+                    ASContext.RegisterLanguage(new Context4(settingObject, GetCurrentSdk, GetLanguageName), "haxe");
+                    var factory = new HaxeCommandFactory();
+                    CommandFactoryProvider.Register("haxe3", factory);
+                    CommandFactoryProvider.Register("haxe", factory);
+                    break;
+                case EventType.SyntaxDetect:
+                    if (PluginBase.MainForm.CurrentDocument?.SciControl?.FileName?.ToLower() is { } fileName)
+                    {
+                        // TODO slavara: check by mask
+                        if (fileName.EndsWithOrdinal(".hx") || fileName.EndsWithOrdinal(".hxp"))
+                        {
+                            ((TextEvent) e).Value = GetLanguageName();
+                            e.Handled = true;
+                        }
+                    }
                     break;
                 case EventType.Trace:
                 {
@@ -193,7 +203,7 @@ namespace HaXeContext
                     // TODO: Show information about which libraries are missing in a single dialog?
                     // TODO: Prevent showing multiple dialogs about the same library.
                     var result = MessageBox.Show(PluginBase.MainForm, text, string.Empty, MessageBoxButtons.OKCancel);
-                    if (result == DialogResult.OK) contextInstance.InstallLibrary(nameToVersion);
+                    if (result == DialogResult.OK) GetContext()?.InstallLibrary(nameToVersion);
                     break;
                 }
             }
@@ -206,7 +216,7 @@ namespace HaXeContext
         /// <summary>
         /// Initializes important variables
         /// </summary>
-        public void InitBasics()
+        void InitBasics()
         {
             var path = Path.Combine(PathHelper.DataDir, nameof(HaXeContext));
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
@@ -217,16 +227,16 @@ namespace HaXeContext
         /// <summary>
         /// Adds the required event handlers
         /// </summary>
-        public void AddEventHandlers()
+        void AddEventHandlers()
         {
             EventManager.AddEventHandler(this, EventType.Trace, HandlingPriority.High);
-            EventManager.AddEventHandler(this, EventType.UIStarted | EventType.Command);
+            EventManager.AddEventHandler(this, EventType.UIStarted | EventType.Command | EventType.SyntaxDetect);
         }
 
         /// <summary>
         /// Loads the plugin settings
         /// </summary>
-        public void LoadSettings()
+        void LoadSettings()
         {
             settingObject = new HaXeSettings();
             if (!File.Exists(settingFilename)) SaveSettings();
@@ -285,7 +295,7 @@ namespace HaXeContext
         /// <summary>
         /// Update the classpath if an important setting has changed
         /// </summary>
-        void SettingObjectOnClasspathChanged() => contextInstance?.BuildClassPath();
+        void SettingObjectOnClasspathChanged() => GetContext()?.BuildClassPath();
 
         /// <summary>
         /// Saves the plugin settings
@@ -295,12 +305,12 @@ namespace HaXeContext
         bool OpenVirtualFileModel(string virtualPath)
         {
             var p = virtualPath.IndexOfOrdinal("::");
-            if (p < 0) return false;
+            if (p == -1) return false;
             var container = virtualPath.Substring(0, p);
             if (!File.Exists(container)) return false;
             var ext = Path.GetExtension(container).ToLower();
             if (ext != ".swf" && ext != ".swc") return false;
-            var ctx = ASCompletion.Context.ASContext.GetLanguageContext("as3") ?? contextInstance;
+            var ctx = ASContext.GetLanguageContext("as3") ?? GetContext();
             var path = new PathModel(container, ctx);
             var parser = new ContentParser(path.Path);
             parser.Run();
@@ -311,7 +321,7 @@ namespace HaXeContext
             return true;
         }
 
-        InstalledSDK GetCustomSDK(string path)
+        protected internal InstalledSDK GetCustomSDK(string path)
         {
             InstalledSDK sdk;
             if (customSDK.Key == path) sdk = customSDK.Value;
@@ -323,6 +333,28 @@ namespace HaXeContext
             }
             return sdk;
         }
+
+        /// <summary>
+        /// Haxe3/Haxe4 detection
+        /// </summary>
+        /// <returns>Detected language</returns>
+        public string GetLanguageName()
+        {
+            if (GetCurrentSdk() is {} sdk && new SemVer(sdk.Version) >= "4.0.0") return "haxe";
+            return "haxe3";
+        }
+
+        InstalledSDK? GetCurrentSdk()
+        {
+            var settings = (HaXeSettings) Settings;
+            var path = PathHelper.ResolvePath(settings.GetDefaultSDK().Path) ?? string.Empty;
+            var sdk = path.IsNullOrEmpty()
+                ? settings.InstalledSDKs?.FirstOrDefault()
+                : settings.InstalledSDKs?.FirstOrDefault(it => it.Path == path) ?? GetCustomSDK(path);
+            return sdk;
+        }
+
+        Context? GetContext() => ASContext.GetLanguageContext(GetLanguageName()) as Context;
 
         #endregion
 

@@ -1330,30 +1330,30 @@ namespace ASCompletion.Completion
             var insideClass = !ctx.CurrentClass.IsVoid() && ctx.CurrentClass.LineFrom < line;
             var support = features.GetDeclarationKeywords(sci.GetLine(line), insideClass);
             if (support.Count == 0) return true;
-            
+            var typesKeywords = features.typesKeywords;
             // does it need indentation?
-            int tab = 0;
-            int tempLine = line-1;
+            var tab = 0;
+            var tempLine = line - 1;
             while (tempLine > 0)
             {
                 var tempText = sci.GetLine(tempLine).Trim();
-                if (insideClass && CodeUtils.IsTypeDecl(tempText, features.typesKeywords))
+                if (tempText.Length > 0)
                 {
-                    tab = sci.GetLineIndentation(tempLine) + sci.TabWidth;
-                    break;
-                }
-                if (tempText.Length > 0 && (tempText.EndsWith('}') || CodeUtils.IsDeclaration(tempText, features)))
-                {
-                    tab = sci.GetLineIndentation(tempLine);
-                    if (tempText.EndsWith('{')) tab += sci.TabWidth;
-                    break;
+                    if (insideClass && CodeUtils.IsTypeDecl(tempText, typesKeywords))
+                    {
+                        tab = sci.GetLineIndentation(tempLine) + sci.TabWidth;
+                        break;
+                    }
+                    if (tempText.EndsWith('}') || CodeUtils.IsDeclaration(tempText, features))
+                    {
+                        tab = sci.GetLineIndentation(tempLine);
+                        if (tempText.EndsWith('{')) tab += sci.TabWidth;
+                        break;
+                    }
                 }
                 tempLine--;
             }
-            if (tab > 0)
-            {
-                sci.SetLineIndentation(line, tab);
-            }
+            if (tab > 0) sci.SetLineIndentation(line, tab);
 
             // build list
             var list = support.Select(token => new DeclarationItem(token)).ToList<ICompletionListItem>();
@@ -4015,7 +4015,7 @@ namespace ASCompletion.Completion
                             var line = sci.GetLine(sci.LineFromPosition(position));
                             //TODO: Very limited check, the case|default could be in a previous line, or it could be something else in the same line
                             if (Regex.IsMatch(line, @"\b(case|default)\b.*:")) break; // case: code block
-                            if (c == ':' && sci.ConfigurationLanguage == "haxe")
+                            if (c == ':' && sci.ConfigurationLanguage.StartsWithOrdinal("haxe"))
                             {
                                 // Anonymous structures
                                 var coma = DisambiguateComa(sci, position, minPos);
@@ -4034,7 +4034,7 @@ namespace ASCompletion.Completion
                 else if (c == '?')
                 {
                     //TODO: Change to ASContext.Context.CurrentModel
-                    if (sci.ConfigurationLanguage == "haxe") // Haxe optional fields
+                    if (sci.ConfigurationLanguage.StartsWithOrdinal("haxe")) // Haxe optional fields
                     {
                         var coma = DisambiguateComa(sci, position - 1, minPos);
                         if (coma == ComaExpression.FunctionDeclaration) return coma; // Function optional argument

@@ -129,8 +129,8 @@ namespace ProjectManager.Controls.TreeView
             // get all the generic FD templates
             foreach (string file in Directory.GetFiles(PathHelper.TemplateDir, "*.fdt"))
             {
-                string name = Path.GetFileNameWithoutExtension(file).ToLower();
-                if (name != "as2" && name != "as3" && name != "haxe") items.Add(GetGenericAddFile(file));
+                var name = Path.GetFileNameWithoutExtension(file).ToLower();
+                if (name != "as2" && name != "as3" && !name.StartsWithOrdinal("haxe")) items.Add(GetGenericAddFile(file));
             }
             return items.ToArray();
         }

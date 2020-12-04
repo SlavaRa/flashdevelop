@@ -285,7 +285,7 @@ namespace HaXeContext.Generators
         {
             position = ASComplete.ExpressionEndPosition(sci, position, true);
             if (ASComplete.GetCharRight(sci, ref position) != '<') return null;
-            var endTemplatePosition = ((Context)ASContext.GetLanguageContext("haxe")).BraceMatch(sci, position);
+            var endTemplatePosition = ((Context)ASContext.GetLanguageContext(sci.ConfigurationLanguage)).BraceMatch(sci, position);
             if (endTemplatePosition == -1) return null;
             var parCount = 0;
             var braCount = 0;

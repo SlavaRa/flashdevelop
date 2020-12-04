@@ -201,7 +201,9 @@ namespace AS3Context
                     {
                         FlexDebugger.Stop();
                         var project = PluginBase.CurrentProject;
-                        viewButton.Enabled = project is null || project.Language == "as3" || project.Language == "haxe";
+                        viewButton.Enabled = project is null
+                                             || project.Language == "as3"
+                                             || project.Language.StartsWithOrdinal("haxe");
                     }
                     else if (action.StartsWithOrdinal("FlashViewer."))
                     {

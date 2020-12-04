@@ -84,22 +84,18 @@ namespace ASCompletion
             };
         }
 
-        protected static void SetAs3Features(ScintillaControl sci)
+        protected static void SetAs3Features(ScintillaControl sci, string lang = "as3")
         {
-            if (sci.ConfigurationLanguage != "as3")
-            {
-                sci.ConfigurationLanguage = "as3";
-                ASContext.Context.SetAs3Features();
-            }
+            if (sci.ConfigurationLanguage == lang) return;
+            sci.ConfigurationLanguage = lang;
+            ASContext.Context.SetAs3Features();
         }
 
-        protected static void SetHaxeFeatures(ScintillaControl sci)
+        protected static void SetHaxeFeatures(ScintillaControl sci, string lang = "haxe")
         {
-            if (sci.ConfigurationLanguage != "haxe")
-            {
-                sci.ConfigurationLanguage = "haxe";
-                ASContext.Context.SetHaxeFeatures();
-            }
+            if (sci.ConfigurationLanguage.StartsWithOrdinal(lang)) return;
+            sci.ConfigurationLanguage = lang;
+            ASContext.Context.SetHaxeFeatures();
         }
 
         protected static void SetSrc(ScintillaControl sci, string sourceText)

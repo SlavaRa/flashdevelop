@@ -2225,7 +2225,7 @@ namespace HaXeContext.Generators.Haxe3
         {
             SetSrc(sci, ReadAllText(fileName));
             SetCurrentFileName(fileName);
-            var context = (Context)ASContext.GetLanguageContext("haxe");
+            var context = (Context)ASContext.GetLanguageContext(sci.ConfigurationLanguage);
             context.CurrentModel = ASContext.Context.CurrentModel;
             context.completionCache.IsDirty = true;
             context.GetTopLevelElements();
@@ -2513,7 +2513,7 @@ namespace HaXeContext.Generators.Haxe3
         {
             SetSrc(sci, ReadAllText(fileName));
             SetCurrentFileName(fileName);
-            var context = (Context)ASContext.GetLanguageContext("haxe");
+            var context = (Context)ASContext.GetLanguageContext(sci.ConfigurationLanguage);
             context.CurrentModel = ASContext.Context.CurrentModel;
             context.completionCache.IsDirty = true;
             context.GetTopLevelElements();
