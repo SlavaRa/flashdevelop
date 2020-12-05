@@ -15,7 +15,6 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using ProjectManager.Projects.Haxe;
-using ProjectManager.Projects;
 using AS3Context;
 using HaXeContext.Completion;
 using HaXeContext.Generators;
@@ -106,6 +105,8 @@ namespace HaXeContext
         
         public Context(HaXeSettings initSettings, Func<InstalledSDK> getCurrentSdk, Func<string> GetLanguageName)
         {
+            var features = new Completion.ContextFeatures();
+            this.features = features;
             haxeSettings = initSettings;
             GetCurrentSDK = getCurrentSdk;
             this.GetLanguageName = GetLanguageName;
@@ -121,7 +122,6 @@ namespace HaXeContext
             /* DESCRIBE LANGUAGE FEATURES */
 
             // language constructs
-            var features = (Completion.ContextFeatures) Features;
             features.hasPackages = true;
             features.hasFriendlyParentPackages = true;
             features.hasModules = true;
@@ -163,8 +163,7 @@ namespace HaXeContext
             features.methodModifierDefault = Visibility.Private;
 
             // keywords
-            features.AbstractKey = "abstract";
-            features.MacroKey = "macro";
+            features.PackageKey = "package";
             features.ClassKey = "class";
             features.InterfaceKey = "interface";
             features.EnumKey = "enum";
@@ -197,9 +196,13 @@ namespace HaXeContext
             features.ConstructorKey = "new";
             features.typesPreKeys = new[] {features.importKey, features.importKeyAlt, features.ConstructorKey, features.ExtendsKey, features.ImplementsKey};
             features.codeKeywords = new[] {
-                "var", "function", features.ConstructorKey, "cast", "return", "break",
+                features.varKey,
+                features.functionKey,
+                features.ConstructorKey,
+                "cast", "return", "break",
                 "continue", "if", "else", "for", "in", "while", "do", "switch", "case", "default", "$type",
-                "null", "untyped", "true", "false", "try", "catch", "throw", "trace", features.MacroKey
+                "null", "untyped", "true", "false", "try", "catch", "throw", "trace",
+                features.MacroKey
             };
             features.declKeywords = new[] {features.varKey, features.functionKey};
             features.accessKeywords = new[]
@@ -567,7 +570,7 @@ namespace HaXeContext
                 }
                 if (majorVersion >= 9)
                 {
-                    foreach(LibraryAsset asset in project.LibraryAssets)
+                    foreach(var asset in project.LibraryAssets)
                         if (asset.IsSwc)
                         {
                             var path = project.GetAbsolutePath(asset.Path);
@@ -881,7 +884,7 @@ namespace HaXeContext
             return result;
         }
 
-        protected override IFileParser GetCodeParser() => new FileParser(context.Features);
+        protected override IFileParser GetCodeParser() => new FileParser((Completion.ContextFeatures)Features);
 
         /// <summary>
         /// Delete current class's cached file

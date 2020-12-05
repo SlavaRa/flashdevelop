@@ -4,18 +4,20 @@ namespace HaXeContext.Completion
 {
     public class ContextFeatures : ASCompletion.Completion.ContextFeatures
     {
-        public string AbstractKey;
-        public string MacroKey;
+        public readonly string AbstractKey = "abstract";
+        public readonly string MacroKey = "macro";
+        public readonly string ExternKey = "extern";
+        public readonly string FromKey = "from";
+        public readonly string ToKey = "to";
 
-        protected override List<string> GetDeclarationKeywords(bool insideClass, string foundMember, List<string> result)
+        protected override void GetDeclarationKeywords(string foundMember, List<string> result)
         {
-            base.GetDeclarationKeywords(insideClass,foundMember, result);
-            if (foundMember == "abstract")
+            if (foundMember == AbstractKey)
             {
-                result.Add("to");
-                result.Add("from");
+                result.Add(ToKey);
+                result.Add(FromKey);
             }
-            return result;
+            base.GetDeclarationKeywords(foundMember, result);
         }
     }
 }

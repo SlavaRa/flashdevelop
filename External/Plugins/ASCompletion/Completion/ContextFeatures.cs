@@ -16,6 +16,7 @@ namespace ASCompletion.Completion
 
         // language constructs
         public bool hasPackages;
+        public string PackageKey;
         public bool hasFriendlyParentPackages;
         public bool hasModules;
         public bool hasNamespaces;
@@ -35,7 +36,7 @@ namespace ASCompletion.Completion
         public bool hasTypeDefs;
         public string TypeDefKey;
         public bool hasStructs;
-        public string ScructKey;
+        public string StructKey;
         public bool hasDelegates;
         public string DelegateKey;
         public bool hasGenerics;
@@ -131,7 +132,9 @@ namespace ASCompletion.Completion
         /// </summary>
         /// <param name="word"></param>
         /// <returns></returns>
-        internal bool HasTypePreKey(string word) => typesPreKeys != null && typesPreKeys.Any(it => it == word);
+        internal bool HasTypePreKey(string word)
+            => typesPreKeys != null
+               && typesPreKeys.Any(it => it == word);
 
         /// <summary>
         /// Get a selected list of possible completion keywords
@@ -139,7 +142,7 @@ namespace ASCompletion.Completion
         /// <param name="text">Context</param>
         /// <param name="insideClass"></param>
         /// <returns>Keywords list</returns>
-        internal List<string> GetDeclarationKeywords(string text, bool insideClass)
+        internal List<string> GetDeclarationKeywords(string? text, bool insideClass)
         {
             var result = new List<string>(accessKeywords);
             var members = new List<string>(declKeywords);
@@ -156,7 +159,7 @@ namespace ASCompletion.Completion
                         break;
                     }
                 }
-                foreach (string token in tokens)
+                foreach (var token in tokens)
                 {
                     if (token.Length > 0 && result.Contains(token))
                     {
@@ -180,22 +183,19 @@ namespace ASCompletion.Completion
                     }
                 }
             }
-            switch (foundMember)
+            if (foundMember is null) result.AddRange(members);
+            else if (foundMember == ClassKey || foundMember == InterfaceKey)
             {
-                case null:
-                    result.AddRange(members);
-                    break;
-                case "class":
-                case "interface":
-                    if (hasExtends) result.Add("extends");
-                    if (hasImplements && foundMember != "interface") result.Add("implements");
-                    break;
+                if (hasExtends) result.Add(ExtendsKey);
+                if (hasImplements && foundMember != InterfaceKey) result.Add(ImplementsKey);
             }
-            GetDeclarationKeywords(insideClass, foundMember, result);
+            else GetDeclarationKeywords(foundMember, result);
             result.Sort();
             return result;
         }
 
-        protected virtual List<string> GetDeclarationKeywords(bool insideClass, string foundMember, List<string> result) => result;
+        protected virtual void GetDeclarationKeywords(string foundMember, List<string> result)
+        {
+        }
     }
 }
