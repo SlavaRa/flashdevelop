@@ -237,5 +237,33 @@ namespace PluginCore.ScintillaNet
                 return (sci.GetFoldLevel(sci.CurrentLine) & flag) == flag;
             }
         }
+
+        [TestFixture]
+        class SnippetHelperTests : ScintillaControlTests
+        {
+            static string GetFullPath(string fileName) => $"{nameof(PluginCore)}.Test_Files.snippet.{fileName}.hx";
+
+            static string ReadAllText(string fileName) => TestFile.ReadAllText(GetFullPath(fileName));
+
+            static IEnumerable<TestCaseData> Issue3141SnippetHelperTestCases
+            {
+                get
+                {
+                    yield return new TestCaseData("BeforeIssue3141_1")
+                        .Returns(ReadAllText("AfterIssue3141_1"))
+                        .SetName("$(LineNumber) Issue 3141. Case 1.");
+                }
+            }
+
+            [
+                Test, 
+                TestCaseSource(nameof(Issue3141SnippetHelperTestCases))
+            ]
+            public string Common(string fileName)
+            {
+                SetSrc(sci, ReadAllText(fileName));
+                return sci.Text;
+            }
+        }
     }
 }

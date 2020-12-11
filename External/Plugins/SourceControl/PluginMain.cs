@@ -266,7 +266,7 @@ namespace SourceControl
                     try
                     {
                         var file = ((TextEvent) e).Value;
-                        if (File.Exists(file)) e.Handled = ProjectWatcher.HandleFileNew(file);   
+                        if (File.Exists(file)) e.Handled = ProjectWatcher.HandleFileNew(file);
                     }
                     catch (Exception ex)
                     {

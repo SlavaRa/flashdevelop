@@ -344,6 +344,7 @@ namespace FlashDevelop.Utilities
                 case "Clipboard": return GetClipboard();
                 case "Locale": return GetLocale();
                 case "Dollar": return "$";
+                //case "LineNumber": return GetLineNumber
             }
             foreach (var arg in ArgumentDialog.CustomArguments)
             {
