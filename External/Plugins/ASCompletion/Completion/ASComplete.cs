@@ -3135,8 +3135,7 @@ namespace ASCompletion.Completion
             if (found != null && (found.Flags & FlagType.Setter) > 0)
             {
                 found = null;
-                var matches = inFile.Members.MultipleSearch(token, mask, access);
-                foreach (var member in matches)
+                foreach (var member in inFile.Members.Where(token, mask, access))
                 {
                     found = member;
                     if ((member.Flags & FlagType.Setter) == 0) break;
@@ -3210,8 +3209,7 @@ namespace ASCompletion.Completion
                 if (found != null && (found.Flags & FlagType.Setter) > 0)
                 {
                     found = null;
-                    var matches = tmpClass.Members.MultipleSearch(token, mask, access);
-                    foreach (var member in matches)
+                    foreach (var member in tmpClass.Members.Where(token, mask, access))
                     {
                         found = member;
                         if ((member.Flags & FlagType.Getter) > 0) break;
